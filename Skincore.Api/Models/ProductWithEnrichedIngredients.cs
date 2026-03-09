@@ -18,14 +18,8 @@ public class ProductWithEnrichedIngredients : Product
     {
         Id = product.Id;
         Name = product.Name;
-        Brand = product.Brand;
-        Description = product.Description;
-        Price = product.Price;
-        Rating = product.Rating;
-        ReviewCount = product.ReviewCount;
         Barcode = product.Barcode;
-        ImageUrls = product.ImageUrls;
         ProductIngredients = product.ProductIngredients;
-        Categories = product.Categories;
+        ExtraElements = product.ExtraElements;
     }
 }

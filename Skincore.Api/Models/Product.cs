@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace Skincore.Api.Models;
 
@@ -8,35 +9,22 @@ public class Product
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
+    [JsonPropertyName("id")]
     public string? Id { get; set; }
 
     [BsonElement("name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; } = null!;
 
-    [BsonElement("brand")]
-    public string? Brand { get; set; }
-
-    [BsonElement("description")]
-    public string? Description { get; set; }
-
-    [BsonElement("price")]
-    public string? Price { get; set; }
-
-    [BsonElement("rating")]
-    public string? Rating { get; set; }
-
-    [BsonElement("review_count")]
-    public string? ReviewCount { get; set; }
-    
     [BsonElement("barcode")]
+    [JsonPropertyName("barcode")]
     public string? Barcode { get; set; }
 
-    [BsonElement("image_urls")]
-    public List<string>? ImageUrls { get; set; }
-
     [BsonElement("product_ingredients")]
+    [JsonPropertyName("product_ingredients")]
     public List<string>? ProductIngredients { get; set; }
-    
-    [BsonElement("categories")]
-    public List<string>? Categories { get; set; }
+
+    [BsonExtraElements]
+    [JsonExtensionData]
+    public IDictionary<string, object>? ExtraElements { get; set; }
 }

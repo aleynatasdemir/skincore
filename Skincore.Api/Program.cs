@@ -9,6 +9,7 @@ builder.Services.Configure<MongoDBSettings>(
 
 builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<IngredientMatchingService>();
+builder.Services.AddSingleton<ProductSearchService>();
 
 builder.Services.AddControllers();
 
@@ -24,12 +25,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Initialize the Ingredient cache on startup
+// Initialize the caches on startup
 using (var scope = app.Services.CreateScope())
 {
     var matchingService = scope.ServiceProvider.GetRequiredService<IngredientMatchingService>();
-    // Wait for the initialization to complete before accepting requests
     matchingService.InitializeAsync().GetAwaiter().GetResult();
+
+    var productSearchService = scope.ServiceProvider.GetRequiredService<ProductSearchService>();
+    productSearchService.InitializeAsync().GetAwaiter().GetResult();
 }
 
 // Configure the HTTP request pipeline.

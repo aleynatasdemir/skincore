@@ -11,11 +11,46 @@ public class ProductsController : ControllerBase
 {
     private readonly MongoDbService _mongoDbService;
     private readonly IngredientMatchingService _matchingService;
+    private readonly ProductSearchService _productSearchService;
 
-    public ProductsController(MongoDbService mongoDbService, IngredientMatchingService matchingService)
+    public ProductsController(
+        MongoDbService mongoDbService, 
+        IngredientMatchingService matchingService,
+        ProductSearchService productSearchService)
     {
         _mongoDbService = mongoDbService;
         _matchingService = matchingService;
+        _productSearchService = productSearchService;
+    }
+
+    [HttpGet("search/name")]
+    public async Task<ActionResult<List<Product>>> SearchByNameFuzzy([FromQuery] string query, [FromQuery] int maxResults = 5)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return BadRequest("Query parameter is required.");
+        }
+
+        var results = await _productSearchService.SearchProductsByNameFuzzyAsync(query, maxResults);
+        return Ok(results);
+    }
+
+    [HttpGet("search/barcode")]
+    public async Task<ActionResult<Product>> SearchByBarcodeExact([FromQuery] string barcode)
+    {
+        if (string.IsNullOrWhiteSpace(barcode))
+        {
+            return BadRequest("Barcode parameter is required.");
+        }
+
+        var product = await _mongoDbService.ProductsCollection
+            .Find(p => p.Barcode == barcode)
+            .FirstOrDefaultAsync();
+
+        if (product == null)
+            return NotFound(new { message = "Product not found with the given barcode." });
+
+        return Ok(product);
     }
 
     [HttpGet]
