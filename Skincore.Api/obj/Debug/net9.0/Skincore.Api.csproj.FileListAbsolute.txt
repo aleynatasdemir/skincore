@@ -23,9 +23,6 @@
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/MongoDB.Driver.dll
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/SharpCompress.dll
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Snappier.dll
-/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.Swagger.dll
-/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerGen.dll
-/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerUI.dll
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/ZstdSharp.dll
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/obj/Debug/net9.0/rjimswa.dswa.cache.json
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/obj/Debug/net9.0/rjsmrazor.dswa.cache.json
