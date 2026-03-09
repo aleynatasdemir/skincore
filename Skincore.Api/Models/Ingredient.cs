@@ -32,7 +32,7 @@ public class Ingredient
     public string? CasNumber { get; set; }
 
     [BsonElement("comedogenic")]
-    public string? Comedogenic { get; set; }
+    public object? Comedogenic { get; set; }
 
     [BsonElement("description")]
     public string? Description { get; set; }
