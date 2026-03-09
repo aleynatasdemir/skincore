@@ -1,0 +1,6 @@
+@Skincore.Api_HostAddress = http://localhost:5192
+
+GET {{Skincore.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
