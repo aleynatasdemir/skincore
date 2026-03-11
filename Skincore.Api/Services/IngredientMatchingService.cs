@@ -74,13 +74,12 @@ public class IngredientMatchingService
         }
 
         // 2. Try Fuzzy Match using FuzzySharp (ExtractOne gets the best match)
-        // We ensure we only do this if we have searchable keys
         if (_searchableKeys.Count > 0)
         {
             var fuzzyResult = Process.ExtractOne(normalizedInput, _searchableKeys);
             
-            // Define a threshold, e.g., 85%
-            if (fuzzyResult.Score >= 85)
+            // 70+ threshold — yazım farklılıklarını yakala
+            if (fuzzyResult.Score >= 70)
             {
                 return new EnrichedIngredient
                 {

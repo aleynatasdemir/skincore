@@ -7,8 +7,10 @@ namespace Skincore.Api.Services;
 public class ProductSearchService
 {
     private readonly MongoDbService _mongoDbService;
-    private Dictionary<string, string> _productNameToIdMap = new();
-    private List<string> _searchableProductNames = new();
+
+    // Her ürün için aranabilir string → product Id map
+    // Aynı ürün birden fazla key ile eşleşebilir (name + ocr_text + brand)
+    private List<(string SearchKey, string ProductId)> _searchIndex = new();
 
     public ProductSearchService(MongoDbService mongoDbService)
     {
@@ -17,57 +19,80 @@ public class ProductSearchService
 
     public async Task InitializeAsync()
     {
-        var projection = Builders<Product>.Projection.Include(p => p.Id).Include(p => p.Name);
+        var projection = Builders<Product>.Projection
+            .Include(p => p.Id)
+            .Include(p => p.Name)
+            .Include(p => p.Brand)
+            .Include(p => p.OcrText);
+
         var products = await _mongoDbService.ProductsCollection
             .Find(_ => true)
             .Project<Product>(projection)
             .ToListAsync();
 
+        _searchIndex.Clear();
+
         foreach (var product in products)
         {
-            if (!string.IsNullOrWhiteSpace(product.Name) && product.Id != null)
+            if (product.Id == null) continue;
+
+            // 1. Ürün adı
+            if (!string.IsNullOrWhiteSpace(product.Name))
+                _searchIndex.Add((product.Name.ToLowerInvariant().Trim(), product.Id));
+
+            // 2. ocr_text — etiket üzerindeki orijinal yazı
+            if (!string.IsNullOrWhiteSpace(product.OcrText))
+                _searchIndex.Add((product.OcrText.ToLowerInvariant().Trim(), product.Id));
+
+            // 3. Marka adı (bonus — marka ile arama yapılabilsin)
+            if (!string.IsNullOrWhiteSpace(product.Brand))
             {
-                var lowerName = product.Name.ToLowerInvariant().Trim();
-                // Store the first occurrence if there are duplicates
-                _productNameToIdMap.TryAdd(lowerName, product.Id);
+                var brandPlusName = $"{product.Brand} {product.Name}".ToLowerInvariant().Trim();
+                _searchIndex.Add((brandPlusName, product.Id));
             }
         }
-
-        _searchableProductNames = _productNameToIdMap.Keys.ToList();
     }
 
     public async Task<List<Product>> SearchProductsByNameFuzzyAsync(string query, int maxResults = 5)
     {
-        if (string.IsNullOrWhiteSpace(query) || _searchableProductNames.Count == 0)
-        {
+        if (string.IsNullOrWhiteSpace(query) || _searchIndex.Count == 0)
             return new List<Product>();
-        }
 
         var normalizedQuery = query.ToLowerInvariant().Trim();
-        
-        // Find top N fuzzy matches
-        var fuzzyResults = Process.ExtractTop(normalizedQuery, _searchableProductNames, limit: maxResults);
-        
-        var productIds = new List<string>();
+        var searchKeys = _searchIndex.Select(x => x.SearchKey).ToList();
+
+        // Fuzzy eşleştirme — tüm key'ler üzerinde
+        var fuzzyResults = Process.ExtractTop(normalizedQuery, searchKeys, limit: maxResults * 3);
+
+        // Score > 55 olanları al, product Id'ye çevir, tekrar edenleri kaldır
+        var seenIds = new HashSet<string>();
+        var productIds = new List<(string Id, int Score)>();
+
         foreach (var result in fuzzyResults)
         {
-            // We can set a reasonable threshold, e.g., score > 60
-            if (result.Score > 60 && _productNameToIdMap.TryGetValue(result.Value, out var id))
-            {
-                productIds.Add(id);
-            }
+            if (result.Score < 55) continue;
+
+            // Index üzerinden hangi product'a ait bul
+            var match = _searchIndex.FirstOrDefault(x => x.SearchKey == result.Value);
+            if (match.ProductId == null) continue;
+
+            if (seenIds.Add(match.ProductId))
+                productIds.Add((match.ProductId, result.Score));
         }
 
-        if (productIds.Count == 0)
-        {
+        // Score'a göre sırala, maxResults'a kırp
+        var orderedIds = productIds
+            .OrderByDescending(x => x.Score)
+            .Take(maxResults)
+            .Select(x => x.Id)
+            .ToList();
+
+        if (orderedIds.Count == 0)
             return new List<Product>();
-        }
 
-        // Fetch full product details for the matched IDs
-        var filter = Builders<Product>.Filter.In(p => p.Id, productIds);
+        var filter = Builders<Product>.Filter.In(p => p.Id, orderedIds);
         var matchedProducts = await _mongoDbService.ProductsCollection.Find(filter).ToListAsync();
 
-        // Sort them back according to the fuzzy score order
-        return matchedProducts.OrderBy(p => productIds.IndexOf(p.Id!)).ToList();
+        return matchedProducts.OrderBy(p => orderedIds.IndexOf(p.Id!)).ToList();
     }
 }

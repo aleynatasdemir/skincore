@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Skincore.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3f6cbcbc0822bf97314b364b52c2fcdfb1a6083f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6ffdecb3ad842d75a19e92fc017bf0701279b9c6")]
 [assembly: System.Reflection.AssemblyProductAttribute("Skincore.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Skincore.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

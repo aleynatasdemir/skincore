@@ -93,6 +93,19 @@ class APIClient {
     func getMe() async throws -> UserResponse {
         return try await request(endpoint: "/auth/me", authenticated: true)
     }
+
+    // MARK: - Product Endpoints
+
+    func searchProductsByName(query: String, maxResults: Int = 5) async throws -> [Product] {
+        let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        return try await request(
+            endpoint: "/products/search/name?query=\(encodedQuery)&maxResults=\(maxResults)"
+        )
+    }
+
+    func getProductDetails(id: String) async throws -> ProductWithEnrichedIngredients {
+        return try await request(endpoint: "/products/\(id)")
+    }
 }
 
 // MARK: - Errors

@@ -24,6 +24,14 @@ public class Product
     [JsonPropertyName("product_ingredients")]
     public List<string>? ProductIngredients { get; set; }
 
+    [BsonElement("brand")]
+    [JsonPropertyName("brand")]
+    public string? Brand { get; set; }
+
+    [BsonElement("ocr_text")]
+    [JsonPropertyName("ocr_text")]
+    public string? OcrText { get; set; }
+
     [BsonExtraElements]
     [JsonExtensionData]
     public IDictionary<string, object>? ExtraElements { get; set; }

@@ -1,121 +1,516 @@
 import SwiftUI
+import Combine
+
+// MARK: - HomeViewModel
+
+@MainActor
+class HomeViewModel: ObservableObject {
+    @Published var searchText: String = ""
+    @Published var searchResults: [Product] = []
+    @Published var isSearching: Bool = false
+
+    private var cancellables = Set<AnyCancellable>()
+
+    init() {
+        $searchText
+            .debounce(for: .milliseconds(350), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] query in
+                guard let self else { return }
+                Task { await self.search(query: query) }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func search(query: String) async {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else {
+            searchResults = []
+            isSearching = false
+            return
+        }
+        isSearching = true
+        do {
+            searchResults = try await APIClient.shared.searchProductsByName(query: trimmed, maxResults: 10)
+        } catch {
+            searchResults = []
+        }
+        isSearching = false
+    }
+}
+
+// MARK: - HomeView
 
 struct HomeView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var viewModel = HomeViewModel()
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color(hex: "0f0f1a").ignoresSafeArea()
-                
-                VStack(spacing: 24) {
-                    // Header
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Merhaba,")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.6))
-                            Text(authViewModel.currentUser?.fullName ?? "Kullanıcı")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.white)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    
+                    // ── Search Bar ──
+                    HStack(spacing: 12) {
+                        HStack {
+                            Image(systemName: viewModel.isSearching ? "arrow.trianglehead.2.clockwise" : "magnifyingglass")
+                                .foregroundColor(Color(hex: "9CA3AF"))
+                                .symbolEffect(.rotate, isActive: viewModel.isSearching)
+                            TextField("", text: $viewModel.searchText,
+                                     prompt: Text("Search ingredients or products...")
+                                        .foregroundColor(Color(hex: "9CA3AF")))
+                                .foregroundColor(Color(hex: "1A1A2E"))
+                                .autocorrectionDisabled()
+                            if !viewModel.searchText.isEmpty {
+                                Button { viewModel.searchText = "" } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(Color(hex: "9CA3AF"))
+                                }
+                            }
+                        }
+                        .padding(12)
+                        .background(Color.white)
+                        .cornerRadius(14)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(viewModel.searchText.isEmpty
+                                        ? Color(hex: "E5E7EB")
+                                        : Color(hex: "D4728C").opacity(0.5),
+                                        lineWidth: 1)
+                        )
+                        
+                        // Filter button
+                        Button { } label: {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color(hex: "D4728C"))
+                                .padding(12)
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
+                                )
                         }
                         
-                        Spacer()
-                        
-                        // Profile / Logout
-                        Menu {
-                            Button(role: .destructive) {
-                                authViewModel.logout()
-                            } label: {
-                                Label("Çıkış Yap", systemImage: "rectangle.portrait.and.arrow.right")
-                            }
-                        } label: {
-                            Image(systemName: "person.circle.fill")
-                                .font(.system(size: 36))
-                                .foregroundColor(Color(hex: "8b5cf6"))
+                        // Camera button
+                        Button { } label: {
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color(hex: "D4728C"))
+                                .padding(12)
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
+                                )
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.top, 8)
-                    
-                    // Welcome Card
-                    VStack(spacing: 16) {
-                        Image(systemName: "leaf.circle.fill")
-                            .font(.system(size: 56))
-                            .foregroundStyle(
+
+                    // ── Arama Sonuçları ──
+                    if !viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        SearchResultsPanel(viewModel: viewModel)
+                    } else {
+
+                    // ── Scan Your Shelf Card ──
+                    ZStack(alignment: .bottomLeading) {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "6366f1"), Color(hex: "8b5cf6")],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                                    colors: [Color(hex: "1A1A2E"), Color(hex: "2D2B55")],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
                                 )
                             )
+                            .frame(height: 180)
                         
-                        Text("SkinCore'a Hoş Geldin!")
-                            .font(.title2.bold())
-                            .foregroundColor(.white)
+                        // Decorative bottles silhouette
+                        HStack {
+                            Spacer()
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 60))
+                                .foregroundColor(.white.opacity(0.08))
+                                .padding(.trailing, 30)
+                                .padding(.bottom, 20)
+                        }
                         
-                        Text("Ürün tarama, içerik analizi ve daha fazlası için hazır.")
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.6))
-                            .multilineTextAlignment(.center)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("NEW FEATURE")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color(hex: "D4728C"))
+                                .cornerRadius(6)
+                            
+                            Text("Scan Your Shelf")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text("Instantly analyze all ingredients and\ncheck safety ratings.")
+                                .font(.system(size: 13))
+                                .foregroundColor(.white.opacity(0.7))
+                                .lineSpacing(2)
+                            
+                            Button {
+                                // Navigate to scan
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "viewfinder")
+                                        .font(.system(size: 14))
+                                    Text("Scan Now")
+                                        .font(.system(size: 14, weight: .semibold))
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(Color.white)
+                                .foregroundColor(Color(hex: "1A1A2E"))
+                                .cornerRadius(20)
+                            }
+                            .padding(.top, 4)
+                        }
+                        .padding(24)
                     }
-                    .padding(32)
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white.opacity(0.05))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    .padding(.horizontal)
+                    
+                    // ── Categories ──
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack {
+                            Text("Categories")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(Color(hex: "1A1A2E"))
+                            Spacer()
+                            Button("View All") { }
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Color(hex: "D4728C"))
+                        }
+                        .padding(.horizontal)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                CategoryItem(icon: "drop.fill", name: "Skincare")
+                                CategoryItem(icon: "scissors", name: "Haircare")
+                                CategoryItem(icon: "paintbrush.fill", name: "Makeup")
+                                CategoryItem(icon: "sun.max.fill", name: "Sunscreen")
+                                CategoryItem(icon: "leaf.fill", name: "Natural")
+                                CategoryItem(icon: "sparkles", name: "Serum")
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
+                    
+                    // ── Most Searched ──
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack {
+                            Text("Most Searched")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(Color(hex: "1A1A2E"))
+                            Spacer()
+                            Button { } label: {
+                                Image(systemName: "line.3.horizontal.decrease")
+                                    .foregroundColor(Color(hex: "6B7280"))
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        // Products Grid
+                        LazyVGrid(columns: [
+                            GridItem(.flexible(), spacing: 14),
+                            GridItem(.flexible(), spacing: 14)
+                        ], spacing: 14) {
+                            ProductCard(
+                                name: "Hyaluronic Serum",
+                                brand: "The Ordinary",
+                                rating: 4.8,
+                                badge: "CLEAN",
+                                badgeColor: Color(hex: "10B981"),
+                                iconName: "drop.fill"
                             )
-                    )
-                    .padding(.horizontal)
-                    
-                    // User Info Card
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label {
-                            Text(authViewModel.currentUser?.email ?? "")
-                                .foregroundColor(.white.opacity(0.8))
-                        } icon: {
-                            Image(systemName: "envelope.fill")
-                                .foregroundColor(Color(hex: "8b5cf6"))
+                            ProductCard(
+                                name: "Glow Toner 5%",
+                                brand: "Pixi Beauty",
+                                rating: 4.5,
+                                badge: "ALERT",
+                                badgeColor: Color(hex: "EF4444"),
+                                iconName: "flask.fill"
+                            )
+                            ProductCard(
+                                name: "Mineral Sunscreen",
+                                brand: "La Roche-Posay",
+                                rating: 4.9,
+                                badge: "SAFE",
+                                badgeColor: Color(hex: "3B82F6"),
+                                iconName: "sun.max.fill"
+                            )
+                            ProductCard(
+                                name: "Hydrating Cleanser",
+                                brand: "CeraVe",
+                                rating: 4.7,
+                                badge: "CLEAN",
+                                badgeColor: Color(hex: "10B981"),
+                                iconName: "hands.and.sparkles.fill"
+                            )
                         }
-                        
-                        Divider().background(Color.white.opacity(0.1))
-                        
-                        Label {
-                            Text(authViewModel.currentUser?.authProvider == "apple" ? "Apple ile giriş" : "E-posta ile giriş")
-                                .foregroundColor(.white.opacity(0.8))
-                        } icon: {
-                            Image(systemName: authViewModel.currentUser?.authProvider == "apple" ? "apple.logo" : "key.fill")
-                                .foregroundColor(Color(hex: "8b5cf6"))
-                        }
+                        .padding(.horizontal)
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.white.opacity(0.05))
-                    )
-                    .padding(.horizontal)
-                    
-                    Spacer()
+
+                    } // end else (search empty)
+
+                    Spacer().frame(height: 80)
+                }
+                .padding(.top, 8)
+            }
+            .background(Color(hex: "FFF0F0"))
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "leaf.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(Color(hex: "D4728C"))
+                        Text("SkinCore")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(hex: "1A1A2E"))
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button(role: .destructive) {
+                            authViewModel.logout()
+                        } label: {
+                            Label("Çıkış Yap", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                    } label: {
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(Color(hex: "6B7280"))
+                    }
                 }
             }
         }
     }
 }
 
+// MARK: - Category Item
+
+struct CategoryItem: View {
+    let icon: String
+    let name: String
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: "FFF0F0"))
+                    .frame(width: 56, height: 56)
+                    .overlay(
+                        Circle().stroke(Color(hex: "F3D5DC"), lineWidth: 1)
+                    )
+                Image(systemName: icon)
+                    .font(.system(size: 22))
+                    .foregroundColor(Color(hex: "D4728C"))
+            }
+            Text(name)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(Color(hex: "6B7280"))
+        }
+    }
+}
+
+// MARK: - Product Card
+
+struct ProductCard: View {
+    let name: String
+    let brand: String
+    let rating: Double
+    let badge: String
+    let badgeColor: Color
+    let iconName: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Product image placeholder
+            ZStack {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(hex: "F3F4F6"))
+                    .frame(height: 140)
+                
+                Image(systemName: iconName)
+                    .font(.system(size: 36))
+                    .foregroundColor(Color(hex: "D4728C").opacity(0.4))
+                
+                // Wishlist heart
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button { } label: {
+                            Image(systemName: "heart")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(hex: "D4728C"))
+                                .padding(8)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.05), radius: 2)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(8)
+            }
+            
+            // Info
+            Text(name)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Color(hex: "1A1A2E"))
+                .lineLimit(1)
+            
+            Text(brand)
+                .font(.system(size: 12))
+                .foregroundColor(Color(hex: "9CA3AF"))
+            
+            // Rating + Badge
+            HStack {
+                HStack(spacing: 2) {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(hex: "F59E0B"))
+                    Text(String(format: "%.1f", rating))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(Color(hex: "1A1A2E"))
+                }
+                
+                Spacer()
+                
+                Text(badge)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(badgeColor)
+            }
+        }
+        .padding(12)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+    }
+}
+
+// MARK: - Search Results Panel
+
+private struct SearchResultsPanel: View {
+    @ObservedObject var viewModel: HomeViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack {
+                if viewModel.isSearching {
+                    ProgressView().scaleEffect(0.8).tint(Color(hex: "D4728C"))
+                    Text("Aranıyor…")
+                        .font(.caption.bold())
+                        .foregroundColor(Color(hex: "9CA3AF"))
+                } else {
+                    Text(viewModel.searchResults.isEmpty
+                         ? "Sonuç bulunamadı"
+                         : "\(viewModel.searchResults.count) ürün bulundu")
+                        .font(.caption.bold())
+                        .foregroundColor(Color(hex: "9CA3AF"))
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            if !viewModel.isSearching {
+                if viewModel.searchResults.isEmpty {
+                    // Boş durum
+                    VStack(spacing: 10) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 36))
+                            .foregroundColor(Color(hex: "D4728C").opacity(0.3))
+                        Text("'\(viewModel.searchText)' için ürün bulunamadı")
+                            .font(.subheadline)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                } else {
+                    LazyVStack(spacing: 10) {
+                        ForEach(viewModel.searchResults) { product in
+                            NavigationLink(destination: ProductDetailView(productId: product.id)) {
+                                HomeProductRow(product: product)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+        .transition(.opacity.combined(with: .move(edge: .top)))
+        .animation(.easeInOut(duration: 0.2), value: viewModel.searchResults.count)
+    }
+}
+
+// MARK: - Home Product Row (arama sonucu satırı)
+
+private struct HomeProductRow: View {
+    let product: Product
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Ürün görseli
+            AsyncImage(url: URL(string: product.firstImageUrl ?? "")) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().aspectRatio(contentMode: .fill)
+                default:
+                    Image(systemName: "photo")
+                        .font(.system(size: 22))
+                        .foregroundColor(Color(hex: "9CA3AF"))
+                }
+            }
+            .frame(width: 60, height: 60)
+            .background(Color(hex: "F3F4F6"))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(product.name ?? "İsimsiz Ürün")
+                    .font(.subheadline.bold())
+                    .foregroundColor(Color(hex: "1A1A2E"))
+                    .lineLimit(2)
+
+                if let brand = product.brand {
+                    Text(brand)
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "9CA3AF"))
+                }
+
+                if let count = product.productIngredients?.count, count > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "list.bullet")
+                            .font(.system(size: 9))
+                        Text("\(count) içerik")
+                    }
+                    .font(.caption2)
+                    .foregroundColor(Color(hex: "D4728C"))
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundColor(Color(hex: "CBD5E1"))
+        }
+        .padding(12)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+    }
+}
+
 #Preview {
     HomeView()
-        .environmentObject({
-            let vm = AuthViewModel()
-            vm.currentUser = UserResponse(
-                id: "1", email: "test@test.com",
-                fullName: "Test User", authProvider: "email",
-                isEmailVerified: true, createdAt: "2026-01-01"
-            )
-            vm.isAuthenticated = true
-            return vm
-        }())
+        .environmentObject(AuthViewModel())
 }

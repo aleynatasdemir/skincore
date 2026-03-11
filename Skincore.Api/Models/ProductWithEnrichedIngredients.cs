@@ -19,6 +19,8 @@ public class ProductWithEnrichedIngredients : Product
         Id = product.Id;
         Name = product.Name;
         Barcode = product.Barcode;
+        Brand = product.Brand;
+        OcrText = product.OcrText;
         ProductIngredients = product.ProductIngredients;
         ExtraElements = product.ExtraElements;
     }

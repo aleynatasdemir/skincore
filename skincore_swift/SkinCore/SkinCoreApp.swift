@@ -8,7 +8,7 @@ struct SkinCoreApp: App {
         WindowGroup {
             Group {
                 if authViewModel.isAuthenticated {
-                    HomeView()
+                    MainTabView()
                 } else {
                     LoginView()
                 }
