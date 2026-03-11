@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """
+PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True python3 extract_text.py 
+
+
+
+
 db_ocr/images/ klasöründeki ürün fotoğraflarından PaddleOCR ile
 metin çıkarır ve MongoDB local/production koleksiyonundaki ilgili
-ürüne  image_text  alanı olarak yazar.
+ürüne  ocr_text  alanı olarak yazar.
 
 Klasör adı = gratis_id  (veya barcode) → MongoDB eşleştirme bu ID ile yapılır.
 
@@ -13,16 +18,21 @@ Kullanım:
 
 import os
 import glob
+import numpy as np
 from PIL import Image
+import pillow_heif
 from paddleocr import PaddleOCR
 from pymongo import MongoClient
+
+# Pillow can now open AVIF/HEIF
+pillow_heif.register_heif_opener()
 
 MIN_IMAGE_SIZE = 300  # piksel (genişlik veya yükseklik bu altındaysa atla)
 
 # ── Ayarlar ──────────────────────────────────────────────────────────────────
 MONGO_URI  = "mongodb://localhost:27017/"
-DB_NAME    = "local"
-COL_NAME   = "production"
+DB_NAME    = "kozmetik"
+COL_NAME   = "products"
 IMAGES_DIR = os.path.join(os.path.dirname(__file__), "images")
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -53,8 +63,20 @@ def extract_text_from_images(ocr: PaddleOCR, image_paths: list[str]) -> str:
     all_texts = []
     for img_path in image_paths:
         try:
-            result = ocr.predict(img_path)
+            # OpenCV (cv2.imread) fails on AVIF inside PaddleOCR, so we load with PIL and pass numpy array.
+            with Image.open(img_path) as img:
+                img_rgb = img.convert("RGB")
+                np_img = np.array(img_rgb)
+                
+            # OpenCV uses BGR natively, PaddleOCR handles RGB/BGR depending on internal model, 
+            # usually BGR is safer for cv2-based pipelines, so let's convert RGB -> BGR
+            # Not strictly required for text recognition, but good practice.
+            np_img = np_img[:, :, ::-1]
+
+            result = ocr.predict(np_img)
+            # PaddleOCR returns lists of (bbox, (text, confidence)) or dicts
             for item in result:
+                # Based on the user's original codebase, handle as dict format "rec_texts"
                 rec_texts = item.get("rec_texts", [])
                 if rec_texts:
                     all_texts.extend(rec_texts)
@@ -97,15 +119,15 @@ def main():
         # MongoDB'de ürünü bul: gratis_id veya barcode ile eşleştir
         doc = col.find_one(
             {"$or": [{"gratis_id": folder_name}, {"barcode": folder_name}]},
-            {"_id": 1, "image_text": 1},
+            {"_id": 1, "ocr_text": 1},
         )
         if not doc:
             no_doc += 1
             print(f"[{i}/{total}] ❌ {folder_name} → MongoDB'de bulunamadı")
             continue
 
-        # Zaten image_text varsa atla (kaldığı yerden devam)
-        if doc.get("image_text"):
+        # Zaten ocr_text varsa atla (kaldığı yerden devam)
+        if doc.get("ocr_text"):
             skipped += 1
             print(f"[{i}/{total}] ⏩ {folder_name} → zaten var, atlandı")
             continue
@@ -114,7 +136,7 @@ def main():
         text = extract_text_from_images(ocr, image_files)
 
         if text:
-            col.update_one({"_id": doc["_id"]}, {"$set": {"image_text": text}})
+            col.update_one({"_id": doc["_id"]}, {"$set": {"ocr_text": text}})
             updated += 1
             print(f"[{i}/{total}] ✅ {folder_name} → {len(text)} karakter yazıldı")
         else:

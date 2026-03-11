@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MongoDB local/production koleksiyonundaki ürünlerin
+MongoDB kozmetik/products koleksiyonundaki ürünlerin
 fotoğraflarını indirip db_ocr/images/ klasörüne kaydeder.
 
 Klasör yapısı: images/<gratis_id>/<fileName>
@@ -9,43 +9,50 @@ Klasör yapısı: images/<gratis_id>/<fileName>
 import os
 import time
 import random
-import requests
+from curl_cffi import requests
+from dotenv import load_dotenv
 from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+load_dotenv()
+_env_proxies = os.environ.get("PROXIES", "")
+# if proxies exist, we split by comma.
+PROXIES = [p.strip() for p in _env_proxies.split(",")] if _env_proxies else []
+
 # ── Ayarlar ──────────────────────────────────────────────────────────────────
 MONGO_URI   = "mongodb://localhost:27017/"
-DB_NAME     = "local"
-COL_NAME    = "production"
+DB_NAME     = "kozmetik"
+COL_NAME    = "products"
 OUTPUT_DIR  = os.path.join(os.path.dirname(__file__), "images")
-MAX_WORKERS = 5           # paralel indirme sayısı (ban yememek için düşük)
-TIMEOUT     = 10          # saniye
+MAX_WORKERS = 10          # curl_cffi + proxy olunca paralellik arttırılabilir
+TIMEOUT     = 15          # saniye
 SKIP_EXISTING = True      # zaten indirilmiş dosyaları atla
 MAX_IMAGES_PER_PRODUCT = 2  # ürün başına max fotoğraf sayısı
-MAX_RETRIES = 1           # başarısız indirmelerde tekrar deneme sayısı
+MAX_RETRIES = 3           # başarısız indirmelerde tekrar deneme sayısı
 # ─────────────────────────────────────────────────────────────────────────────
 
-HEADERS_BASE = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-    "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Sec-Fetch-Dest": "image",
-    "Sec-Fetch-Mode": "no-cors",
-    "Sec-Fetch-Site": "cross-site",
-}
+def normalize_url(url: str) -> str:
+    url = url.strip()
+    if url.startswith("//"):
+        return "https:" + url
+    return url
 
-USER_AGENTS = [
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
-]
+def get_ext(url: str, default_ext=".jpg") -> str:
+    """Ekstra parametreleri atarak makul bir uzantı bulur."""
+    base = url.split("?")[0].split("/")[-1]
+    if "." in base:
+        ext = "." + base.split(".")[-1].lower()
+        if len(ext) <= 5 and ext.isalnum() == False:  # basit sanity
+            return ext
+    return default_ext
 
 def download_image(task):
     """Tek bir resmi indir. task = (gratis_id, barcode, fileUrl, fileName)"""
     gratis_id, barcode, file_url, file_name = task
+
+    # Sadece belli formatı destekle, filename gibi URL verilerini filtrele
+    if not file_url.startswith(("http://", "https://")):
+        return ("skip", "geçersiz url")
 
     # Klasör: images/<gratis_id>/
     folder_id = gratis_id or barcode or "unknown"
@@ -59,19 +66,29 @@ def download_image(task):
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            # Her istekte yeni session (cookie birikmesini önler)
-            headers = {**HEADERS_BASE, "User-Agent": random.choice(USER_AGENTS)}
-            resp = requests.get(file_url, headers=headers, timeout=TIMEOUT, stream=True)
+            proxy_url = random.choice(PROXIES) if PROXIES else None
+            proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+            
+            resp = requests.get(
+                file_url,
+                impersonate="chrome110",
+                timeout=TIMEOUT,
+                proxies=proxies,
+                stream=True
+            )
             resp.raise_for_status()
+            
             with open(dest, "wb") as f:
                 for chunk in resp.iter_content(8192):
-                    f.write(chunk)
-            # İstekler arası rastgele bekleme (ban önleme)
+                    if chunk:
+                        f.write(chunk)
+            
+            # İstekler arası çok hafif bekleme
             time.sleep(random.uniform(0.1, 0.5))
             return ("ok", file_name)
         except Exception as e:
             if attempt < MAX_RETRIES:
-                time.sleep(attempt * 3 + random.uniform(1, 3))
+                time.sleep(attempt * 2 + random.uniform(0.5, 2))
             else:
                 return ("err", f"{file_name} -> {e}")
 
@@ -86,31 +103,67 @@ def main():
 
     # Tüm görevleri hazırla
     tasks = []
+    skip_cnt = 0
     cursor = col.find({}, {"gratis_id": 1, "barcode": 1, "image_urls": 1})
     for doc in cursor:
         gratis_id = doc.get("gratis_id", "")
         barcode   = doc.get("barcode", "")
-        for i, img in enumerate(doc.get("image_urls", [])[:MAX_IMAGES_PER_PRODUCT]):
+        
+        folder_id = str(gratis_id or barcode or "unknown")
+        folder = os.path.join(OUTPUT_DIR, folder_id)
+
+        # Klasördeki mevcut resim sayısını al (eski uzun isimliler dahil)
+        existing_imgs = 0
+        if SKIP_EXISTING and os.path.exists(folder):
+            existing_imgs = len([
+                f for f in os.listdir(folder)
+                if os.path.isfile(os.path.join(folder, f)) and 
+                   f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+            ])
+            
+        seen = set()
+        count = 0
+        for img in doc.get("image_urls", []):
+            if count >= MAX_IMAGES_PER_PRODUCT:
+                break
+                
             # Bazı belgeler dict, bazıları direk string URL
             if isinstance(img, dict):
                 file_url  = img.get("fileUrl", "")
-                file_name = img.get("fileName", "") or file_url.split("/")[-1]
             elif isinstance(img, str):
                 file_url  = img
-                file_name = img.split("/")[-1] or f"{gratis_id or barcode}_{i}.jpg"
             else:
                 continue
-            if file_url and file_name:
-                tasks.append((gratis_id, barcode, file_url, file_name))
+                
+            file_url = normalize_url(file_url)
+            if not file_url.startswith(("http://", "https://")):
+                continue
+                
+            if file_url in seen:
+                continue
+                
+            seen.add(file_url)
+            # İsim olarak sade 0.jpg, 1.jpg vs. yapalım
+            ext = get_ext(file_url)
+            file_name = f"{count}{ext}"    
+
+            if file_url:
+                dest = os.path.join(folder, file_name)
+                # Zaten indirildiyse (dosya var VEYA klasördeki mevcut resim sayısı count'tan büyükse) atla
+                if SKIP_EXISTING and (os.path.exists(dest) or existing_imgs > count):
+                    skip_cnt += 1
+                else:
+                    tasks.append((gratis_id, barcode, file_url, file_name))
+                count += 1
 
     client.close()
 
     total   = len(tasks)
     ok_cnt  = 0
     err_cnt = 0
-    skip_cnt= 0
 
-    print(f"Toplam indirme görevi: {total}")
+    print(f"Toplam indirme görevi oluşturuldu: {total}")
+    print(f"Başlangıçta zaten var olan (atlanan) resim sayısı: {skip_cnt}")
     print(f"Klasör: {OUTPUT_DIR}\n")
 
     start = time.time()
