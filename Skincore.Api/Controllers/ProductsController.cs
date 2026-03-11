@@ -125,7 +125,8 @@ public class ProductsController : ControllerBase
         if (product == null)
             return NotFound();
 
-        // Kullanıcı geçmişine kaydet (ürün detayına gidildiğinde)
+        // Popüler aramalara ve kullanıcı geçmişine kaydet (ürün detayına gidildiğinde)
+        _ = _popularSearchService.IncrementSearchCount(product.Id!, product.Name);
         _ = TryRecordSearchHistory(product.Name, product);
 
         var enrichedProduct = new ProductWithEnrichedIngredients(product);
