@@ -19,62 +19,51 @@ struct RegisterView: View {
     
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(hex: "1a1a2e"), Color(hex: "16213e"), Color(hex: "0f3460")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            Color(hex: "FFF0F0").ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 24) {
                     Spacer().frame(height: 20)
                     
                     // Header
-                    VStack(spacing: 8) {
-                        Image(systemName: "person.badge.plus")
-                            .font(.system(size: 48))
-                            .foregroundColor(Color(hex: "8b5cf6"))
-                        
-                        Text("Hesap Oluştur")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.white)
-                        
-                        Text("Cilt bakım yolculuğuna başla")
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.6))
-                    }
+                    Text("skincore.")
+                        .font(.system(size: 36, weight: .light, design: .serif))
+                        .foregroundColor(Color(hex: "D4728C"))
+                    
+                    Text("Create Account")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(Color(hex: "1A1A2E"))
+                    
+                    Text("Start your skincare journey")
+                        .font(.subheadline)
+                        .foregroundColor(Color(hex: "6B7280"))
                     
                     // Form
                     VStack(spacing: 14) {
-                        // Full Name
-                        AuthTextField(icon: "person.fill", placeholder: "Ad Soyad", text: $fullName)
+                        AuthInputField(icon: "person.fill", placeholder: "Full Name", text: $fullName)
                         
-                        // Email
-                        AuthTextField(icon: "envelope.fill", placeholder: "E-posta", text: $email)
+                        AuthInputField(icon: "envelope.fill", placeholder: "Email", text: $email)
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
                         
-                        // Password
-                        AuthSecureField(icon: "lock.fill", placeholder: "Şifre (min 8 karakter)", text: $password)
+                        AuthSecureInputField(icon: "lock.fill", placeholder: "Password (min 8 chars)", text: $password)
                         
-                        // Confirm Password
-                        AuthSecureField(icon: "lock.rotation", placeholder: "Şifre Tekrar", text: $confirmPassword)
+                        AuthSecureInputField(icon: "lock.rotation", placeholder: "Confirm Password", text: $confirmPassword)
                         
                         if !confirmPassword.isEmpty && !passwordsMatch {
-                            Text("Şifreler eşleşmiyor")
+                            Text("Passwords don't match")
                                 .font(.caption)
-                                .foregroundColor(Color(hex: "ef4444"))
+                                .foregroundColor(Color(hex: "EF4444"))
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 24)
                     
                     // Error
                     if let error = authViewModel.errorMessage {
                         Text(error)
                             .font(.caption)
-                            .foregroundColor(Color(hex: "ef4444"))
+                            .foregroundColor(Color(hex: "EF4444"))
                             .padding(.horizontal)
                     }
                     
@@ -92,39 +81,31 @@ struct RegisterView: View {
                             if authViewModel.isLoading {
                                 ProgressView().tint(.white)
                             } else {
-                                Text("Kayıt Ol")
-                                    .fontWeight(.semibold)
+                                Text("Sign Up")
+                                    .font(.system(size: 17, weight: .semibold))
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: isFormValid
-                                    ? [Color(hex: "6366f1"), Color(hex: "8b5cf6")]
-                                    : [Color.gray.opacity(0.3), Color.gray.opacity(0.3)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .frame(height: 56)
+                        .background(isFormValid ? Color(hex: "1A1A2E") : Color(hex: "C4C4C4"))
                         .foregroundColor(.white)
-                        .cornerRadius(14)
+                        .cornerRadius(28)
                     }
                     .disabled(!isFormValid || authViewModel.isLoading)
-                    .padding(.horizontal)
+                    .padding(.horizontal, 24)
                     
                     // Back to Login
                     Button {
                         dismiss()
                     } label: {
-                        HStack(spacing: 4) {
-                            Text("Zaten hesabın var mı?")
-                                .foregroundColor(.white.opacity(0.5))
-                            Text("Giriş Yap")
-                                .foregroundColor(Color(hex: "8b5cf6"))
+                        HStack(spacing: 6) {
+                            Text("Already have an account?")
+                                .foregroundColor(Color(hex: "6B7280"))
+                            Text("Log In")
                                 .fontWeight(.semibold)
+                                .foregroundColor(Color(hex: "1A1A2E"))
                         }
-                        .font(.subheadline)
+                        .font(.system(size: 14))
                     }
                     
                     Spacer()
@@ -138,7 +119,7 @@ struct RegisterView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
+                        .foregroundColor(Color(hex: "1A1A2E"))
                 }
             }
         }
@@ -147,7 +128,7 @@ struct RegisterView: View {
 
 // MARK: - Reusable Components
 
-struct AuthTextField: View {
+struct AuthInputField: View {
     let icon: String
     let placeholder: String
     @Binding var text: String
@@ -155,23 +136,24 @@ struct AuthTextField: View {
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(Color(hex: "6B7280"))
                 .frame(width: 24)
             TextField("", text: $text,
-                     prompt: Text(placeholder).foregroundColor(.white.opacity(0.4)))
-                .foregroundColor(.white)
+                     prompt: Text(placeholder).foregroundColor(Color(hex: "6B7280")))
+                .foregroundColor(Color(hex: "1A1A2E"))
+                .accentColor(Color(hex: "1A1A2E"))
         }
         .padding()
-        .background(Color.white.opacity(0.08))
+        .background(Color.white)
         .cornerRadius(14)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
         )
     }
 }
 
-struct AuthSecureField: View {
+struct AuthSecureInputField: View {
     let icon: String
     let placeholder: String
     @Binding var text: String
@@ -179,18 +161,19 @@ struct AuthSecureField: View {
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(Color(hex: "6B7280"))
                 .frame(width: 24)
             SecureField("", text: $text,
-                       prompt: Text(placeholder).foregroundColor(.white.opacity(0.4)))
-                .foregroundColor(.white)
+                       prompt: Text(placeholder).foregroundColor(Color(hex: "6B7280")))
+                .foregroundColor(Color(hex: "1A1A2E"))
+                .accentColor(Color(hex: "1A1A2E"))
         }
         .padding()
-        .background(Color.white.opacity(0.08))
+        .background(Color.white)
         .cornerRadius(14)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
         )
     }
 }

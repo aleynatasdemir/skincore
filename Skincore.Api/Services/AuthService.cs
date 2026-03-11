@@ -59,8 +59,9 @@ public class AuthService
         }
 
         // Validate password
-        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
-            return (false, "Şifre en az 8 karakter olmalıdır.");
+        var passwordError = ValidatePassword(request.Password);
+        if (passwordError != null)
+            return (false, passwordError);
 
         var code = GenerateVerificationCode();
 
@@ -422,5 +423,23 @@ public class AuthService
             case 3: output += "="; break;
         }
         return Convert.FromBase64String(output);
+    }
+
+    // ── Password Validation ──
+    private static string? ValidatePassword(string? password)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+            return "Şifre gereklidir.";
+        if (password.Length < 8)
+            return "Şifre en az 8 karakter olmalıdır.";
+        if (!password.Any(char.IsUpper))
+            return "Şifre en az bir büyük harf içermelidir.";
+        if (!password.Any(char.IsLower))
+            return "Şifre en az bir küçük harf içermelidir.";
+        if (!password.Any(char.IsDigit))
+            return "Şifre en az bir rakam içermelidir.";
+        if (!password.Any(c => !char.IsLetterOrDigit(c)))
+            return "Şifre en az bir özel karakter içermelidir (!@#$%^&*).";
+        return null;
     }
 }

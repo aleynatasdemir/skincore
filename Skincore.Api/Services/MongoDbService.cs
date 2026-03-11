@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Skincore.Api.Models;
 
@@ -25,17 +26,17 @@ public class MongoDbService
 
     public async Task CreateIndexesAsync()
     {
+        // Drop old problematic index if it exists
+        try { await UsersCollection.Indexes.DropOneAsync("appleUserId_1"); }
+        catch { /* Index may not exist */ }
+
         var emailIndex = new CreateIndexModel<User>(
             Builders<User>.IndexKeys.Ascending(u => u.Email),
             new CreateIndexOptions { Unique = true });
 
+        // AppleUserId index for fast lookup (not unique - uniqueness handled in app logic)
         var appleUserIdIndex = new CreateIndexModel<User>(
-            Builders<User>.IndexKeys.Ascending(u => u.AppleUserId),
-            new CreateIndexOptions 
-            { 
-                Unique = true, 
-                Sparse = true // Allow null values
-            });
+            Builders<User>.IndexKeys.Ascending(u => u.AppleUserId));
 
         await UsersCollection.Indexes.CreateManyAsync(new[] { emailIndex, appleUserIdIndex });
     }
