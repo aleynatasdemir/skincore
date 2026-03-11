@@ -45,10 +45,65 @@ public class User
     [BsonElement("refreshTokenExpiry")]
     public DateTime? RefreshTokenExpiry { get; set; }
 
+    // Favoriler
+    [BsonElement("favorites")]
+    public List<FavoriteProduct> Favorites { get; set; } = new();
+
+    // Arama Geçmişi
+    [BsonElement("searchHistory")]
+    public List<SearchHistoryItem> SearchHistory { get; set; } = new();
+
     // Timestamps
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [BsonElement("lastLoginAt")]
     public DateTime? LastLoginAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class FavoriteProduct
+{
+    [BsonElement("id")]
+    public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
+
+    [BsonElement("productId")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string ProductId { get; set; } = null!;
+
+    [BsonElement("productName")]
+    public string ProductName { get; set; } = null!;
+
+    [BsonElement("productBrand")]
+    public string? ProductBrand { get; set; }
+
+    [BsonElement("productImageURL")]
+    public string? ProductImageURL { get; set; }
+
+    [BsonElement("addedAt")]
+    public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class SearchHistoryItem
+{
+    [BsonElement("id")]
+    public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
+
+    [BsonElement("query")]
+    public string Query { get; set; } = null!;
+
+    [BsonElement("productId")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? ProductId { get; set; }
+
+    [BsonElement("productName")]
+    public string? ProductName { get; set; }
+
+    [BsonElement("category")]
+    public string? Category { get; set; }
+
+    [BsonElement("searchedAt")]
+    public DateTime SearchedAt { get; set; } = DateTime.UtcNow;
 }

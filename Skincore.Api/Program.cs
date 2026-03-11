@@ -21,6 +21,8 @@ builder.Services.AddSingleton<IngredientMatchingService>();
 builder.Services.AddSingleton<ProductSearchService>();
 builder.Services.AddSingleton<EmailService>();
 builder.Services.AddSingleton<AuthService>();
+builder.Services.AddSingleton<UserProfileService>();
+builder.Services.AddSingleton<PopularSearchService>();
 
 builder.Services.AddControllers();
 

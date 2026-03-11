@@ -12,15 +12,18 @@ public class ProductsController : ControllerBase
     private readonly MongoDbService _mongoDbService;
     private readonly IngredientMatchingService _matchingService;
     private readonly ProductSearchService _productSearchService;
+    private readonly PopularSearchService _popularSearchService;
 
     public ProductsController(
         MongoDbService mongoDbService, 
         IngredientMatchingService matchingService,
-        ProductSearchService productSearchService)
+        ProductSearchService productSearchService,
+        PopularSearchService popularSearchService)
     {
         _mongoDbService = mongoDbService;
         _matchingService = matchingService;
         _productSearchService = productSearchService;
+        _popularSearchService = popularSearchService;
     }
 
     [HttpGet("search/name")]
@@ -32,6 +35,14 @@ public class ProductsController : ControllerBase
         }
 
         var results = await _productSearchService.SearchProductsByNameFuzzyAsync(query, maxResults);
+
+        // İlk sonucu popüler aramalara kaydet
+        if (results.Count > 0)
+        {
+            var top = results[0];
+            _ = _popularSearchService.IncrementSearchCount(top.Id!, top.Name);
+        }
+
         return Ok(results);
     }
 
@@ -49,6 +60,9 @@ public class ProductsController : ControllerBase
 
         if (product == null)
             return NotFound(new { message = "Product not found with the given barcode." });
+
+        // Popüler aramalara kaydet
+        _ = _popularSearchService.IncrementSearchCount(product.Id!, product.Name);
 
         return Ok(product);
     }

@@ -24,6 +24,9 @@ public class MongoDbService
     public IMongoCollection<User> UsersCollection => 
         _database.GetCollection<User>("users");
 
+    public IMongoCollection<PopularSearch> PopularSearchesCollection => 
+        _database.GetCollection<PopularSearch>("popular_searches");
+
     public async Task CreateIndexesAsync()
     {
         // Drop old problematic index if it exists
