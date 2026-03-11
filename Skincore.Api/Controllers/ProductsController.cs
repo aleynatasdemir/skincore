@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Skincore.Api.Models;
@@ -13,17 +14,40 @@ public class ProductsController : ControllerBase
     private readonly IngredientMatchingService _matchingService;
     private readonly ProductSearchService _productSearchService;
     private readonly PopularSearchService _popularSearchService;
+    private readonly UserProfileService _userProfileService;
 
     public ProductsController(
         MongoDbService mongoDbService, 
         IngredientMatchingService matchingService,
         ProductSearchService productSearchService,
-        PopularSearchService popularSearchService)
+        PopularSearchService popularSearchService,
+        UserProfileService userProfileService)
     {
         _mongoDbService = mongoDbService;
         _matchingService = matchingService;
         _productSearchService = productSearchService;
         _popularSearchService = popularSearchService;
+        _userProfileService = userProfileService;
+    }
+
+    private string? GetUserIdIfAuthenticated()
+    {
+        return User.Identity?.IsAuthenticated == true
+            ? User.FindFirstValue(ClaimTypes.NameIdentifier)
+            : null;
+    }
+
+    private async Task TryRecordSearchHistory(string query, Product product)
+    {
+        var userId = GetUserIdIfAuthenticated();
+        if (userId == null) return;
+
+        await _userProfileService.AddSearchHistory(userId, new AddSearchHistoryRequest
+        {
+            Query = query,
+            ProductId = product.Id,
+            ProductName = product.Name
+        });
     }
 
     [HttpGet("search/name")]
@@ -36,11 +60,12 @@ public class ProductsController : ControllerBase
 
         var results = await _productSearchService.SearchProductsByNameFuzzyAsync(query, maxResults);
 
-        // İlk sonucu popüler aramalara kaydet
+        // İlk sonucu popüler aramalara ve kullanıcı geçmişine kaydet
         if (results.Count > 0)
         {
             var top = results[0];
             _ = _popularSearchService.IncrementSearchCount(top.Id!, top.Name);
+            _ = TryRecordSearchHistory(query, top);
         }
 
         return Ok(results);
@@ -61,8 +86,9 @@ public class ProductsController : ControllerBase
         if (product == null)
             return NotFound(new { message = "Product not found with the given barcode." });
 
-        // Popüler aramalara kaydet
+        // Popüler aramalara ve kullanıcı geçmişine kaydet
         _ = _popularSearchService.IncrementSearchCount(product.Id!, product.Name);
+        _ = TryRecordSearchHistory(barcode, product);
 
         return Ok(product);
     }
@@ -98,6 +124,9 @@ public class ProductsController : ControllerBase
 
         if (product == null)
             return NotFound();
+
+        // Kullanıcı geçmişine kaydet (ürün detayına gidildiğinde)
+        _ = TryRecordSearchHistory(product.Name, product);
 
         var enrichedProduct = new ProductWithEnrichedIngredients(product);
 
