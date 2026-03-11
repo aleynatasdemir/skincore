@@ -38,3 +38,15 @@
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/obj/Debug/net9.0/Skincore.Api.pdb
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/obj/Debug/net9.0/Skincore.Api.genruntimeconfig.cache
 /Users/furkanyilmaz/Desktop/skincore/Skincore.Api/obj/Debug/net9.0/ref/Skincore.Api.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/BCrypt.Net-Next.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Logging.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Tokens.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerUI.dll
