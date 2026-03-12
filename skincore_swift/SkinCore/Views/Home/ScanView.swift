@@ -984,6 +984,8 @@ struct ProductDetailView: View {
     @State private var isLoading = true
     @State private var errorMessage: String? = nil
     @State private var selectedFilter: SafetyFilter = .all
+    @State private var isFavorite: Bool = false
+    @State private var isFavoriteLoading: Bool = false
 
     enum SafetyFilter: String, CaseIterable {
         case all      = "Tümü"
@@ -1277,6 +1279,33 @@ struct ProductDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    guard !isFavoriteLoading, let product = product else { return }
+                    isFavoriteLoading = true
+                    Task {
+                        do {
+                            let req = AddFavoriteRequest(
+                                productId: productId,
+                                productName: product.name ?? "",
+                                productBrand: product.brand,
+                                productImageURL: product.firstImageUrl
+                            )
+                            let response = try await APIClient.shared.toggleFavorite(req)
+                            isFavorite = response.isFavorite
+                        } catch {
+                            print("Toggle favorite error: \(error)")
+                        }
+                        isFavoriteLoading = false
+                    }
+                } label: {
+                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(isFavorite ? Color(hex: "D4728C") : Color(hex: "6B7280"))
+                }
+            }
+        }
         .task {
             do {
                 product = try await APIClient.shared.getProductDetails(id: productId)
@@ -1284,6 +1313,14 @@ struct ProductDetailView: View {
                 errorMessage = error.localizedDescription
             }
             isLoading = false
+
+            // Favori durumunu kontrol et
+            do {
+                let favResult = try await APIClient.shared.checkFavorite(productId: productId)
+                isFavorite = favResult.isFavorite
+            } catch {
+                print("Check favorite error: \(error)")
+            }
         }
     }
 }

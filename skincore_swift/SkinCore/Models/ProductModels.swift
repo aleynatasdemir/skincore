@@ -72,7 +72,7 @@ struct IngredientFunction: Codable {
     }
 }
 
-struct MatchedIngredient: Codable {
+struct MatchedIngredient: Codable, Identifiable {
     let id: String?
     let name: String?
     let nameUpper: String?
@@ -134,6 +134,11 @@ struct PopularProductResponse: Codable, Identifiable {
     let productId: String
     let productName: String?
     let imageUrl: String?
+    // Some endpoints may include image_urls (array) as well — accept both formats
+    let imageUrls: [ProductImageUrl]?
+
+    /// Prefer explicit imageUrl, fall back to first item in imageUrls
+    var resolvedImageUrl: String? { imageUrl ?? imageUrls?.first?.fileUrl }
 
     var id: String { productId }
 
@@ -141,6 +146,7 @@ struct PopularProductResponse: Codable, Identifiable {
         case productId   = "productId"
         case productName = "productName"
         case imageUrl    = "imageUrl"
+        case imageUrls   = "image_urls"
     }
 }
 
@@ -152,6 +158,20 @@ struct SearchHistoryResponse: Codable, Identifiable {
     let category: String?
     let imageUrl: String?
     let searchedAt: String?
+    let imageUrls: [ProductImageUrl]?
+
+    var resolvedImageUrl: String? { imageUrl ?? imageUrls?.first?.fileUrl }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case query
+        case productId
+        case productName
+        case category
+        case imageUrl
+        case searchedAt
+        case imageUrls = "image_urls"
+    }
 }
 
 struct AddSearchHistoryRequest: Codable {
@@ -159,6 +179,54 @@ struct AddSearchHistoryRequest: Codable {
     let productId: String?
     let productName: String?
     let category: String?
+}
+
+// MARK: - Favorite Models
+
+struct FavoriteResponse: Codable, Identifiable {
+    let id: String
+    let productId: String
+    let productName: String
+    let productBrand: String?
+    let productImageURL: String?
+    let addedAt: String?
+    // accept image_urls from backend too
+    let imageUrls: [ProductImageUrl]?
+
+    var resolvedImageUrl: String? { productImageURL ?? imageUrls?.first?.fileUrl }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case productId
+        case productName
+        case productBrand
+        case productImageURL
+        case addedAt
+        case imageUrls = "image_urls"
+    }
+}
+
+struct AddFavoriteRequest: Codable {
+    let productId: String
+    let productName: String
+    let productBrand: String?
+    let productImageURL: String?
+
+    enum CodingKeys: String, CodingKey {
+        case productId
+        case productName
+        case productBrand
+        case productImageURL
+    }
+}
+
+struct ToggleFavoriteResponse: Codable {
+    let isFavorite: Bool
+    let message: String
+}
+
+struct IsFavoriteResponse: Codable {
+    let isFavorite: Bool
 }
 
 // MARK: - Product with Enriched Ingredients Response

@@ -46,11 +46,15 @@ class HomeViewModel: ObservableObject {
         do {
             let results = try await APIClient.shared.searchProductsByName(query: trimmed, maxResults: 10)
             searchResults = results
-            // İlk sonuç varsa history'ye ekle
-            if let first = results.first {
-                await addToHistory(query: trimmed, productId: first.id, productName: first.name, category: first.brand)
-            } else {
-                await addToHistory(query: trimmed, productId: nil, productName: nil, category: nil)
+            // History'ye fire-and-forget — aramayı bloklamasın
+            let first = results.first
+            Task {
+                await addToHistory(
+                    query: trimmed,
+                    productId: first?.id,
+                    productName: first?.name,
+                    category: first?.brand
+                )
             }
         } catch {
             searchResults = []
@@ -86,7 +90,20 @@ class HomeViewModel: ObservableObject {
         let req = AddSearchHistoryRequest(query: query, productId: productId, productName: productName, category: category)
         do {
             _ = try await APIClient.shared.addSearchHistory(req)
-            await fetchHistory()
+            // Sadece local listeye ekle, fetchHistory() çağırma — aramayı yavaşlatır
+            let newItem = SearchHistoryResponse(
+                id: UUID().uuidString,
+                query: query,
+                productId: productId,
+                productName: productName,
+                category: category,
+                imageUrl: nil,
+                searchedAt: nil,
+                imageUrls: nil
+            )
+            searchHistory.insert(newItem, at: 0)
+            // Max 20 tut
+            if searchHistory.count > 20 { searchHistory = Array(searchHistory.prefix(20)) }
         } catch {
             print("Add history error: \(error)")
         }
@@ -116,6 +133,8 @@ class HomeViewModel: ObservableObject {
 struct HomeView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var viewModel = HomeViewModel()
+    @FocusState private var isSearchFocused: Bool
+    @State private var isShowingProfile = false
 
     var body: some View {
         NavigationStack {
@@ -133,8 +152,12 @@ struct HomeView: View {
                                         .foregroundColor(Color(hex: "9CA3AF")))
                                 .foregroundColor(Color(hex: "1A1A2E"))
                                 .autocorrectionDisabled()
+                                .focused($isSearchFocused)
                             if !viewModel.searchText.isEmpty {
-                                Button { viewModel.searchText = "" } label: {
+                                Button {
+                                    viewModel.searchText = ""
+                                    isSearchFocused = false
+                                } label: {
                                     Image(systemName: "xmark.circle.fill")
                                         .foregroundColor(Color(hex: "9CA3AF"))
                                 }
@@ -145,29 +168,12 @@ struct HomeView: View {
                         .cornerRadius(14)
                         .overlay(
                             RoundedRectangle(cornerRadius: 14)
-                                .stroke(viewModel.searchText.isEmpty
-                                        ? Color(hex: "E5E7EB")
-                                        : Color(hex: "D4728C").opacity(0.5),
-                                        lineWidth: 1)
+                                .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
                         )
-
-                        // Filter button
-                        Button { } label: {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(hex: "D4728C"))
-                                .padding(12)
-                                .background(Color.white)
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
-                                )
-                        }
 
                         // Camera button
                         Button { } label: {
-                            Image(systemName: "camera.fill")
+                            Image(systemName: "viewfinder")
                                 .font(.system(size: 18))
                                 .foregroundColor(Color(hex: "D4728C"))
                                 .padding(12)
@@ -346,6 +352,14 @@ struct HomeView: View {
                 .padding(.top, 8)
             }
             .background(Color(hex: "FFF0F0"))
+            .onTapGesture {
+                isSearchFocused = false
+            }
+            .onChange(of: viewModel.searchText) { _, newValue in
+                if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    isSearchFocused = false
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     HStack(spacing: 8) {
@@ -358,16 +372,16 @@ struct HomeView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(role: .destructive) {
-                            authViewModel.logout()
-                        } label: {
-                            Label("Çıkış Yap", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
+                    Button {
+                        isShowingProfile.toggle()
                     } label: {
                         Image(systemName: "person.circle.fill")
                             .font(.system(size: 28))
                             .foregroundColor(Color(hex: "6B7280"))
+                    }
+                    .sheet(isPresented: $isShowingProfile) {
+                        ProfileView()
+                            .environmentObject(authViewModel)
                     }
                 }
             }
@@ -388,7 +402,7 @@ private struct PopularProductCard: View {
                     .fill(Color(hex: "F3F4F6"))
                     .frame(height: 140)
 
-                AsyncImage(url: URL(string: item.imageUrl ?? "")) { phase in
+                AsyncImage(url: URL(string: item.resolvedImageUrl ?? "")) { phase in
                     switch phase {
                     case .success(let img):
                         img.resizable()
@@ -438,7 +452,7 @@ private struct HistoryRow: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color(hex: "F3F4F6"))
                     .frame(width: 48, height: 48)
-                AsyncImage(url: URL(string: item.imageUrl ?? "")) { phase in
+                AsyncImage(url: URL(string: item.resolvedImageUrl ?? "")) { phase in
                     switch phase {
                     case .success(let img):
                         img.resizable()

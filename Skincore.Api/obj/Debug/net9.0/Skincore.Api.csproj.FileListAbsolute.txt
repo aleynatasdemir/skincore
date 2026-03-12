@@ -103,3 +103,4 @@
 /Users/aleyna/Desktop/skincore/skincore/Skincore.Api/obj/Debug/net9.0/Skincore.Api.pdb
 /Users/aleyna/Desktop/skincore/skincore/Skincore.Api/obj/Debug/net9.0/Skincore.Api.genruntimeconfig.cache
 /Users/aleyna/Desktop/skincore/skincore/Skincore.Api/obj/Debug/net9.0/ref/Skincore.Api.dll
+/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/bin/Debug/net9.0/Skincore.Api.staticwebassets.runtime.json

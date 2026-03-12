@@ -71,17 +71,9 @@ public class PopularSearchService
 
     public static string? ExtractFirstImageUrl(Product? product)
     {
-        if (product?.ExtraElements == null) return null;
-        if (!product.ExtraElements.TryGetValue("image_urls", out var imageUrlsObj)) return null;
+        if (product?.ImageUrls == null || product.ImageUrls.Count == 0) return null;
 
-        if (imageUrlsObj is MongoDB.Bson.BsonArray bsonArray && bsonArray.Count > 0)
-        {
-            var first = bsonArray[0];
-            if (first.IsString) return first.AsString;
-            if (first.IsBsonDocument && first.AsBsonDocument.Contains("fileUrl"))
-                return first.AsBsonDocument["fileUrl"].AsString;
-        }
-
-        return null;
+        var first = product.ImageUrls[0];
+        return first.FileUrl;
     }
 }

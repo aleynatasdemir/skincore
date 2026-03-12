@@ -22,6 +22,6 @@ public class ProductWithEnrichedIngredients : Product
         Brand = product.Brand;
         OcrText = product.OcrText;
         ProductIngredients = product.ProductIngredients;
-        ExtraElements = product.ExtraElements;
+        ImageUrls = product.ImageUrls;
     }
 }

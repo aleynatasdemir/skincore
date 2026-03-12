@@ -50,7 +50,7 @@ public class Ingredient
 
     [BsonElement("functions")]
     [JsonPropertyName("functions")]
-    public List<IngredientFunction>? Functions { get; set; }
+    public BsonArray? Functions { get; set; }
 
     [BsonElement("safety_label")]
     [JsonPropertyName("safety_label")]

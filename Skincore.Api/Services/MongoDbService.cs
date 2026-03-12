@@ -24,6 +24,9 @@ public class MongoDbService
     public IMongoCollection<User> UsersCollection => 
         _database.GetCollection<User>("users");
 
+    public IMongoCollection<Routine> RoutinesCollection =>
+        _database.GetCollection<Routine>("routines");
+
     public IMongoCollection<PopularSearch> PopularSearchesCollection => 
         _database.GetCollection<PopularSearch>("popular_searches");
 

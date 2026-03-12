@@ -1,26 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "/Users/aleyna/Desktop/skincore/skincore/Skincore.Api/Skincore.Api.csproj": {}
+    "/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/Skincore.Api.csproj": {}
   },
   "projects": {
-    "/Users/aleyna/Desktop/skincore/skincore/Skincore.Api/Skincore.Api.csproj": {
+    "/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/Skincore.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/aleyna/Desktop/skincore/skincore/Skincore.Api/Skincore.Api.csproj",
+        "projectUniqueName": "/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/Skincore.Api.csproj",
         "projectName": "Skincore.Api",
-        "projectPath": "/Users/aleyna/Desktop/skincore/skincore/Skincore.Api/Skincore.Api.csproj",
-        "packagesPath": "/Users/aleyna/.nuget/packages/",
-        "outputPath": "/Users/aleyna/Desktop/skincore/skincore/Skincore.Api/obj/",
+        "projectPath": "/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/Skincore.Api.csproj",
+        "packagesPath": "/Users/furkanyilmaz/.nuget/packages/",
+        "outputPath": "/Users/furkanyilmaz/Desktop/skincore/Skincore.Api/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/aleyna/.nuget/NuGet/NuGet.Config"
+          "/Users/furkanyilmaz/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "/opt/homebrew/Cellar/dotnet@9/9.0.115/libexec/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -39,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -93,7 +92,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet@9/9.0.115/libexec/sdk/9.0.115/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

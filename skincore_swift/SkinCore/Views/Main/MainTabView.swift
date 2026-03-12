@@ -9,20 +9,20 @@ struct MainTabView: View {
                 HomeView()
             }
             
-            Tab("Discover", systemImage: "safari.fill", value: 1) {
-                DiscoverView()
+            Tab("Ingredients", systemImage: "leaf.fill", value: 1) {
+                IngredientAnalysisView()
             }
             
             Tab("Scan", systemImage: "viewfinder", value: 2) {
                 ScanView()
             }
             
-            Tab("Wishlist", systemImage: "heart.fill", value: 3) {
-                WishlistView()
+            Tab("Favorites", systemImage: "heart.fill", value: 3) {
+                FavoritesView()
             }
             
-            Tab("History", systemImage: "clock.arrow.counterclockwise", value: 4) {
-                HistoryView()
+            Tab("Social", systemImage: "person.2.fill", value: 4) {
+                SocialFeedView()
             }
         }
         .tint(Color(hex: "D4728C"))

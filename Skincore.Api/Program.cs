@@ -23,6 +23,7 @@ builder.Services.AddSingleton<EmailService>();
 builder.Services.AddSingleton<AuthService>();
 builder.Services.AddSingleton<UserProfileService>();
 builder.Services.AddSingleton<PopularSearchService>();
+builder.Services.AddSingleton<SocialRoutinesService>();
 
 builder.Services.AddControllers();
 
@@ -95,7 +96,6 @@ using (var scope = app.Services.CreateScope())
     var productSearchService = scope.ServiceProvider.GetRequiredService<ProductSearchService>();
     productSearchService.InitializeAsync().GetAwaiter().GetResult();
 
-    // Create MongoDB indexes for users collection
     var mongoDbService = scope.ServiceProvider.GetRequiredService<MongoDbService>();
     mongoDbService.CreateIndexesAsync().GetAwaiter().GetResult();
 }
@@ -103,6 +103,7 @@ using (var scope = app.Services.CreateScope())
 // ── HTTP Pipeline ──
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SkinCore API v1"));
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
@@ -110,4 +111,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
