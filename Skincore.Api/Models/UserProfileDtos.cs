@@ -5,6 +5,13 @@ namespace Skincore.Api.Models;
 public class UpdateProfileRequest
 {
     public string? DisplayName { get; set; }
+    public string? SkinType { get; set; }
+    public string? Username { get; set; }
+}
+
+public class CheckUsernameRequest
+{
+    public string Username { get; set; } = null!;
 }
 
 // ── Favorite Request DTOs ──
@@ -34,6 +41,8 @@ public class UserProfileResponse
     public string Id { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? FullName { get; set; }
+    public string? SkinType { get; set; }
+    public string? Username { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

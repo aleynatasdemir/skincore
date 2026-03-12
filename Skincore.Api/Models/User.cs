@@ -18,6 +18,12 @@ public class User
     [BsonElement("fullName")]
     public string? FullName { get; set; }
 
+    [BsonElement("username")]
+    public string? Username { get; set; }
+
+    [BsonElement("skinType")]
+    public string? SkinType { get; set; }
+
     // Apple Sign In
     [BsonElement("appleUserId")]
     public string? AppleUserId { get; set; }

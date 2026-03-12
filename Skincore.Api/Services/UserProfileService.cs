@@ -31,6 +31,35 @@ public class UserProfileService
         if (request.DisplayName != null)
             updateDefs.Add(Builders<User>.Update.Set(u => u.FullName, request.DisplayName));
 
+        if (request.SkinType != null)
+        {
+            var validSkinTypes = new[] { "Normal", "Kuru", "Yağlı", "Karma", "Hassas", "Akneye Meyilli", "Olgun" };
+            if (!validSkinTypes.Contains(request.SkinType))
+            {
+                // Geçersiz cilt tipi
+                return false;
+            }
+            updateDefs.Add(Builders<User>.Update.Set(u => u.SkinType, request.SkinType));
+        }
+
+        if (request.Username != null)
+        {
+            var sanitizedUsername = request.Username.Trim();
+            // Check if username is already taken by someone else (case-insensitive)
+            var existingUser = await _users.Find(u => 
+                u.Id != userId && 
+                u.Username != null && 
+                u.Username.ToLower() == sanitizedUsername.ToLower()
+            ).FirstOrDefaultAsync();
+
+            if (existingUser != null)
+            {
+                return false; // Username is already taken
+            }
+            
+            updateDefs.Add(Builders<User>.Update.Set(u => u.Username, sanitizedUsername));
+        }
+
         if (updateDefs.Count == 0)
             return false;
 
@@ -39,6 +68,17 @@ public class UserProfileService
         var combinedUpdate = Builders<User>.Update.Combine(updateDefs);
         var result = await _users.UpdateOneAsync(u => u.Id == userId, combinedUpdate);
         return result.ModifiedCount > 0;
+    }
+
+    public async Task<bool> IsUsernameAvailable(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username)) return false;
+        
+        var sanitizedUsername = username.Trim().ToLower();
+        var count = await _users.CountDocumentsAsync(u => 
+            u.Username != null && u.Username.ToLower() == sanitizedUsername);
+            
+        return count == 0;
     }
 
     // ==================== FAVORİLER ====================
@@ -234,6 +274,8 @@ public class UserProfileService
         Id = user.Id,
         Email = user.Email,
         FullName = user.FullName,
+        SkinType = user.SkinType,
+        Username = user.Username,
         CreatedAt = user.CreatedAt,
         UpdatedAt = user.UpdatedAt
     };

@@ -40,7 +40,7 @@ public class UserProfileController : ControllerBase
     }
 
     /// <summary>
-    /// PUT /api/userprofile - Profili güncelle (displayName, skinType, skinConcerns, allergies)
+    /// PUT /api/userprofile - Profili güncelle (displayName, skinType, username, vb.)
     /// </summary>
     [HttpPut]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
@@ -49,9 +49,23 @@ public class UserProfileController : ControllerBase
         var result = await _profileService.UpdateProfile(userId, request);
 
         if (!result)
-            return BadRequest(new MessageResponse { Message = "Profil güncellenemedi. Geçersiz cilt tipi olabilir." });
+            return BadRequest(new MessageResponse { Message = "Profil güncellenemedi. Cilt tipi geçersiz veya kullanıcı adı daha önceden alınmış olabilir." });
 
         return Ok(new MessageResponse { Message = "Profil güncellendi." });
+    }
+
+    /// <summary>
+    /// POST /api/userprofile/check-username - Kullanıcı adı uygunluğunu kontrol et
+    /// </summary>
+    [HttpPost("check-username")]
+    public async Task<IActionResult> CheckUsername([FromBody] CheckUsernameRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username))
+            return BadRequest(new MessageResponse { Message = "Kullanıcı adı boş olamaz." });
+
+        var isAvailable = await _profileService.IsUsernameAvailable(request.Username);
+
+        return Ok(new { isAvailable, message = isAvailable ? "Kullanıcı adı kullanılabilir." : "Bu kullanıcı adı zaten alınmış." });
     }
 
     // ==================== FAVORİLER ====================
