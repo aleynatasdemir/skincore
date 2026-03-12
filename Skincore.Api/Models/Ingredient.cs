@@ -1,8 +1,48 @@
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson.Serialization.Serializers;
 using System.Text.Json.Serialization;
 
 namespace Skincore.Api.Models;
+
+public class FunctionListBsonSerializer : SerializerBase<List<string>?>
+{
+    public override List<string>? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+    {
+        var bsonType = context.Reader.GetCurrentBsonType();
+        if (bsonType == BsonType.Null) { context.Reader.ReadNull(); return null; }
+        if (bsonType != BsonType.Array) { context.Reader.SkipValue(); return null; }
+
+        var list = new List<string>();
+        context.Reader.ReadStartArray();
+        while (context.Reader.ReadBsonType() != BsonType.EndOfDocument)
+        {
+            var currentType = context.Reader.CurrentBsonType;
+            if (currentType == BsonType.String)
+                list.Add(context.Reader.ReadString());
+            else if (currentType == BsonType.Document)
+            {
+                string? name = null;
+                context.Reader.ReadStartDocument();
+                while (context.Reader.ReadBsonType() != BsonType.EndOfDocument)
+                {
+                    var fieldName = context.Reader.ReadName();
+                    if (fieldName == "name" && context.Reader.CurrentBsonType == BsonType.String)
+                        name = context.Reader.ReadString();
+                    else
+                        context.Reader.SkipValue();
+                }
+                context.Reader.ReadEndDocument();
+                if (name != null) list.Add(name);
+            }
+            else context.Reader.SkipValue();
+        }
+        context.Reader.ReadEndArray();
+        return list;
+    }
+}
 
 [BsonIgnoreExtraElements]
 public class IngredientFunction
@@ -17,7 +57,7 @@ public class IngredientFunction
 
     [BsonElement("is_dangerous")]
     [JsonPropertyName("is_dangerous")]
-    public bool IsDangerous { get; set; }
+    public object? IsDangerous { get; set; } // Changed to object? to handle string/bool mix
 }
 
 [BsonIgnoreExtraElements]
@@ -66,7 +106,8 @@ public class Ingredient
 
     [BsonElement("functions")]
     [JsonPropertyName("functions")]
-    public BsonArray? Functions { get; set; }
+    [BsonSerializer(typeof(FunctionListBsonSerializer))]
+    public List<string>? Functions { get; set; }
 
     [BsonElement("metrics")]
     [JsonPropertyName("metrics")]
@@ -75,8 +116,4 @@ public class Ingredient
     [BsonElement("skin_compatibility")]
     [JsonPropertyName("skin_compatibility")]
     public object? SkinCompatibility { get; set; }
-
-    [BsonExtraElements]
-    [JsonExtensionData]
-    public IDictionary<string, object>? ExtraElements { get; set; }
 }
