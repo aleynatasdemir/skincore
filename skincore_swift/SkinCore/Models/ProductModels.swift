@@ -112,6 +112,13 @@ struct MatchedIngredient: Codable, Identifiable {
         }
     }
 
+    var ewgScore: String? { metrics?.ewgScore }
+    var safetyLabel: String? { metrics?.safetyLabel }
+    var safetyLevel: Int? { metrics?.safetyLevel }
+    var limitedEu: Bool? { nil }
+    var limitedUs: Bool? { nil }
+    var safetymakeupUrl: String? { nil }
+
     enum CodingKeys: String, CodingKey {
         case id
         case name

@@ -1398,7 +1398,7 @@ struct IngredientDetailCard: View {
                         .lineLimit(2)
 
                     if let funcs = item.matchedIngredient?.functions, !funcs.isEmpty {
-                        Text(funcs.prefix(3).compactMap { $0.name }.joined(separator: " · "))
+                        Text(funcs.prefix(3).joined(separator: " · "))
                             .font(.caption)
                             .foregroundColor(Color(hex: "94A3B8"))
                             .lineLimit(1)

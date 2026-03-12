@@ -193,25 +193,21 @@ struct HomeView: View {
                     } else {
 
                         // ── Scan Your Shelf Card ──
-                        ZStack(alignment: .bottomLeading) {
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: "1A1A2E"), Color(hex: "2D2B55")],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
+                        ZStack(alignment: .leading) {
+                            // Custom 4K Background Image
+                            Image("scan_shelf_background")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
                                 .frame(height: 180)
-
-                            HStack {
-                                Spacer()
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.white.opacity(0.08))
-                                    .padding(.trailing, 30)
-                                    .padding(.bottom, 20)
-                            }
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(LinearGradient(
+                                            colors: [Color.black.opacity(0.6), Color.clear],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        ))
+                                )
 
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("NEW FEATURE")
@@ -228,7 +224,7 @@ struct HomeView: View {
 
                                 Text("Instantly analyze all ingredients and\ncheck safety ratings.")
                                     .font(.system(size: 13))
-                                    .foregroundColor(.white.opacity(0.7))
+                                    .foregroundColor(.white.opacity(0.9))
                                     .lineSpacing(2)
 
                                 Button {
@@ -252,31 +248,6 @@ struct HomeView: View {
                         }
                         .padding(.horizontal)
 
-                        // ── Categories ──
-                        VStack(alignment: .leading, spacing: 14) {
-                            HStack {
-                                Text("Categories")
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundColor(Color(hex: "1A1A2E"))
-                                Spacer()
-                                Button("View All") { }
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(Color(hex: "D4728C"))
-                            }
-                            .padding(.horizontal)
-
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 16) {
-                                    CategoryItem(icon: "drop.fill", name: "Skincare")
-                                    CategoryItem(icon: "scissors", name: "Haircare")
-                                    CategoryItem(icon: "paintbrush.fill", name: "Makeup")
-                                    CategoryItem(icon: "sun.max.fill", name: "Sunscreen")
-                                    CategoryItem(icon: "leaf.fill", name: "Natural")
-                                    CategoryItem(icon: "sparkles", name: "Serum")
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
 
                         // ── Most Searched ──
                         VStack(alignment: .leading, spacing: 14) {
@@ -363,8 +334,8 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     HStack(spacing: 8) {
-                        Image(systemName: "leaf.circle.fill")
-                            .font(.system(size: 28))
+                        Image(systemName: "leaf.fill")
+                            .font(.system(size: 22))
                             .foregroundColor(Color(hex: "D4728C"))
                         Text("SkinCore")
                             .font(.system(size: 20, weight: .bold))
@@ -375,8 +346,8 @@ struct HomeView: View {
                     Button {
                         isShowingProfile.toggle()
                     } label: {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 28))
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 22))
                             .foregroundColor(Color(hex: "6B7280"))
                     }
                     .sheet(isPresented: $isShowingProfile) {
@@ -503,29 +474,6 @@ private struct HistoryRow: View {
 
 // MARK: - Category Item
 
-struct CategoryItem: View {
-    let icon: String
-    let name: String
-
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: "FFF0F0"))
-                    .frame(width: 56, height: 56)
-                    .overlay(
-                        Circle().stroke(Color(hex: "F3D5DC"), lineWidth: 1)
-                    )
-                Image(systemName: icon)
-                    .font(.system(size: 22))
-                    .foregroundColor(Color(hex: "D4728C"))
-            }
-            Text(name)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(Color(hex: "6B7280"))
-        }
-    }
-}
 
 // MARK: - Product Card (legacy, kept for reference)
 

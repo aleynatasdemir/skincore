@@ -376,10 +376,10 @@ private struct IngredientCard: View {
     }
 
     private var functionText: String? {
-        guard let funcs = ingredient.functions, let first = funcs.first, let name = first.name else {
+        guard let funcs = ingredient.functions, let first = funcs.first else {
             return nil
         }
-        return "FUNCTION: \(name.uppercased())"
+        return "FUNCTION: \(first.uppercased())"
     }
 
     var body: some View {
