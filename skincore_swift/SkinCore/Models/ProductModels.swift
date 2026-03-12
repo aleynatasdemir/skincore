@@ -72,18 +72,27 @@ struct IngredientFunction: Codable {
     }
 }
 
+struct IngredientMetrics: Codable {
+    let safetyLevel: Int?
+    let safetyLabel: String?
+    let ewgScore: String?
+    let comedogenicRating: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case safetyLevel = "safety_level"
+        case safetyLabel = "safety_label"
+        case ewgScore = "ewg_score"
+        case comedogenicRating = "comedogenic_rating"
+    }
+}
+
 struct MatchedIngredient: Codable, Identifiable {
     let id: String?
     let name: String?
     let nameUpper: String?
     let description: String?
-    let ewgScore: String?
-    let functions: [IngredientFunction]?
-    let safetyLabel: String?
-    let safetyLevel: Int?
-    let limitedEu: Bool?
-    let limitedUs: Bool?
-    let safetymakeupUrl: String?
+    let functions: [String]? // Updated to [String] to handle flexible data
+    let metrics: IngredientMetrics?
 
     /// Düzgün formatlı isim: önce name_upper, sonra name → capitalized
     var displayName: String {
@@ -93,9 +102,9 @@ struct MatchedIngredient: Codable, Identifiable {
 
     /// safety_level 0 veya nil ise safety_label'dan türet
     var resolvedSafetyLevel: Int {
-        let lvl = safetyLevel ?? 0
+        let lvl = metrics?.safetyLevel ?? 0
         if lvl > 0 { return lvl }
-        switch safetyLabel?.lowercased() {
+        switch metrics?.safetyLabel?.lowercased() {
         case "güvenli", "safe", "tamamen güvenli":          return 1
         case "orta", "moderate", "dikkatli", "caution":    return 2
         case "kaçın", "avoid", "tehlikeli", "dangerous":   return 3
@@ -108,13 +117,8 @@ struct MatchedIngredient: Codable, Identifiable {
         case name
         case nameUpper       = "name_upper"
         case description
-        case ewgScore        = "ewg_score"
         case functions
-        case safetyLabel     = "safety_label"
-        case safetyLevel     = "safety_level"
-        case limitedEu       = "limited_eu"
-        case limitedUs       = "limited_us"
-        case safetymakeupUrl = "safetymakeup_url"
+        case metrics
     }
 }
 

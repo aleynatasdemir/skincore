@@ -21,6 +21,26 @@ public class IngredientFunction
 }
 
 [BsonIgnoreExtraElements]
+public class IngredientMetrics
+{
+    [BsonElement("safety_level")]
+    [JsonPropertyName("safety_level")]
+    public int? SafetyLevel { get; set; }
+
+    [BsonElement("safety_label")]
+    [JsonPropertyName("safety_label")]
+    public string? SafetyLabel { get; set; }
+
+    [BsonElement("ewg_score")]
+    [JsonPropertyName("ewg_score")]
+    public string? EwgScore { get; set; }
+
+    [BsonElement("comedogenic_rating")]
+    [JsonPropertyName("comedogenic_rating")]
+    public object? ComedogenicRating { get; set; }
+}
+
+[BsonIgnoreExtraElements]
 public class Ingredient
 {
     [BsonId]
@@ -28,7 +48,7 @@ public class Ingredient
     [JsonPropertyName("id")]
     public string? Id { get; set; }
 
-    [BsonElement("name")]
+    [BsonElement("inci_name")]
     [JsonPropertyName("name")]
     public string Name { get; set; } = null!;
 
@@ -44,33 +64,17 @@ public class Ingredient
     [JsonPropertyName("description")]
     public string? Description { get; set; }
 
-    [BsonElement("ewg_score")]
-    [JsonPropertyName("ewg_score")]
-    public string? EwgScore { get; set; }
-
     [BsonElement("functions")]
     [JsonPropertyName("functions")]
     public BsonArray? Functions { get; set; }
 
-    [BsonElement("safety_label")]
-    [JsonPropertyName("safety_label")]
-    public string? SafetyLabel { get; set; }
+    [BsonElement("metrics")]
+    [JsonPropertyName("metrics")]
+    public IngredientMetrics? Metrics { get; set; }
 
-    [BsonElement("safety_level")]
-    [JsonPropertyName("safety_level")]
-    public int? SafetyLevel { get; set; }
-
-    [BsonElement("limited_eu")]
-    [JsonPropertyName("limited_eu")]
-    public bool LimitedEu { get; set; }
-
-    [BsonElement("limited_us")]
-    [JsonPropertyName("limited_us")]
-    public bool LimitedUs { get; set; }
-
-    [BsonElement("comedogenic")]
-    [JsonPropertyName("comedogenic")]
-    public object? Comedogenic { get; set; }
+    [BsonElement("skin_compatibility")]
+    [JsonPropertyName("skin_compatibility")]
+    public object? SkinCompatibility { get; set; }
 
     [BsonExtraElements]
     [JsonExtensionData]
