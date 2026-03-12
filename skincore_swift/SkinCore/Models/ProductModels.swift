@@ -128,6 +128,41 @@ struct IngredientMatchResult: Codable, Identifiable {
 
 // MARK: - Product with Enriched Ingredients Response
 
+// MARK: - Popular & Search History Models
+
+struct PopularProductResponse: Codable, Identifiable {
+    let productId: String
+    let productName: String?
+    let imageUrl: String?
+
+    var id: String { productId }
+
+    enum CodingKeys: String, CodingKey {
+        case productId   = "productId"
+        case productName = "productName"
+        case imageUrl    = "imageUrl"
+    }
+}
+
+struct SearchHistoryResponse: Codable, Identifiable {
+    let id: String
+    let query: String
+    let productId: String?
+    let productName: String?
+    let category: String?
+    let imageUrl: String?
+    let searchedAt: String?
+}
+
+struct AddSearchHistoryRequest: Codable {
+    let query: String
+    let productId: String?
+    let productName: String?
+    let category: String?
+}
+
+// MARK: - Product with Enriched Ingredients Response
+
 struct ProductWithEnrichedIngredients: Codable {
     let id: String?
     let name: String?

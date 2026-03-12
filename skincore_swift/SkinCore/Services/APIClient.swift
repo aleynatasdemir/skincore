@@ -106,6 +106,30 @@ class APIClient {
     func getProductDetails(id: String) async throws -> ProductWithEnrichedIngredients {
         return try await request(endpoint: "/products/\(id)")
     }
+
+    // MARK: - Popular Endpoints
+
+    func getPopularProducts(limit: Int = 10) async throws -> [PopularProductResponse] {
+        return try await request(endpoint: "/popular?limit=\(limit)")
+    }
+
+    // MARK: - Search History Endpoints
+
+    func getSearchHistory(limit: Int = 20) async throws -> [SearchHistoryResponse] {
+        return try await request(endpoint: "/userprofile/search-history?limit=\(limit)", authenticated: true)
+    }
+
+    func addSearchHistory(_ req: AddSearchHistoryRequest) async throws -> MessageResponse {
+        return try await request(endpoint: "/userprofile/search-history", method: "POST", body: req, authenticated: true)
+    }
+
+    func deleteSearchHistoryItem(itemId: String) async throws -> MessageResponse {
+        return try await request(endpoint: "/userprofile/search-history/\(itemId)", method: "DELETE", authenticated: true)
+    }
+
+    func clearSearchHistory() async throws -> MessageResponse {
+        return try await request(endpoint: "/userprofile/search-history", method: "DELETE", authenticated: true)
+    }
 }
 
 // MARK: - Errors
