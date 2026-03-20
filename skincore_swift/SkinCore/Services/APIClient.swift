@@ -7,7 +7,7 @@ class APIClient {
     #if targetEnvironment(simulator)
     private let baseURL = "http://localhost:5192/api"
     #else
-    private let baseURL = "http://192.168.0.15:5192/api"
+    private let baseURL = "http://192.168.1.142:5192/api"
     #endif
     
     private init() {}

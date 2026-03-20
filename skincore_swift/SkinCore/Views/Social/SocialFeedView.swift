@@ -156,16 +156,23 @@ private struct RoutineSelection: Identifiable {
 
 private struct SearchBar: View {
     @Binding var text: String
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(Color(hex: "D4728C"))
             TextField("Rutin ya da kullanıcı ara", text: $text)
+                .focused($isFocused)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 .font(.system(size: 15))
                 .foregroundColor(Color(hex: "1A1A2E"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isFocused = true
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 14)
@@ -175,6 +182,7 @@ private struct SearchBar: View {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(Color(hex: "F3D5DC"), lineWidth: 1)
         )
+        .zIndex(10)
     }
 }
 
