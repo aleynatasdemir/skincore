@@ -1,0 +1,25 @@
+=========================================
+GÖREV DAĞILIMI VE ÇALIŞMA ÖZETİ: 1. KİŞİ
+=========================================
+
+-----------------------------------------
+🎯 1. Üstlenilen Görevler (Eşit Bölüşüm)
+-----------------------------------------
+- **1. Hafta — Veri Toplama**
+  - Kozmetik ürünlerin genel verilerinin ve görsellerinin toplanması.
+  - Farklı kaynaklardan (Dermokozmetika, EWG vb.) gelen verilerin birleştirilerek "Ürün Dataseti"nin oluşturulması.
+- **5. Veritabanı Tasarımı**
+  - MongoDB veritabanı altyapısının kurulması ve koleksiyonların (Kategori bazlı: makyaj, cilt bakımı vb.) yönetilmesi.
+  - Veritabanı veri temizleme ve normalize etme işlemleri.
+
+-----------------------------------------
+🛠️ 2. Şimdiye Kadar Neler Yapıldı?
+-----------------------------------------
+1. **Veri Çekme (Scraping/Crawling):**
+   - Dermokozmetika ve EWG gibi platformlardan binlerce ürünün adı, markası, içerik metni ve görsel linkleri toplandı.
+2. **Görsel Yönetimi & İndirme:**
+   - `download_images.py` gibi betiklerle ürün görselleri barkod veya ID'lerine göre yerel diske indirildi. API'nin bu görselleri sunması sağlandı.
+3. **Fuzzy Matching (Bulanık Eşleştirme):**
+   - Farklı kaynaklardan gelen aynı ürünü tekilleştirmek için barkod ve isim tabanlı bulanık eşleştirme algoritmaları geliştirildi.
+4. **OCR Altyapısı (Görselden Metne):**
+   - `extract_text.py` üzerinden Google Cloud Vision API ile entegrasyon sağlandı. Ürün arkası içerik listelerinin fotoğraflardan okunabilir hale getirilmesi için temel atıldı.

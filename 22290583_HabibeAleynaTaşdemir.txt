@@ -1,0 +1,28 @@
+=========================================
+GÖREV DAĞILIMI VE ÇALIŞMA ÖZETİ: 2. KİŞİ
+=========================================
+
+-----------------------------------------
+🎯 1. Üstlenilen Görevler (Eşit Bölüşüm)
+-----------------------------------------
+- **İçerik (Ingredient) Veri Kaynakları**
+  - Uluslararası INCI standartlarının ve EWG içerik puanlama sistemlerinin araştırılması.
+- **8. Ingredient Analysis Engine (Analiz Motoru)**
+  - Analiz sisteminin amacı ve Ingredient veri yapısının oluşturulması.
+  - **AI Destekli İçerik Temizleme (`ingredients_data_cleaner`):** Düzensiz içerik metinlerinin yapay zeka ile parse edilip zenginleştirilmesi.
+
+-----------------------------------------
+🛠️ 2. Şimdiye Kadar Neler Yapıldı?
+-----------------------------------------
+1. **Ingredient Veri Çekimi ve Ayrıştırma:**
+   - Ürün içerik listeleri (String) tekil kelimelere bölünerek (split) analiz edilebilir forma getirildi.
+2. **AI Tabanlı İçerik Temizleme (`ingredients_data_cleaner`):**
+   - `clean_ingredients.py` betiği ile Gemini AI API entegrasyonu tamamlandı.
+   - Bozuk ve düzensiz içerik girdileri Yapay Zeka (System Instruction) ile beslenerek şu forma dönüştürüldü:
+     - **INCI Name:** Uluslararası standart adı ile tekilleştirme.
+     - **Açıklama:** Son kullanıcıya yönelik 1-3 cümlelik akıcı Türkçe açıklama.
+     - **Fonksiyonlar:** Emülgatör, nemlendirici, koruyucu vb. etiketleme.
+     - **Cilt Uyumluluğu:** ["Normal", "Kuru", "Yagli", "Karma", "Hassas", "Akneye_Meyilli", "Olgun"] arasından `good_for` ve `bad_for` dizilerinin tespiti.
+     - **Metrikler:** Komedojenik seviye (0-5), EWG skoru ve Güvenlik Seviyesi (0-4).
+3. **Backend Analiz Altyapısı (C#):**
+   - `User.cs` ve `UserProfile` modelleri oluşturularak kullanıcıların cilt tiplerini seçebileceği ve bu verilerin analiz motoruna beslenebileceği API uçları hazırlandı.
