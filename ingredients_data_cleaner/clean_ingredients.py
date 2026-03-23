@@ -17,16 +17,13 @@ MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", 20))
 DELAY_BETWEEN_BATCHES = int(os.getenv("DELAY_BETWEEN_BATCHES", 3))
 
-if not GEMINI_API_KEY or GEMINI_API_KEY == "buraya_api_keyinizi_yapistirin":
-    raise ValueError("Lütfen .env dosyasına geçerli bir GEMINI_API_KEY girin.")
-
 # Gemini İstemcisi
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 # MongoDB Bağlantısı
 mongo_client = MongoClient(MONGO_URI)
 db = mongo_client['kozmetik']
-# Burayı kendi koleksiyon isminize göre ayarlayabilirsiniz
+
 source_collection = db['ingredients']
 target_collection = db['ingredients_cleaned'] # Temizlenmiş veriler için yeni koleksiyon
 

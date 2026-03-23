@@ -1,9 +1,7 @@
-=========================================
-GÖREV DAĞILIMI VE ÇALIŞMA ÖZETİ: 1. KİŞİ
-=========================================
+
 
 -----------------------------------------
-🎯 1. Üstlenilen Görevler (Eşit Bölüşüm)
+🎯 1. Üstlenilen Görevler 
 -----------------------------------------
 - **1. Hafta — Veri Toplama**
   - Kozmetik ürünlerin genel verilerinin ve görsellerinin toplanması.

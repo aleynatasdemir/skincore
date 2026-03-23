@@ -1,9 +1,6 @@
-=========================================
-GÖREV DAĞILIMI VE ÇALIŞMA ÖZETİ: 2. KİŞİ
-=========================================
-
+1. Hafta Video Linki: https://drive.google.com/drive/folders/1qbefQPeL55cTfJeT5uPsiIo-x3iHWXvc?usp=drive_link
 -----------------------------------------
-🎯 1. Üstlenilen Görevler (Eşit Bölüşüm)
+🎯 1. Üstlenilen Görevler 
 -----------------------------------------
 - **İçerik (Ingredient) Veri Kaynakları**
   - Uluslararası INCI standartlarının ve EWG içerik puanlama sistemlerinin araştırılması.
