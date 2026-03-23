@@ -21,8 +21,8 @@ struct MainTabView: View {
                 FavoritesView()
             }
             
-            Tab("Social", systemImage: "person.2.fill", value: 4) {
-                SocialFeedView()
+            Tab("History", systemImage: "clock.fill", value: 4) {
+                SearchHistoryView()
             }
         }
         .tint(Color(hex: "D4728C"))

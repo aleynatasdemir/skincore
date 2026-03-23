@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using Skincore.Api.Models;
 using Skincore.Api.Services;
@@ -39,25 +38,24 @@ public class IngredientsController : ControllerBase
 
         if (minSafety.HasValue)
         {
-            filters.Add(builder.Gte("metrics.safety_level", minSafety.Value));
+            filters.Add(builder.Gte(i => i.SafetyLevel, minSafety.Value));
         }
 
         if (maxSafety.HasValue)
         {
-            filters.Add(builder.Lte("metrics.safety_level", maxSafety.Value));
+            filters.Add(builder.Lte(i => i.SafetyLevel, maxSafety.Value));
         }
 
-        // Comedogenic filtresi: eğer true ise, comedogenic_rating alanı null olmayanları getir
+        // Comedogenic filtresi: eğer true ise, comedogenic alanı null olmayanları getir
         if (comedogenic.HasValue && comedogenic.Value)
         {
-            filters.Add(builder.Ne("metrics.comedogenic_rating", BsonNull.Value));
+            filters.Add(builder.Ne("comedogenic", BsonNull.Value));
         }
 
         var filter = filters.Count > 0 ? builder.And(filters) : builder.Empty;
 
         var ingredients = await _mongoDbService.IngredientsCollection
             .Find(filter)
-            .Project<Ingredient>(Builders<Ingredient>.Projection.Exclude("extraElements")) // Optional but cleaner
             .Skip((page - 1) * pageSize)
             .Limit(pageSize)
             .ToListAsync();

@@ -45,10 +45,6 @@ struct ProfileView: View {
 
                     // menu
                     VStack(spacing: 0) {
-                        NavigationLink(destination: MyRoutinesView()) {
-                            ProfileRow(icon: "sparkles", title: "Rutinlerim")
-                        }
-                        Divider().padding(.leading, 64)
                         ProfileRow(icon: "person.fill", title: "Account Preferences")
                         Divider().padding(.leading, 64)
                         ProfileRow(icon: "bell.fill", title: "Reminders & Alerts")

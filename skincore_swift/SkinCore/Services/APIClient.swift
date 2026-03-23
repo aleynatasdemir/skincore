@@ -7,31 +7,13 @@ class APIClient {
     #if targetEnvironment(simulator)
     private let baseURL = "http://localhost:5192/api"
     #else
-    private let baseURL = "http://192.168.1.142:5192/api"
+    private let baseURL = "http://192.168.0.15:5192/api"
     #endif
     
     private init() {}
     
     // MARK: - Generic Request
-    func createRequest(endpoint: String, method: String = "GET", body: (any Encodable)? = nil, authenticated: Bool = false) throws -> URLRequest {
-        guard let url = URL(string: baseURL + endpoint) else { throw APIClientError.invalidURL }
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        
-        if let body = body {
-            request.httpBody = try JSONEncoder().encode(body)
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        }
-        
-        if authenticated {
-            if let token = KeychainService.shared.getAccessToken() {
-                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            }
-        }
-        
-        return request
-    }
-
+    
     func request<T: Codable>(
         endpoint: String,
         method: String = "GET",
@@ -189,60 +171,6 @@ class APIClient {
             endpoint += "&comedogenic=true"
         }
         return try await request(endpoint: endpoint)
-    }
-
-    // MARK: - Routines Endpoints
-
-    func getRoutineFeed(limit: Int = 20, search: String? = nil) async throws -> [RoutineFeedItem] {
-        var endpoint = "/routines?limit=\(limit)"
-        if let search = search, !search.isEmpty {
-            let encoded = search.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? search
-            endpoint += "&search=\(encoded)"
-        }
-        return try await request(endpoint: endpoint, authenticated: true)
-    }
-
-    func getMyRoutines() async throws -> [RoutineFeedItem] {
-        return try await request(endpoint: "/routines/my", authenticated: true)
-    }
-
-    func uploadImage(data: Data) async throws -> String {
-        let boundary = "Boundary-\(UUID().uuidString)"
-        var request = try createRequest(endpoint: "/routines/upload-image", method: "POST", authenticated: true)
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        var body = Data()
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"photo.jpg\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
-        body.append(data)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-        request.httpBody = body
-
-        let (responseData, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else { throw APIClientError.invalidResponse }
-        if !(200...299).contains(httpResponse.statusCode) { throw APIClientError.httpError(httpResponse.statusCode) }
-
-        struct UploadResponse: Codable { let imageUrl: String }
-        let decoded = try JSONDecoder().decode(UploadResponse.self, from: responseData)
-        return decoded.imageUrl
-    }
-
-    func getRoutineDetail(id: String) async throws -> RoutineDetail {
-        return try await request(endpoint: "/routines/\(id)", authenticated: true)
-    }
-
-    func createRoutine(_ req: CreateRoutineRequest) async throws -> RoutineDetail {
-        return try await request(endpoint: "/routines", method: "POST", body: req, authenticated: true)
-    }
-
-    func addRoutineComment(routineId: String, text: String) async throws -> RoutineCommentResponse {
-        let body = AddRoutineCommentRequest(text: text)
-        return try await request(endpoint: "/routines/\(routineId)/comments", method: "POST", body: body, authenticated: true)
-    }
-
-    func toggleRoutineLike(routineId: String) async throws -> ToggleLikeResponse {
-        return try await request(endpoint: "/routines/\(routineId)/likes/toggle", method: "POST", authenticated: true)
     }
 }
 
