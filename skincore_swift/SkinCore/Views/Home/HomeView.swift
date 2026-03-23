@@ -5,6 +5,7 @@ import Combine
 
 @MainActor
 class HomeViewModel: ObservableObject {
+
     @Published var searchText: String = ""
     @Published var searchResults: [Product] = []
     @Published var isSearching: Bool = false
@@ -18,6 +19,7 @@ class HomeViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     init() {
+
         $searchText
             .debounce(for: .milliseconds(350), scheduler: RunLoop.main)
             .removeDuplicates()
@@ -33,21 +35,31 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Search
+    // MARK: SEARCH
 
     func search(query: String) async {
+
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
         guard trimmed.count >= 2 else {
             searchResults = []
             isSearching = false
             return
         }
+
         isSearching = true
+
         do {
-            let results = try await APIClient.shared.searchProductsByName(query: trimmed, maxResults: 10)
+
+            let results = try await APIClient.shared.searchProductsByName(
+                query: trimmed,
+                maxResults: 10
+            )
+
             searchResults = results
-            // History'ye fire-and-forget — aramayı bloklamasın
+
             let first = results.first
+
             Task {
                 await addToHistory(
                     query: trimmed,
@@ -56,41 +68,62 @@ class HomeViewModel: ObservableObject {
                     category: first?.brand
                 )
             }
+
         } catch {
             searchResults = []
         }
+
         isSearching = false
     }
 
-    // MARK: - Popular
+    // MARK: POPULAR
 
     func fetchPopular() async {
+
         isLoadingPopular = true
+
         do {
             popularProducts = try await APIClient.shared.getPopularProducts(limit: 10)
         } catch {
-            print("Popular fetch error: \(error)")
+            print("Popular fetch error:", error)
         }
+
         isLoadingPopular = false
     }
 
-    // MARK: - Search History
+    // MARK: HISTORY
 
     func fetchHistory() async {
+
         isLoadingHistory = true
+
         do {
             searchHistory = try await APIClient.shared.getSearchHistory(limit: 20)
         } catch {
-            print("History fetch error: \(error)")
+            print("History fetch error:", error)
         }
+
         isLoadingHistory = false
     }
 
-    func addToHistory(query: String, productId: String?, productName: String?, category: String?) async {
-        let req = AddSearchHistoryRequest(query: query, productId: productId, productName: productName, category: category)
+    func addToHistory(
+        query: String,
+        productId: String?,
+        productName: String?,
+        category: String?
+    ) async {
+
+        let req = AddSearchHistoryRequest(
+            query: query,
+            productId: productId,
+            productName: productName,
+            category: category
+        )
+
         do {
+
             _ = try await APIClient.shared.addSearchHistory(req)
-            // Sadece local listeye ekle, fetchHistory() çağırma — aramayı yavaşlatır
+
             let newItem = SearchHistoryResponse(
                 id: UUID().uuidString,
                 query: query,
@@ -101,261 +134,38 @@ class HomeViewModel: ObservableObject {
                 searchedAt: nil,
                 imageUrls: nil
             )
-            searchHistory.insert(newItem, at: 0)
-            // Max 20 tut
-            if searchHistory.count > 20 { searchHistory = Array(searchHistory.prefix(20)) }
+
+            // UI güncellemesi MainActor üzerinde olmalı
+            await MainActor.run {
+                searchHistory.insert(newItem, at: 0)
+
+                if searchHistory.count > 20 {
+                    searchHistory = Array(searchHistory.prefix(20))
+                }
+            }
+
         } catch {
-            print("Add history error: \(error)")
+            print("Add history error:", error)
         }
     }
 
     func deleteHistoryItem(id: String) async {
+
         do {
             _ = try await APIClient.shared.deleteSearchHistoryItem(itemId: id)
             searchHistory.removeAll { $0.id == id }
         } catch {
-            print("Delete history error: \(error)")
+            print("Delete history error:", error)
         }
     }
 
     func clearHistory() async {
+
         do {
             _ = try await APIClient.shared.clearSearchHistory()
             searchHistory = []
         } catch {
-            print("Clear history error: \(error)")
-        }
-    }
-}
-
-// MARK: - HomeView
-
-struct HomeView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
-    @StateObject private var viewModel = HomeViewModel()
-    @FocusState private var isSearchFocused: Bool
-    @State private var isShowingProfile = false
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-
-                    // ── Search Bar ──
-                    HStack(spacing: 12) {
-                        HStack {
-                            Image(systemName: viewModel.isSearching ? "arrow.trianglehead.2.clockwise" : "magnifyingglass")
-                                .foregroundColor(Color(hex: "9CA3AF"))
-                                .symbolEffect(.rotate, isActive: viewModel.isSearching)
-                            TextField("", text: $viewModel.searchText,
-                                     prompt: Text("Search ingredients or products...")
-                                        .foregroundColor(Color(hex: "9CA3AF")))
-                                .foregroundColor(Color(hex: "1A1A2E"))
-                                .autocorrectionDisabled()
-                                .focused($isSearchFocused)
-                            if !viewModel.searchText.isEmpty {
-                                Button {
-                                    viewModel.searchText = ""
-                                    isSearchFocused = false
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(Color(hex: "9CA3AF"))
-                                }
-                            }
-                        }
-                        .padding(12)
-                        .background(Color.white)
-                        .cornerRadius(14)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
-                        )
-
-                        // Camera button
-                        Button { } label: {
-                            Image(systemName: "viewfinder")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(hex: "D4728C"))
-                                .padding(12)
-                                .background(Color.white)
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
-                                )
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    // ── Arama Sonuçları ──
-                    if !viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        SearchResultsPanel(viewModel: viewModel)
-                    } else {
-
-                        // ── Scan Your Shelf Card ──
-                        ZStack(alignment: .leading) {
-                            // Custom 4K Background Image
-                            Image("scan_shelf_background")
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(height: 180)
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .fill(LinearGradient(
-                                            colors: [Color.black.opacity(0.6), Color.clear],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        ))
-                                )
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("NEW FEATURE")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 4)
-                                    .background(Color(hex: "D4728C"))
-                                    .cornerRadius(6)
-
-                                Text("Scan Your Shelf")
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(.white)
-
-                                Text("Instantly analyze all ingredients and\ncheck safety ratings.")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.white.opacity(0.9))
-                                    .lineSpacing(2)
-
-                                Button {
-                                    // Navigate to scan
-                                } label: {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "viewfinder")
-                                            .font(.system(size: 14))
-                                        Text("Scan Now")
-                                            .font(.system(size: 14, weight: .semibold))
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 10)
-                                    .background(Color.white)
-                                    .foregroundColor(Color(hex: "1A1A2E"))
-                                    .cornerRadius(20)
-                                }
-                                .padding(.top, 4)
-                            }
-                            .padding(24)
-                        }
-                        .padding(.horizontal)
-
-
-                        // ── Most Searched ──
-                        VStack(alignment: .leading, spacing: 14) {
-                            HStack {
-                                Text("Most Searched")
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundColor(Color(hex: "1A1A2E"))
-                                Spacer()
-                                if viewModel.isLoadingPopular {
-                                    ProgressView().scaleEffect(0.7).tint(Color(hex: "D4728C"))
-                                }
-                            }
-                            .padding(.horizontal)
-
-                            if viewModel.popularProducts.isEmpty && !viewModel.isLoadingPopular {
-                                Text("Henüz veri yok")
-                                    .font(.caption)
-                                    .foregroundColor(Color(hex: "9CA3AF"))
-                                    .padding(.horizontal)
-                            } else {
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible(), spacing: 14),
-                                    GridItem(.flexible(), spacing: 14)
-                                ], spacing: 14) {
-                                    ForEach(viewModel.popularProducts) { item in
-                                        NavigationLink(destination: ProductDetailView(productId: item.productId)) {
-                                            PopularProductCard(item: item)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
-
-                        // ── Search History ──
-                        if !viewModel.searchHistory.isEmpty || viewModel.isLoadingHistory {
-                            VStack(alignment: .leading, spacing: 14) {
-                                HStack {
-                                    Text("Recent Searches")
-                                        .font(.system(size: 20, weight: .bold))
-                                        .foregroundColor(Color(hex: "1A1A2E"))
-                                    Spacer()
-                                    if viewModel.isLoadingHistory {
-                                        ProgressView().scaleEffect(0.7).tint(Color(hex: "D4728C"))
-                                    } else if !viewModel.searchHistory.isEmpty {
-                                        Button {
-                                            Task { await viewModel.clearHistory() }
-                                        } label: {
-                                            Text("Tümünü Temizle")
-                                                .font(.system(size: 13, weight: .medium))
-                                                .foregroundColor(Color(hex: "EF4444"))
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal)
-
-                                LazyVStack(spacing: 8) {
-                                    ForEach(viewModel.searchHistory) { item in
-                                        HistoryRow(item: item) {
-                                            Task { await viewModel.deleteHistoryItem(id: item.id) }
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
-
-                    } // end else (search empty)
-
-                    Spacer().frame(height: 80)
-                }
-                .padding(.top, 8)
-            }
-            .background(Color(hex: "FFF0F0"))
-            .onTapGesture {
-                isSearchFocused = false
-            }
-            .onChange(of: viewModel.searchText) { _, newValue in
-                if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    isSearchFocused = false
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "leaf.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(Color(hex: "D4728C"))
-                        Text("SkinCore")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(Color(hex: "1A1A2E"))
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        isShowingProfile.toggle()
-                    } label: {
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(Color(hex: "6B7280"))
-                    }
-                    .sheet(isPresented: $isShowingProfile) {
-                        ProfileView()
-                            .environmentObject(authViewModel)
-                    }
-                }
-            }
+            print("Clear history error:", error)
         }
     }
 }
@@ -367,7 +177,6 @@ private struct PopularProductCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Ürün görseli
             ZStack {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color(hex: "F3F4F6"))
@@ -418,7 +227,6 @@ private struct HistoryRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Ürün görseli veya ikon
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color(hex: "F3F4F6"))
@@ -458,7 +266,6 @@ private struct HistoryRow: View {
 
             Spacer()
 
-            // Silme butonu
             Button(action: onDelete) {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 18))
@@ -469,79 +276,6 @@ private struct HistoryRow: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
-    }
-}
-
-// MARK: - Category Item
-
-
-// MARK: - Product Card (legacy, kept for reference)
-
-struct ProductCard: View {
-    let name: String
-    let brand: String
-    let rating: Double
-    let badge: String
-    let badgeColor: Color
-    let iconName: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(hex: "F3F4F6"))
-                    .frame(height: 140)
-
-                Image(systemName: iconName)
-                    .font(.system(size: 36))
-                    .foregroundColor(Color(hex: "D4728C").opacity(0.4))
-
-                VStack {
-                    HStack {
-                        Spacer()
-                        Button { } label: {
-                            Image(systemName: "heart")
-                                .font(.system(size: 14))
-                                .foregroundColor(Color(hex: "D4728C"))
-                                .padding(8)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.05), radius: 2)
-                        }
-                    }
-                    Spacer()
-                }
-                .padding(8)
-            }
-
-            Text(name)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(Color(hex: "1A1A2E"))
-                .lineLimit(1)
-
-            Text(brand)
-                .font(.system(size: 12))
-                .foregroundColor(Color(hex: "9CA3AF"))
-
-            HStack {
-                HStack(spacing: 2) {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 10))
-                        .foregroundColor(Color(hex: "F59E0B"))
-                    Text(String(format: "%.1f", rating))
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color(hex: "1A1A2E"))
-                }
-                Spacer()
-                Text(badge)
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(badgeColor)
-            }
-        }
-        .padding(12)
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
     }
 }
 
@@ -661,4 +395,271 @@ private struct HomeProductRow: View {
 #Preview {
     HomeView()
         .environmentObject(AuthViewModel())
+}
+
+
+// MARK: - HomeView
+
+struct HomeView: View {
+
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var viewModel = HomeViewModel()
+
+    @FocusState private var isSearchFocused: Bool
+    @State private var isShowingProfile = false
+
+    var body: some View {
+
+        NavigationStack {
+
+            ScrollView {
+
+                VStack(alignment: .leading, spacing: 24) {
+
+                    // SEARCH BAR
+
+                    HStack(spacing: 12) {
+                        HStack {
+                            Image(systemName: viewModel.isSearching ? "arrow.trianglehead.2.clockwise" : "magnifyingglass")
+                                .foregroundColor(Color(hex: "9CA3AF"))
+                                .symbolEffect(.rotate, isActive: viewModel.isSearching)
+
+                            TextField(
+                                "",
+                                text: $viewModel.searchText,
+                                prompt: Text("Search ingredients or products...")
+                                    .foregroundColor(Color(hex: "9CA3AF"))
+                            )
+                            .focused($isSearchFocused)
+                            .submitLabel(.search)
+                            .autocorrectionDisabled()
+                            .foregroundColor(Color(hex: "1A1A2E"))
+
+                            if !viewModel.searchText.isEmpty {
+                                Button {
+                                    viewModel.searchText = ""
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(Color(hex: "9CA3AF"))
+                                }
+                            }
+                        }
+                        .padding(12)
+                        .background(Color.white)
+                        .cornerRadius(14)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
+                        )
+
+                        // CAMERA BUTTON
+                        Button {
+                            // Camera action
+                        } label: {
+                            Image(systemName: "viewfinder")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color(hex: "D4728C"))
+                                .padding(12)
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
+                                )
+                        }
+                    }
+                    .padding(.horizontal)
+                    .zIndex(20)
+
+                    // ── Scan Your Shelf Card (Hero) ──
+                    ZStack(alignment: .leading) {
+                        // Custom 3D Illustrative Background Image
+                        Image("scan_shelf_background")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 180)
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(LinearGradient(
+                                        colors: [Color.black.opacity(0.6), Color.clear],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    ))
+                            )
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("NEW FEATURE")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color(hex: "D4728C"))
+                                .cornerRadius(6)
+
+                            Text("Scan Your Shelf")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.white)
+
+                            Text("Instantly analyze all ingredients and\ncheck safety ratings.")
+                                .font(.system(size: 13))
+                                .foregroundColor(.white.opacity(0.9))
+                                .lineSpacing(2)
+
+                            NavigationLink(destination: ScanView()) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "viewfinder")
+                                        .font(.system(size: 14))
+                                    Text("Scan Now")
+                                        .font(.system(size: 14, weight: .semibold))
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(Color.white)
+                                .foregroundColor(Color(hex: "1A1A2E"))
+                                .cornerRadius(20)
+                            }
+                            .padding(.top, 4)
+                        }
+                        .padding(24)
+                    }
+                    .padding(.horizontal)
+
+
+                    // SEARCH RESULTS OR CONTENT
+                    if !viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        SearchResultsPanel(viewModel: viewModel)
+                    } else {
+                        // MOST SEARCHED
+
+                        VStack(alignment: .leading, spacing: 14) {
+
+                            HStack {
+
+                                Text("Most Searched")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(Color(hex: "1A1A2E"))
+
+                                Spacer()
+
+                                if viewModel.isLoadingPopular {
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                        .tint(Color(hex: "D4728C"))
+                                }
+                            }
+                            .padding(.horizontal)
+
+                            LazyVGrid(
+                                columns: [
+                                    GridItem(.flexible()),
+                                    GridItem(.flexible())
+                                ],
+                                spacing: 14
+                            ) {
+
+                                ForEach(viewModel.popularProducts) { item in
+
+                                    NavigationLink(
+                                        destination: ProductDetailView(productId: item.productId)
+                                    ) {
+                                        PopularProductCard(item: item)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+
+
+                        // HISTORY
+
+                        if !viewModel.searchHistory.isEmpty {
+
+                            VStack(alignment: .leading, spacing: 14) {
+
+                                HStack {
+
+                                    Text("Recent Searches")
+                                        .font(.system(size: 20, weight: .bold))
+                                        .foregroundColor(Color(hex: "1A1A2E"))
+
+                                    Spacer()
+
+                                    Button {
+
+                                        Task { await viewModel.clearHistory() }
+
+                                    } label: {
+
+                                        Text("Clear")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.red)
+                                    }
+                                }
+                                .padding(.horizontal)
+
+                                LazyVStack(spacing: 8) {
+
+                                    ForEach(viewModel.searchHistory) { item in
+
+                                        HistoryRow(item: item) {
+
+                                            Task {
+                                                await viewModel.deleteHistoryItem(id: item.id)
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
+                    }
+
+                    Spacer().frame(height: 80)
+                }
+                .padding(.top, 8)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(Color(hex: "FFF0F0"))
+
+
+            // NAVBAR
+
+            .toolbar {
+
+                ToolbarItem(placement: .navigationBarLeading) {
+
+                    HStack(spacing: 8) {
+
+                        Image("app_logo_header")
+                            .resizable()
+                            .frame(width: 40, height: 40)
+
+                        Text("SkinCore")
+                            .font(.system(size: 20, weight: .bold))
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+
+                    Button {
+
+                        isShowingProfile.toggle()
+
+                    } label: {
+
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(.gray)
+                    }
+                    .sheet(isPresented: $isShowingProfile) {
+
+                        ProfileView()
+                            .environmentObject(authViewModel)
+                    }
+                }
+            }
+        }
+    }
 }

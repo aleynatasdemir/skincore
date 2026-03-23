@@ -174,12 +174,19 @@ struct IngredientAnalysisView: View {
                                     
                                     // Search Bar (Landing)
                                     HStack(spacing: 12) {
-                                        Image(systemName: "magnifyingglass")
-                                            .font(.system(size: 18))
-                                            .foregroundColor(Color(hex: "6B7280"))
-                                        TextField("Search ingredients (e.g. Retinol)", text: $viewModel.searchText)
-                                            .focused($isSearchFocused)
-                                            .foregroundColor(Color(hex: "1A1A2E"))
+                                        HStack {
+                                            Image(systemName: "magnifyingglass")
+                                                .font(.system(size: 18))
+                                                .foregroundColor(Color(hex: "6B7280"))
+                                            TextField("Search ingredients (e.g. Retinol)", text: $viewModel.searchText)
+                                                .focused($isSearchFocused)
+                                                .foregroundColor(Color(hex: "1A1A2E"))
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            isSearchFocused = true
+                                        }
                                     }
                                     .padding()
                                     .background(Color.white.opacity(0.6))
@@ -188,6 +195,7 @@ struct IngredientAnalysisView: View {
                                         RoundedRectangle(cornerRadius: 16)
                                             .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
                                     )
+                                    .zIndex(10)
                                 }
                                 .padding(.horizontal, 20)
                                 .padding(.top, 20)
@@ -224,12 +232,19 @@ struct IngredientAnalysisView: View {
                         VStack(spacing: 0) {
                             // Sticky Search Bar
                             HStack(spacing: 10) {
-                                Image(systemName: "magnifyingglass")
-                                    .foregroundColor(Color(hex: "9CA3AF"))
-                                TextField(viewModel.selectedCategoryTitle ?? "Search ingredients...", text: $viewModel.searchText)
-                                    .focused($isSearchFocused)
-                                    .foregroundColor(Color(hex: "1A1A2E"))
-                                    .autocorrectionDisabled()
+                                HStack {
+                                    Image(systemName: "magnifyingglass")
+                                        .foregroundColor(Color(hex: "9CA3AF"))
+                                    TextField(viewModel.selectedCategoryTitle ?? "Search ingredients...", text: $viewModel.searchText)
+                                        .focused($isSearchFocused)
+                                        .foregroundColor(Color(hex: "1A1A2E"))
+                                        .autocorrectionDisabled()
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    isSearchFocused = true
+                                }
                                 
                                 if !viewModel.searchText.isEmpty || viewModel.selectedCategoryTitle != nil {
                                     Button {
@@ -245,6 +260,7 @@ struct IngredientAnalysisView: View {
                             .background(Color.white)
                             .cornerRadius(12)
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: "E5E7EB"), lineWidth: 1))
+                            .zIndex(10)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                             
