@@ -153,6 +153,72 @@ class APIClient {
         return try await request(endpoint: "/userprofile/favorites/\(productId)/check", authenticated: true)
     }
 
+    // MARK: - Routines (Social) Endpoints
+
+    func getRoutineFeed(limit: Int = 20, search: String? = nil) async throws -> [RoutineFeedItem] {
+        var endpoint = "/routines?limit=\(limit)"
+        if let search = search, !search.isEmpty {
+            let encoded = search.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? search
+            endpoint += "&search=\(encoded)"
+        }
+        return try await request(endpoint: endpoint, authenticated: true)
+    }
+
+    func getMyRoutines() async throws -> [RoutineFeedItem] {
+        return try await request(endpoint: "/routines/my", authenticated: true)
+    }
+
+    func getRoutineDetail(id: String) async throws -> RoutineDetail {
+        return try await request(endpoint: "/routines/\(id)", authenticated: true)
+    }
+
+    func createRoutine(_ req: CreateRoutineRequest) async throws -> RoutineFeedItem {
+        return try await request(endpoint: "/routines", method: "POST", body: req, authenticated: true)
+    }
+
+    func addRoutineComment(routineId: String, text: String) async throws -> RoutineCommentResponse {
+        let body = AddRoutineCommentRequest(text: text)
+        return try await request(endpoint: "/routines/\(routineId)/comments", method: "POST", body: body, authenticated: true)
+    }
+
+    func toggleRoutineLike(routineId: String) async throws -> ToggleLikeResponse {
+        return try await request(endpoint: "/routines/\(routineId)/likes/toggle", method: "POST", authenticated: true)
+    }
+
+    func uploadImage(data: Data) async throws -> String {
+        guard let url = URL(string: "\(baseURL)/routines/upload-image") else {
+            throw APIClientError.invalidURL
+        }
+
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        if let token = KeychainService.shared.getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"photo.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(data)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        let (responseData, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIClientError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
+        }
+
+        struct UploadResponse: Codable { let imageUrl: String }
+        let result = try JSONDecoder().decode(UploadResponse.self, from: responseData)
+        return result.imageUrl
+    }
+
     // MARK: - Ingredients Endpoints
 
     func getIngredients(search: String? = nil, page: Int = 1, pageSize: Int = 50, minSafety: Int? = nil, maxSafety: Int? = nil, comedogenic: Bool? = nil) async throws -> [MatchedIngredient] {

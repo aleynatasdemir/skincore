@@ -141,6 +141,26 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
 
+                    // ── Header ──
+                    HStack {
+                        Text("skincore.")
+                            .font(.system(size: 26, weight: .light, design: .serif))
+                            .foregroundColor(Color(hex: "D4728C"))
+                        Spacer()
+                        Button {
+                            isShowingProfile.toggle()
+                        } label: {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(Color(hex: "D4728C"))
+                        }
+                        .sheet(isPresented: $isShowingProfile) {
+                            ProfileView()
+                                .environmentObject(authViewModel)
+                        }
+                    }
+                    .padding(.horizontal)
+
                     // ── Search Bar ──
                     HStack(spacing: 12) {
                         HStack {
@@ -192,26 +212,23 @@ struct HomeView: View {
                         SearchResultsPanel(viewModel: viewModel)
                     } else {
 
-                        // ── Scan Your Shelf Card ──
-                        ZStack(alignment: .bottomLeading) {
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: "1A1A2E"), Color(hex: "2D2B55")],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
+                        // ── Scan Your Shelf Card (Hero) ──
+                        ZStack(alignment: .leading) {
+                            Image("scan_shelf_background")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
                                 .frame(height: 180)
-
-                            HStack {
-                                Spacer()
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.white.opacity(0.08))
-                                    .padding(.trailing, 30)
-                                    .padding(.bottom, 20)
-                            }
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(LinearGradient(
+                                            colors: [Color.black.opacity(0.6), Color.clear],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        ))
+                                )
+                                .allowsHitTesting(false)
 
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("NEW FEATURE")
@@ -228,12 +245,10 @@ struct HomeView: View {
 
                                 Text("Instantly analyze all ingredients and\ncheck safety ratings.")
                                     .font(.system(size: 13))
-                                    .foregroundColor(.white.opacity(0.7))
+                                    .foregroundColor(.white.opacity(0.9))
                                     .lineSpacing(2)
 
-                                Button {
-                                    // Navigate to scan
-                                } label: {
+                                NavigationLink(destination: ScanView()) {
                                     HStack(spacing: 6) {
                                         Image(systemName: "viewfinder")
                                             .font(.system(size: 14))
@@ -251,32 +266,6 @@ struct HomeView: View {
                             .padding(24)
                         }
                         .padding(.horizontal)
-
-                        // ── Categories ──
-                        VStack(alignment: .leading, spacing: 14) {
-                            HStack {
-                                Text("Categories")
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundColor(Color(hex: "1A1A2E"))
-                                Spacer()
-                                Button("View All") { }
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(Color(hex: "D4728C"))
-                            }
-                            .padding(.horizontal)
-
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 16) {
-                                    CategoryItem(icon: "drop.fill", name: "Skincare")
-                                    CategoryItem(icon: "scissors", name: "Haircare")
-                                    CategoryItem(icon: "paintbrush.fill", name: "Makeup")
-                                    CategoryItem(icon: "sun.max.fill", name: "Sunscreen")
-                                    CategoryItem(icon: "leaf.fill", name: "Natural")
-                                    CategoryItem(icon: "sparkles", name: "Serum")
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
 
                         // ── Most Searched ──
                         VStack(alignment: .leading, spacing: 14) {
@@ -351,40 +340,14 @@ struct HomeView: View {
                 }
                 .padding(.top, 8)
             }
+            .scrollDismissesKeyboard(.immediately)
             .background(Color(hex: "FFF0F0"))
-            .onTapGesture {
-                isSearchFocused = false
-            }
             .onChange(of: viewModel.searchText) { _, newValue in
                 if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     isSearchFocused = false
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "leaf.circle.fill")
-                            .font(.system(size: 28))
-                            .foregroundColor(Color(hex: "D4728C"))
-                        Text("SkinCore")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(Color(hex: "1A1A2E"))
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        isShowingProfile.toggle()
-                    } label: {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 28))
-                            .foregroundColor(Color(hex: "6B7280"))
-                    }
-                    .sheet(isPresented: $isShowingProfile) {
-                        ProfileView()
-                            .environmentObject(authViewModel)
-                    }
-                }
-            }
+            .navigationBarHidden(true)
         }
     }
 }
@@ -501,32 +464,6 @@ private struct HistoryRow: View {
     }
 }
 
-// MARK: - Category Item
-
-struct CategoryItem: View {
-    let icon: String
-    let name: String
-
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: "FFF0F0"))
-                    .frame(width: 56, height: 56)
-                    .overlay(
-                        Circle().stroke(Color(hex: "F3D5DC"), lineWidth: 1)
-                    )
-                Image(systemName: icon)
-                    .font(.system(size: 22))
-                    .foregroundColor(Color(hex: "D4728C"))
-            }
-            Text(name)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(Color(hex: "6B7280"))
-        }
-    }
-}
-
 // MARK: - Product Card (legacy, kept for reference)
 
 struct ProductCard: View {
@@ -635,7 +572,7 @@ private struct SearchResultsPanel: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 32)
                 } else {
-                    LazyVStack(spacing: 10) {
+                    VStack(spacing: 10) {
                         ForEach(viewModel.searchResults) { product in
                             NavigationLink(destination: ProductDetailView(productId: product.id)) {
                                 HomeProductRow(product: product)
@@ -648,8 +585,6 @@ private struct SearchResultsPanel: View {
             }
         }
         .padding(.vertical, 4)
-        .transition(.opacity.combined(with: .move(edge: .top)))
-        .animation(.easeInOut(duration: 0.2), value: viewModel.searchResults.count)
     }
 }
 
