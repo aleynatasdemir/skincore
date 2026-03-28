@@ -17,10 +17,12 @@ Kullanım:
 """
 
 import os
+import gc
 import glob
 import numpy as np
 from PIL import Image
 import pillow_heif
+from bson import ObjectId
 from paddleocr import PaddleOCR
 from pymongo import MongoClient
 
@@ -28,6 +30,7 @@ from pymongo import MongoClient
 pillow_heif.register_heif_opener()
 
 MIN_IMAGE_SIZE = 300  # piksel (genişlik veya yükseklik bu altındaysa atla)
+MAX_IMAGE_SIZE = 4000  # bu pikselden büyük resimleri atla (RAM koruması)
 
 # ── Ayarlar ──────────────────────────────────────────────────────────────────
 MONGO_URI  = "mongodb://localhost:27017/"
@@ -45,10 +48,14 @@ def get_image_files(folder: str) -> list[str]:
     for ext in IMAGE_EXTENSIONS:
         files.extend(glob.glob(os.path.join(folder, f"*{ext}")))
 
-    # Küçük thumbnail'leri ve bozuk dosyaları filtrele
+    # Dosya boyutu ile hızlı ön filtre (5KB altı muhtemelen placeholder)
+    files = [f for f in files if os.path.getsize(f) > 5000]
+
+    # Küçük thumbnail'leri ve aşırı büyük dosyaları filtrele
     valid = []
     for f in sorted(files):
         try:
+            # Sadece header oku, tüm resmi belleğe yükleme
             with Image.open(f) as img:
                 w, h = img.size
                 if w >= MIN_IMAGE_SIZE and h >= MIN_IMAGE_SIZE:
@@ -63,23 +70,30 @@ def extract_text_from_images(ocr: PaddleOCR, image_paths: list[str]) -> str:
     all_texts = []
     for img_path in image_paths:
         try:
-            # OpenCV (cv2.imread) fails on AVIF inside PaddleOCR, so we load with PIL and pass numpy array.
             with Image.open(img_path) as img:
                 img_rgb = img.convert("RGB")
+                # Büyük resimleri küçült — RAM koruması
+                max_side = 2000
+                w, h = img_rgb.size
+                if max(w, h) > max_side:
+                    ratio = max_side / max(w, h)
+                    img_rgb = img_rgb.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
                 np_img = np.array(img_rgb)
-                
-            # OpenCV uses BGR natively, PaddleOCR handles RGB/BGR depending on internal model, 
-            # usually BGR is safer for cv2-based pipelines, so let's convert RGB -> BGR
-            # Not strictly required for text recognition, but good practice.
+                # PIL image'ı hemen kapat
+                del img_rgb
+
+            # RGB -> BGR
             np_img = np_img[:, :, ::-1]
 
             result = ocr.predict(np_img)
-            # PaddleOCR returns lists of (bbox, (text, confidence)) or dicts
+            del np_img
+
             for item in result:
-                # Based on the user's original codebase, handle as dict format "rec_texts"
                 rec_texts = item.get("rec_texts", [])
                 if rec_texts:
                     all_texts.extend(rec_texts)
+            del result
+            gc.collect()
         except Exception as e:
             print(f"  ⚠️  OCR hatası ({os.path.basename(img_path)}): {e}")
     return " ".join(all_texts).strip()
@@ -116,9 +130,12 @@ def main():
             print(f"[{i}/{total}] ⏭️  {folder_name} → resim yok")
             continue
 
-        # MongoDB'de ürünü bul: gratis_id veya barcode ile eşleştir
+        # MongoDB'de ürünü bul: gratis_id, barcode veya _id ile eşleştir
+        query_conditions = [{"gratis_id": folder_name}, {"barcode": folder_name}]
+        if ObjectId.is_valid(folder_name):
+            query_conditions.append({"_id": ObjectId(folder_name)})
         doc = col.find_one(
-            {"$or": [{"gratis_id": folder_name}, {"barcode": folder_name}]},
+            {"$or": query_conditions},
             {"_id": 1, "ocr_text": 1},
         )
         if not doc:

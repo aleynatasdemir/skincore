@@ -24,7 +24,7 @@ MONGO_URI   = "mongodb://localhost:27017/"
 DB_NAME     = "kozmetik"
 COL_NAME    = "products"
 OUTPUT_DIR  = os.path.join(os.path.dirname(__file__), "images")
-MAX_WORKERS = 10          # curl_cffi + proxy olunca paralellik arttırılabilir
+MAX_WORKERS = 5           # CDN rate-limit'e takılmamak için düşük tut
 TIMEOUT     = 15          # saniye
 SKIP_EXISTING = True      # zaten indirilmiş dosyaları atla
 MAX_IMAGES_PER_PRODUCT = 2  # ürün başına max fotoğraf sayısı
@@ -37,6 +37,28 @@ def normalize_url(url: str) -> str:
         return "https:" + url
     return url
 
+def get_headers_for_url(url: str) -> dict:
+    """URL'nin domain'ine göre uygun Referer ve header döndürür."""
+    headers = {
+        "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+    }
+    if "watsons.com.tr" in url:
+        headers["Referer"] = "https://www.watsons.com.tr/"
+        headers["Origin"] = "https://www.watsons.com.tr"
+    elif "sephora" in url:
+        headers["Referer"] = "https://www.sephora.com.tr/"
+        headers["Origin"] = "https://www.sephora.com.tr"
+    elif "gratis.com" in url:
+        headers["Referer"] = "https://www.gratis.com/"
+    elif "goldenrose" in url:
+        headers["Referer"] = "https://shop.goldenrose.com.tr/"
+    elif "nivea" in url:
+        headers["Referer"] = "https://www.nivea.com.tr/"
+    elif "dermokozmetika" in url:
+        headers["Referer"] = "https://www.dermokozmetika.com.tr/"
+    return headers
+
 def get_ext(url: str, default_ext=".jpg") -> str:
     """Ekstra parametreleri atarak makul bir uzantı bulur."""
     base = url.split("?")[0].split("/")[-1]
@@ -47,15 +69,13 @@ def get_ext(url: str, default_ext=".jpg") -> str:
     return default_ext
 
 def download_image(task):
-    """Tek bir resmi indir. task = (gratis_id, barcode, fileUrl, fileName)"""
-    gratis_id, barcode, file_url, file_name = task
+    """Tek bir resmi indir. task = (folder_id, file_url, file_name)"""
+    folder_id, file_url, file_name = task
 
     # Sadece belli formatı destekle, filename gibi URL verilerini filtrele
     if not file_url.startswith(("http://", "https://")):
         return ("skip", "geçersiz url")
 
-    # Klasör: images/<gratis_id>/
-    folder_id = gratis_id or barcode or "unknown"
     folder = os.path.join(OUTPUT_DIR, str(folder_id))
     os.makedirs(folder, exist_ok=True)
 
@@ -69,20 +89,23 @@ def download_image(task):
             proxy_url = random.choice(PROXIES) if PROXIES else None
             proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
             
+            headers = get_headers_for_url(file_url)
             resp = requests.get(
                 file_url,
                 impersonate="chrome110",
                 timeout=TIMEOUT,
                 proxies=proxies,
-                stream=True
+                headers=headers,
             )
             resp.raise_for_status()
-            
+
+            # Çok küçük resimler placeholder olabilir, atla
+            if len(resp.content) < 5000:
+                return ("skip", f"{file_name} (too small: {len(resp.content)}b)")
+
             with open(dest, "wb") as f:
-                for chunk in resp.iter_content(8192):
-                    if chunk:
-                        f.write(chunk)
-            
+                f.write(resp.content)
+
             # İstekler arası çok hafif bekleme
             time.sleep(random.uniform(0.1, 0.5))
             return ("ok", file_name)
@@ -104,12 +127,17 @@ def main():
     # Tüm görevleri hazırla
     tasks = []
     skip_cnt = 0
-    cursor = col.find({}, {"gratis_id": 1, "barcode": 1, "image_urls": 1})
+    cursor = col.find({}, {"_id": 1, "gratis_id": 1, "barcode": 1, "image_urls": 1})
     for doc in cursor:
-        gratis_id = doc.get("gratis_id", "")
-        barcode   = doc.get("barcode", "")
-        
-        folder_id = str(gratis_id or barcode or "unknown")
+        gratis_id = doc.get("gratis_id") or ""
+        barcode   = doc.get("barcode") or ""
+
+        # None, "", 0 gibi falsy değerleri atla
+        folder_id = str(gratis_id).strip() if gratis_id else ""
+        if not folder_id or folder_id == "None":
+            folder_id = str(barcode).strip() if barcode else ""
+        if not folder_id or folder_id == "None":
+            folder_id = str(doc["_id"])
         folder = os.path.join(OUTPUT_DIR, folder_id)
 
         # Klasördeki mevcut resim sayısını al (eski uzun isimliler dahil)
@@ -153,7 +181,7 @@ def main():
                 if SKIP_EXISTING and (os.path.exists(dest) or existing_imgs > count):
                     skip_cnt += 1
                 else:
-                    tasks.append((gratis_id, barcode, file_url, file_name))
+                    tasks.append((folder_id, file_url, file_name))
                 count += 1
 
     client.close()

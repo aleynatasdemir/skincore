@@ -488,3 +488,4 @@ db_ocr/venv/
 venv/
 venv
 .env
+.venv/

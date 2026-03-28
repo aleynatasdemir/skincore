@@ -5,22 +5,6 @@ using System.Text.Json.Serialization;
 namespace Skincore.Api.Models;
 
 [BsonIgnoreExtraElements]
-public class IngredientFunction
-{
-    [BsonElement("name")]
-    [JsonPropertyName("name")]
-    public string? Name { get; set; }
-
-    [BsonElement("uri")]
-    [JsonPropertyName("uri")]
-    public string? Uri { get; set; }
-
-    [BsonElement("is_dangerous")]
-    [JsonPropertyName("is_dangerous")]
-    public bool IsDangerous { get; set; }
-}
-
-[BsonIgnoreExtraElements]
 public class Ingredient
 {
     [BsonId]
@@ -50,7 +34,7 @@ public class Ingredient
 
     [BsonElement("functions")]
     [JsonPropertyName("functions")]
-    public List<IngredientFunction>? Functions { get; set; }
+    public List<string>? Functions { get; set; }
 
     [BsonElement("safety_label")]
     [JsonPropertyName("safety_label")]
