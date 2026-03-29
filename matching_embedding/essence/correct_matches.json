@@ -1,0 +1,826 @@
+[
+  {
+    "ewg_image": "/essence_ewg_img/1773504545-375.",
+    "ewg_product": "BABY GOT DIAMOND highlighter stick",
+    "local_image": "/essence_wats_img/1446816.jpg",
+    "local_product": "Essence Baby Got Diamond Highlighter Stick",
+    "text_score": 100,
+    "watsons_id": "1446816"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504164-236.",
+    "ewg_product": "24ever ink liner",
+    "local_image": "/essence_wats_img/173793.png",
+    "local_product": "Essence 24Ever Ink Liner No: 01",
+    "text_score": 100,
+    "watsons_id": "173793"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504058-198.",
+    "ewg_product": "silky BLUR PORELESS PRIMER",
+    "local_image": "/essence_wats_img/1446788.jpg",
+    "local_product": "Essence Silky Blur Poreless Primer",
+    "text_score": 100,
+    "watsons_id": "1446788"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504499-358.",
+    "ewg_product": "Brow Lifting Gel Set",
+    "local_image": "/essence_wats_img/1405348.jpg",
+    "local_product": "Essence Brow Lifting Gel Set",
+    "text_score": 100,
+    "watsons_id": "1405348"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504254-269.",
+    "ewg_product": "Lash Princess Volume Mascara",
+    "local_image": "/essence_wats_img/1303148.png",
+    "local_product": "Essence Lash Princess Volume Maskara",
+    "text_score": 100,
+    "watsons_id": "1303148"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504455-342.",
+    "ewg_product": "jelly GRIP undereye primer stick",
+    "local_image": "/essence_wats_img/1443498.jpg",
+    "local_product": "Essence Jelly Grip Undereye Primer Stick",
+    "text_score": 100,
+    "watsons_id": "1443498"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504232-261.",
+    "ewg_product": "DROP OF sunshine HIGHLIGHTING DROPS",
+    "local_image": "/essence_wats_img/1446830.jpg",
+    "local_product": "Essence Drop Of Sunshine Highlighting Drops",
+    "text_score": 100,
+    "watsons_id": "1446830"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504417-328.",
+    "ewg_product": "I LOVE EXTREME BLUE crazy volume mascara",
+    "local_image": "/essence_wats_img/162821.jpeg",
+    "local_product": "Essence I Love Extreme Crazy Volume Maskara",
+    "text_score": 93.33333333333333,
+    "watsons_id": "162821"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504291-283.",
+    "ewg_product": "call me Queen dramatic false lash effect mascara waterproof",
+    "local_image": "/essence_wats_img/1446543.jpg",
+    "local_product": "Essence Call Me Queen Dramatic Effect Maskara Waterproof",
+    "text_score": 92.3076923076923,
+    "watsons_id": "1446543"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504537-372.",
+    "ewg_product": "I Love Extreme Volume Mascara - Waterproof Black",
+    "local_image": "/essence_wats_img/1340668.jpg",
+    "local_product": "Essence I Love Extreme Volume Waterproof Maskara",
+    "text_score": 90.9090909090909,
+    "watsons_id": "1340668"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503894-141.",
+    "ewg_product": "Cosmetics Get BIG! Lashes Volume Curl Mascara",
+    "local_image": "/essence_wats_img/162817.png",
+    "local_product": "Essence Get Big! Lashes Volume Curl Maskara",
+    "text_score": 89.74358974358974,
+    "watsons_id": "162817"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504323-294.",
+    "ewg_product": "Lash Princess Sculpted Volume Mascara",
+    "local_image": "/essence_wats_img/162830.jpeg",
+    "local_product": "Essence Lash Princess Sculpted Maskara",
+    "text_score": 89.55223880597015,
+    "watsons_id": "162830"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503920-150.",
+    "ewg_product": "Cosmetics Lash Princess False Lash Effect Waterproof Mascara",
+    "local_image": "/essence_wats_img/168654.png",
+    "local_product": "Essence Lash Princess False Effect Maskara",
+    "text_score": 89.47368421052632,
+    "watsons_id": "168654"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504556-379.",
+    "ewg_product": "fix & LAST keep it PERFECT MAKE-UP FIXING SPRAY",
+    "local_image": "/essence_wats_img/1446858.jpg",
+    "local_product": "Essence Fix & Last Keep It Make-Up Fixing Sprey",
+    "text_score": 89.36170212765957,
+    "watsons_id": "1446858"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504267-274.",
+    "ewg_product": "Cosmetics All Eyes On Me Waterproof Mascara",
+    "local_image": "/essence_wats_img/162806.jpeg",
+    "local_product": "Essence All Eyes On Me Waterproof Maskara",
+    "text_score": 89.1891891891892,
+    "watsons_id": "162806"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504199-249.",
+    "ewg_product": "Cosmetics Get BIG! Lashes Volume Boost Mascara",
+    "local_image": "/essence_wats_img/162818.jpeg",
+    "local_product": "Essence Get Big! Lashes Volume Maskara",
+    "text_score": 88.23529411764706,
+    "watsons_id": "162818"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504510-362.",
+    "ewg_product": "Cosmetics I love Extreme Volume Mascara",
+    "local_image": "/essence_wats_img/162823.jpeg",
+    "local_product": "Essence I Love Extreme Volume Maskara",
+    "text_score": 87.87878787878788,
+    "watsons_id": "162823"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504545-375.",
+    "ewg_product": "BABY GOT DIAMOND highlighter stick",
+    "local_image": "/essence_wats_img/1465275.jpg",
+    "local_product": "Essence Baby Got Glow Stick Aydınlatıcı 10",
+    "text_score": 86.66666666666667,
+    "watsons_id": "1465275"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773501979-16.",
+    "ewg_product": "Electric Glow Colour Changing Lipstick",
+    "local_image": "/essence_wats_img/1405362.jpg",
+    "local_product": "Essence Meta Glow Colour Changing Ruj",
+    "text_score": 86.56716417910448,
+    "watsons_id": "1405362"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504254-269.",
+    "ewg_product": "Lash Princess Volume Mascara",
+    "local_image": "/essence_wats_img/1446536.jpg",
+    "local_product": "Essence Lash Princess Takma Kirpik Efektli Maskara Black Brown",
+    "text_score": 85.71428571428571,
+    "watsons_id": "1446536"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504254-269.",
+    "ewg_product": "Lash Princess Volume Mascara",
+    "local_image": "/essence_wats_img/1465128.jpg",
+    "local_product": "Essence Lash Princess False Lash Effect Maskara Bordo",
+    "text_score": 85.71428571428571,
+    "watsons_id": "1465128"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504208-252.",
+    "ewg_product": "what the fake! GLASS SHINE PLUMPING LIP FILLER",
+    "local_image": "/essence_wats_img/1446648.jpg",
+    "local_product": "Essence What The Fake Glass Shine Plump Lip Filler 1",
+    "text_score": 85.71428571428571,
+    "watsons_id": "1446648"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504477-350.",
+    "ewg_product": "Quick Wing! stamp eyeliner, 01 black",
+    "local_image": "/essence_wats_img/1443505.jpg",
+    "local_product": "Essence Quick Wing! Stamp Eyeliner 01",
+    "text_score": 84.93150684931507,
+    "watsons_id": "1443505"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503713-79.",
+    "ewg_product": "Cosmetics Get BIG! Lashes Volume Boost Waterprrof Mascara",
+    "local_image": "/essence_wats_img/162819.jpeg",
+    "local_product": "Essence Get Big! Lashes Volume Waterproof Maskara",
+    "text_score": 84.90566037735849,
+    "watsons_id": "162819"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504246-266.",
+    "ewg_product": "NATURAL MATTE MOUSSE FOUNDATION, 01",
+    "local_image": "/essence_wats_img/1405446.jpg",
+    "local_product": "Essence Natural Matte Mousse Fondöten No: 01",
+    "text_score": 83.95061728395062,
+    "watsons_id": "1405446"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504320-293.",
+    "ewg_product": "NATURAL MATTE MOUSSE FOUNDATION, 04",
+    "local_image": "/essence_wats_img/1405467.jpg",
+    "local_product": "Essence Natural Matte Mousse Fondöten No: 04",
+    "text_score": 83.95061728395062,
+    "watsons_id": "1405467"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504300-286.",
+    "ewg_product": "NATURAL MATTE MOUSSE FOUNDATION, 02",
+    "local_image": "/essence_wats_img/1405453.jpg",
+    "local_product": "Essence Natural Matte Mousse Fondöten No: 02",
+    "text_score": 83.95061728395062,
+    "watsons_id": "1405453"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504524-367.",
+    "ewg_product": "NATURAL MATTE MOUSSE FOUNDATION, 13",
+    "local_image": "/essence_wats_img/1405474.jpg",
+    "local_product": "Essence Natural Matte Mousse Fondöten No: 13",
+    "text_score": 83.95061728395062,
+    "watsons_id": "1405474"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504493-356.",
+    "ewg_product": "NATURAL MATTE MOUSSE FOUNDATION, 03",
+    "local_image": "/essence_wats_img/1405460.jpg",
+    "local_product": "Essence Natural Matte Mousse Fondöten No: 03",
+    "text_score": 83.95061728395062,
+    "watsons_id": "1405460"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504431-333.",
+    "ewg_product": "All About Matt! Fixing Compact Powder (2019 formulation)",
+    "local_image": "/essence_wats_img/162692.jpeg",
+    "local_product": "Essence All About Mat Fixing Compact Pudra",
+    "text_score": 83.78378378378378,
+    "watsons_id": "162692"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504077-205.",
+    "ewg_product": "Superfine Waterproof Eyeliner Pen",
+    "local_image": "/essence_wats_img/162726.jpeg",
+    "local_product": "Essence Waterproof Eyeliner",
+    "text_score": 83.33333333333333,
+    "watsons_id": "162726"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503099-53.",
+    "ewg_product": "What A Tint! Lip & Cheek Tint, kiss from a rose 01",
+    "local_image": "/essence_wats_img/1443582.jpg",
+    "local_product": "Essence What A Tint! Lip & Cheek Tint 01",
+    "text_score": 81.81818181818181,
+    "watsons_id": "1443582"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773502033-35.",
+    "ewg_product": "BIRTHDAY BOMB shiny lipgloss",
+    "local_image": "/essence_wats_img/1446620.jpg",
+    "local_product": "Essence Birthday Bomb Shiny Lip Gloss 01",
+    "text_score": 80.85106382978724,
+    "watsons_id": "1446620"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504117-219.",
+    "ewg_product": "Eyeliner Pen Extra Longlasting + Waterproof - 01 Black",
+    "local_image": "/essence_wats_img/162736.jpeg",
+    "local_product": "Essence Longlasting Göz Kalemi 01 Black Fever",
+    "text_score": 80.55555555555556,
+    "watsons_id": "162736"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504009-181.",
+    "ewg_product": "LOVE IT A CHOCO' LOT! blush mousse, 01 A Chocoholic's Dream!",
+    "local_image": "/essence_wats_img/1487465.jpg",
+    "local_product": "Essence Love It A Choco' Lot! Mousse Allık 01",
+    "text_score": 80,
+    "watsons_id": "1487465"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503906-145.",
+    "ewg_product": "BABY GOT GLOW liquid highlighter, 30 Breezy Bronze",
+    "local_image": "/essence_wats_img/1446823.jpg",
+    "local_product": "Essence Baby Got Glow Likit Highlighter 20",
+    "text_score": 78.26086956521739,
+    "watsons_id": "1446823"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504262-272.",
+    "ewg_product": "Brighten Up! Banana Powder, Bababanana 20",
+    "local_image": "/essence_wats_img/1376669.png",
+    "local_product": "Essence Brighten Up! Banana Pudra No: 20",
+    "text_score": 78.04878048780488,
+    "watsons_id": "1376669"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504264-273.",
+    "ewg_product": "LOVE IT A CHOCO' LOT! eyeshadow stick, 01 Chocolate Lover...",
+    "local_image": "/essence_wats_img/1487402.jpg",
+    "local_product": "Essence Love It A Choco' Lot! Stick Göz Farı 01",
+    "text_score": 77.87610619469027,
+    "watsons_id": "1487402"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504356-306.",
+    "ewg_product": "Cosmetics The False Lashes Mascara Extreme Volume and Curl",
+    "local_image": "/essence_wats_img/162853.jpeg",
+    "local_product": "Essence The False Lash Extreme Volume&Curl Maskara",
+    "text_score": 75.92592592592592,
+    "watsons_id": "162853"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503726-83.",
+    "ewg_product": "FOUNDATION stick, 190 medium pink",
+    "local_image": "/essence_wats_img/1446704.jpg",
+    "local_product": "Essence Stick Fondöten 190",
+    "text_score": 75.40983606557377,
+    "watsons_id": "1446704"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504251-268.",
+    "ewg_product": "make me brow eyebrow gel mascara, browny brows 02",
+    "local_image": "/essence_wats_img/162691.jpeg",
+    "local_product": "Essence Make Me Brow Kaş Maskarası 02 Browny",
+    "text_score": 75.26881720430107,
+    "watsons_id": "162691"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503691-71.",
+    "ewg_product": "FOUNDATION stick, 70 fair peach",
+    "local_image": "/essence_wats_img/1446697.jpg",
+    "local_product": "Essence Stick Fondöten 170",
+    "text_score": 74.57627118644068,
+    "watsons_id": "1446697"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504235-262.",
+    "ewg_product": "Cosmetics Make Me Brow Eyebrow Gel Mascara",
+    "local_image": "/essence_wats_img/173792.png",
+    "local_product": "Essence Make Me Brow Gel Kaş Maskara No: 05",
+    "text_score": 72.72727272727272,
+    "watsons_id": "173792"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504235-262.",
+    "ewg_product": "Cosmetics Make Me Brow Eyebrow Gel Mascara",
+    "local_image": "/essence_wats_img/173790.png",
+    "local_product": "Essence Make Me Brow Gel Kaş Maskara No: 04",
+    "text_score": 72.72727272727272,
+    "watsons_id": "173790"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503691-71.",
+    "ewg_product": "FOUNDATION stick, 70 fair peach",
+    "local_image": "/essence_wats_img/1446781.jpg",
+    "local_product": "Essence Stick Fondöten 50",
+    "text_score": 72.41379310344828,
+    "watsons_id": "1446781"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503754-93.",
+    "ewg_product": "the super peptide glossy lip treatment, 01 Peptacular!",
+    "local_image": "/essence_wats_img/1443554.jpg",
+    "local_product": "Essence The Super Peptide Glossy Dudak Bakımı 01",
+    "text_score": 72,
+    "watsons_id": "1443554"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503976-170.",
+    "ewg_product": "Baby Got Blush Stick, Rose All Day 030",
+    "local_image": "/essence_wats_img/1443589.jpg",
+    "local_product": "Essence Baby Got Allık 50",
+    "text_score": 71.7948717948718,
+    "watsons_id": "1443589"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504017-184.",
+    "ewg_product": "LOVE IT A CHOCO' LOT! lip oil, 01 Oh So Chocolatey!",
+    "local_image": "/essence_wats_img/1487451.jpg",
+    "local_product": "Essence Love It A Choco' Lot! Dudak Yağı 01",
+    "text_score": 71.64179104477611,
+    "watsons_id": "1487451"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503868-132.",
+    "ewg_product": "FOUNDATION stick, 210 medium tan golden",
+    "local_image": "/essence_wats_img/1446767.jpg",
+    "local_product": "Essence Stick Fondöten 210",
+    "text_score": 71.64179104477611,
+    "watsons_id": "1446767"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503965-166.",
+    "ewg_product": "BABY GOT BRONZE liquid bronzer, 40 Tan-Tastic",
+    "local_image": "/essence_wats_img/1446802.jpg",
+    "local_product": "Essence Baby Got Bronze Likit Bronzer 20",
+    "text_score": 70.58823529411765,
+    "watsons_id": "1446802"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503781-102.",
+    "ewg_product": "FOUNDATION stick, 140 light neutral",
+    "local_image": "/essence_wats_img/1446683.jpg",
+    "local_product": "Essence Stick Fondöten 150",
+    "text_score": 69.84126984126985,
+    "watsons_id": "1446683"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503781-102.",
+    "ewg_product": "FOUNDATION stick, 140 light neutral",
+    "local_image": "/essence_wats_img/1446690.jpg",
+    "local_product": "Essence Stick Fondöten 160",
+    "text_score": 69.84126984126985,
+    "watsons_id": "1446690"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503781-102.",
+    "ewg_product": "FOUNDATION stick, 140 light neutral",
+    "local_image": "/essence_wats_img/1446676.jpg",
+    "local_product": "Essence Stick Fondöten 130",
+    "text_score": 69.84126984126985,
+    "watsons_id": "1446676"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503781-102.",
+    "ewg_product": "FOUNDATION stick, 140 light neutral",
+    "local_image": "/essence_wats_img/1446669.jpg",
+    "local_product": "Essence Stick Fondöten 120",
+    "text_score": 69.84126984126985,
+    "watsons_id": "1446669"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503803-110.",
+    "ewg_product": "Extreme Shine Volume Lipgloss - 101 Milky Way",
+    "local_image": "/essence_wats_img/1287818.png",
+    "local_product": "Essence Extreme Shine Volume Dudak Parlatıcısı 101",
+    "text_score": 69.56521739130434,
+    "watsons_id": "1287818"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503906-145.",
+    "ewg_product": "BABY GOT GLOW liquid highlighter, 30 Breezy Bronze",
+    "local_image": "/essence_wats_img/1405537.jpg",
+    "local_product": "Essence Baby Got Likit Aydınlatıcı No: 10",
+    "text_score": 68.13186813186813,
+    "watsons_id": "1405537"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503850-126.",
+    "ewg_product": "JUICY MELON tinted lip & cheek balm, pH Reacting Pink",
+    "local_image": "/essence_wats_img/1446844.jpg",
+    "local_product": "Essence Juicy Melon Tinted Lip&Cheek Balm",
+    "text_score": 68.08510638297872,
+    "watsons_id": "1446844"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504104-214.",
+    "ewg_product": "DROP OF sunshine BRONZING DROPS",
+    "local_image": "/essence_wats_img/1443568.jpg",
+    "local_product": "Essence Drop Of Sunshine Bronzlaştırıcı Damla",
+    "text_score": 68.08510638297872,
+    "watsons_id": "1443568"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503681-68.",
+    "ewg_product": "Extreme Shine Volume Lipgloss -102 Sweet Dreams",
+    "local_image": "/essence_wats_img/1340794.jpg",
+    "local_product": "Essence Extreme Shine Volume Dudak Parlatıcısı 102",
+    "text_score": 68.04123711340206,
+    "watsons_id": "1340794"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503679-67.",
+    "ewg_product": "BABY GOT BLUSH liquid blush, 30 Dusty Rose",
+    "local_image": "/essence_wats_img/1405530.jpg",
+    "local_product": "Essence Baby Got Likit Allık No: 30",
+    "text_score": 67.53246753246754,
+    "watsons_id": "1405530"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504392-319.",
+    "ewg_product": "brow powder duo set, 03 Dark",
+    "local_image": "/essence_wats_img/1446564.jpg",
+    "local_product": "Essence Brow Powder Kaş Kiti 03",
+    "text_score": 66.66666666666666,
+    "watsons_id": "1446564"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503681-68.",
+    "ewg_product": "Extreme Shine Volume Lipgloss -102 Sweet Dreams",
+    "local_image": "/essence_wats_img/1352295.png",
+    "local_product": "Essence Extreme Shine Volume Dudak Parlatıcısı 10",
+    "text_score": 66.66666666666666,
+    "watsons_id": "1352295"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504516-364.",
+    "ewg_product": "make me brow eyebrow gel mascara, ashy brows 04",
+    "local_image": "/essence_wats_img/1465058.jpg",
+    "local_product": "Essence Make Me Brow Kaş Maskarası 07",
+    "text_score": 66.66666666666666,
+    "watsons_id": "1465058"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773502010-27.",
+    "ewg_product": "Hydra Kiss Lip Oil, Kiss From A Rose 01",
+    "local_image": "/essence_wats_img/1465093.jpg",
+    "local_product": "Essence Hydra Kiss Lip Dudak Tint 01",
+    "text_score": 66.66666666666666,
+    "watsons_id": "1465093"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503681-68.",
+    "ewg_product": "Extreme Shine Volume Lipgloss -102 Sweet Dreams",
+    "local_image": "/essence_wats_img/1340787.jpg",
+    "local_product": "Essence Extreme Shine Volume Dudak Parlatıcısı 02",
+    "text_score": 66.66666666666666,
+    "watsons_id": "1340787"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503681-68.",
+    "ewg_product": "Extreme Shine Volume Lipgloss -102 Sweet Dreams",
+    "local_image": "/essence_wats_img/1322545.png",
+    "local_product": "Essence Extreme Shine Volume Dudak Parlatıcısı 103",
+    "text_score": 65.97938144329896,
+    "watsons_id": "1322545"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503968-167.",
+    "ewg_product": "8H Matte Comfort Lipliner, classic red 07",
+    "local_image": "/essence_wats_img/1340829.jpg",
+    "local_product": "Essence 8H Matte Comfort Dudak Kalemi No: 07",
+    "text_score": 65.88235294117646,
+    "watsons_id": "1340829"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503743-89.",
+    "ewg_product": "BABY GOT BLUSH liquid blush, 10 Pinkalicious",
+    "local_image": "/essence_wats_img/1405523.jpg",
+    "local_product": "Essence Baby Got Likit Allık No: 10",
+    "text_score": 65.82278481012659,
+    "watsons_id": "1405523"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503970-168.",
+    "ewg_product": "Extreme Shine Volume Lipgloss, Candy Shop",
+    "local_image": "/essence_wats_img/1287790.png",
+    "local_product": "Essence Extreme Shine Volume Dudak Parlatıcısı 01",
+    "text_score": 65.57377049180329,
+    "watsons_id": "1287790"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504156-233.",
+    "ewg_product": "8H Matte Comfort Lipliner, rosy nude 04",
+    "local_image": "/essence_wats_img/1340815.jpg",
+    "local_product": "Essence 8H Matte Comfort Dudak Kalemi No: 04",
+    "text_score": 65.51724137931035,
+    "watsons_id": "1340815"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504376-313.",
+    "ewg_product": "brow powder duo set, 01 Light",
+    "local_image": "/essence_wats_img/1446550.jpg",
+    "local_product": "Essence Brow Powder Kaş Kiti 01",
+    "text_score": 65.11627906976744,
+    "watsons_id": "1446550"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504444-338.",
+    "ewg_product": "soft & precise lip pencil, 302| Heavenly",
+    "local_image": "/essence_wats_img/1376802.png",
+    "local_product": "Essence Soft & Precise Dudak Kalemi No: 302",
+    "text_score": 65.06024096385542,
+    "watsons_id": "1376802"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503696-73.",
+    "ewg_product": "LOVE IT A CHOCO' LOT! Lipgloss, 01 Melted Bliss Chocolate Kiss.",
+    "local_image": "/essence_wats_img/1487458.jpg",
+    "local_product": "Essence Love It A Choco' Lot! Dudak Parlatıcısı 01",
+    "text_score": 64.86486486486487,
+    "watsons_id": "1487458"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504071-203.",
+    "ewg_product": "8H Matte Comfort Lipliner, pink blush 05",
+    "local_image": null,
+    "local_product": "Essence 8H Matte Comfort Dudak Kalemi No: 05",
+    "text_score": 64.40677966101694,
+    "watsons_id": null
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503844-124.",
+    "ewg_product": "FIX IT LIKE A PRO TRANSPARENT BROW FIXING GEL",
+    "local_image": "/essence_wats_img/1443491.jpg",
+    "local_product": "Essence Fix It Like A Pro Transparan Kaş Sabitleme Jeli",
+    "text_score": 64,
+    "watsons_id": "1443491"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504297-285.",
+    "ewg_product": "brow powder duo set, 02 Medium",
+    "local_image": "/essence_wats_img/1446557.jpg",
+    "local_product": "Essence Brow Powder Kaş Kiti 02",
+    "text_score": 63.63636363636363,
+    "watsons_id": "1446557"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504444-338.",
+    "ewg_product": "soft & precise lip pencil, 302| Heavenly",
+    "local_image": "/essence_wats_img/1376599.png",
+    "local_product": "Essence Soft & Precise Dudak Kalemi No: 303",
+    "text_score": 62.65060240963855,
+    "watsons_id": "1376599"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504227-259.",
+    "ewg_product": "lash WITHOUT LIMITS WATERPROOF EXTREME LENGTHENING & VOLUME...",
+    "local_image": "/essence_wats_img/1465142.jpg",
+    "local_product": "Essence Without Limits Waterproof Extra Uzunluk & Hacim Veren Maskara",
+    "text_score": 62.595419847328245,
+    "watsons_id": "1465142"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504397-321.",
+    "ewg_product": "Bright Eyes! Under Eye Stick, Soft Rose 01",
+    "local_image": "/essence_wats_img/1376746.png",
+    "local_product": "Essence Bright Eyes! Gözaltı Stick Kapatıcı No: 01",
+    "text_score": 62.365591397849464,
+    "watsons_id": "1376746"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503800-109.",
+    "ewg_product": "8H Matte Comfort Lipliner, silky hazelnut 02",
+    "local_image": "/essence_wats_img/1443533.jpg",
+    "local_product": "Essence 8H Matte Comfort Dudak Kalemi 12",
+    "text_score": 61.904761904761905,
+    "watsons_id": "1443533"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504126-222.",
+    "ewg_product": "8H Matte Comfort Lipliner, soft beige 03",
+    "local_image": "/essence_wats_img/1340801.jpg",
+    "local_product": "Essence 8H Matte Comfort Dudak Kalemi No: 01",
+    "text_score": 61.904761904761905,
+    "watsons_id": "1340801"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504334-298.",
+    "ewg_product": "eye sparkle! liquid liner, Sparkling Lights",
+    "local_image": "/essence_wats_img/1446585.jpg",
+    "local_product": "Essence Eye Sparkle! Likit Göz Kalemi 01",
+    "text_score": 61.72839506172839,
+    "watsons_id": "1446585"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504469-347.",
+    "ewg_product": "LOVE IT A CHOCO' LOT! lash WITHOUT LIMITS BROWN EXTREME...",
+    "local_image": "/essence_wats_img/1487409.jpg",
+    "local_product": "Essence Love It A Choco' Lot! L.W.L Kahve Maskara",
+    "text_score": 60,
+    "watsons_id": "1487409"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1446739.jpg",
+    "local_product": "Essence Jel Oje 79",
+    "text_score": 59.45945945945946,
+    "watsons_id": "1446739"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773501971-13.",
+    "ewg_product": "Hydra Kiss Lip Oil, Cranberry Is Back 06",
+    "local_image": "/essence_wats_img/1446627.jpg",
+    "local_product": "Essence Hydra Kiss Dudak Yağı 06",
+    "text_score": 57.77777777777778,
+    "watsons_id": "1446627"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773501976-15.",
+    "ewg_product": "Hydra Kiss Lip Oil, Mocha Glow 08",
+    "local_image": "/essence_wats_img/1446634.jpg",
+    "local_product": "Essence Hydra Kiss Dudak Yağı 08",
+    "text_score": 57.77777777777778,
+    "watsons_id": "1446634"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504593-393.",
+    "ewg_product": "Long Lasting Eye Pencil, Sparkling Black 34",
+    "local_image": "/essence_wats_img/1303155.png",
+    "local_product": "Essence Longlasting Göz Kalemi 34",
+    "text_score": 56.75675675675676,
+    "watsons_id": "1303155"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503844-124.",
+    "ewg_product": "FIX IT LIKE A PRO TRANSPARENT BROW FIXING GEL",
+    "local_image": "/essence_wats_img/1340710.jpg",
+    "local_product": "Essence Fix It Like A Boss Şeffaf Kaş Maskarası",
+    "text_score": 56.52173913043478,
+    "watsons_id": "1340710"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773502010-27.",
+    "ewg_product": "Hydra Kiss Lip Oil, Kiss From A Rose 01",
+    "local_image": "/essence_wats_img/1376613.png",
+    "local_product": "Essence Hydra Kiss Dudak Yağı No: 01",
+    "text_score": 55.319148936170215,
+    "watsons_id": "1376613"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773502039-37.",
+    "ewg_product": "Hydra Kiss Lip Oil, Pink Champagne 03",
+    "local_image": "/essence_wats_img/1376620.png",
+    "local_product": "Essence Hydra Kiss Dudak Yağı No: 03",
+    "text_score": 54.794520547945204,
+    "watsons_id": "1376620"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503099-53.",
+    "ewg_product": "What A Tint! Lip & Cheek Tint, kiss from a rose 01",
+    "local_image": "/essence_wats_img/1465282.jpg",
+    "local_product": "Essence What a Tint! Dudak & Yanak Renklendirici 10",
+    "text_score": 54.54545454545455,
+    "watsons_id": "1465282"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1327249.png",
+    "local_product": "Essence Jel Oje No: 17",
+    "text_score": 53.65853658536585,
+    "watsons_id": "1327249"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1327291.png",
+    "local_product": "Essence Jel Oje No: 33",
+    "text_score": 53.65853658536585,
+    "watsons_id": "1327291"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1327305.png",
+    "local_product": "Essence Jel Oje No: 42",
+    "text_score": 53.65853658536585,
+    "watsons_id": "1327305"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1327256.png",
+    "local_product": "Essence Jel Oje No: 18",
+    "text_score": 53.65853658536585,
+    "watsons_id": "1327256"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1405593.jpg",
+    "local_product": "Essence Gel Oje No: 70",
+    "text_score": 53.65853658536585,
+    "watsons_id": "1405593"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1327151.png",
+    "local_product": "Essence Jel Oje No: 01",
+    "text_score": 53.65853658536585,
+    "watsons_id": "1327151"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1443603.jpg",
+    "local_product": "Essence Jel Oje No: 72",
+    "text_score": 53.65853658536585,
+    "watsons_id": "1443603"
+  },
+  {
+    "ewg_image": null,
+    "ewg_product": "nail polish #101 color and go (clear) (old formulation)",
+    "local_image": "/essence_wats_img/1443596.jpg",
+    "local_product": "Essence Jel Oje No: 71",
+    "text_score": 53.65853658536585,
+    "watsons_id": "1443596"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503942-158.",
+    "ewg_product": "JUICY BOMB Shiny Lipgloss, Lovely Litchi 101",
+    "local_image": "/essence_wats_img/1465198.jpg",
+    "local_product": "Essence Chili Bomb Parlak Lip Gloss 01",
+    "text_score": 51.21951219512195,
+    "watsons_id": "1465198"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773502019-30.",
+    "ewg_product": "the super peptide glossy lip treatment, 04 Coralized!",
+    "local_image": "/essence_wats_img/1465240.jpg",
+    "local_product": "Essence Super Peptide Parlak Dudak Bakım Ürünü 02",
+    "text_score": 50.98039215686274,
+    "watsons_id": "1465240"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773503754-93.",
+    "ewg_product": "the super peptide glossy lip treatment, 01 Peptacular!",
+    "local_image": "/essence_wats_img/1465247.jpg",
+    "local_product": "Essence Super Peptide Parlak Dudak Bakım Ürünü 03",
+    "text_score": 50.48543689320388,
+    "watsons_id": "1465247"
+  },
+  {
+    "ewg_image": "/essence_ewg_img/1773504134-225.",
+    "ewg_product": "Super Fine Eyeliner Pen - 01 Deep Black",
+    "local_image": "/essence_wats_img/1252699.png",
+    "local_product": "Essence Liner Tiny Tip No: 01",
+    "text_score": 50,
+    "watsons_id": "1252699"
+  }
+]

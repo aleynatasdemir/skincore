@@ -1,23 +1,36 @@
 
 1. Hafta Video Linki :https://youtu.be/vL49_XQTqpc
+2. Hafta Video Linki :https://youtu.be/rLe49olRcSA
 -----------------------------------------
-🎯 1. Üstlenilen Görevler 
+ 1. Üstlenilen Görevler 
 -----------------------------------------
-- **1. Hafta — Veri Toplama**
+- 1. Hafta — Veri Toplama
   - Kozmetik ürünlerin genel verilerinin ve görsellerinin toplanması.
   - Farklı kaynaklardan (Dermokozmetika, EWG vb.) gelen verilerin birleştirilerek "Ürün Dataseti"nin oluşturulması.
-- **5. Veritabanı Tasarımı**
+- 1. Hafta - Veritabanı Tasarımı
   - MongoDB veritabanı altyapısının kurulması ve koleksiyonların (Kategori bazlı: makyaj, cilt bakımı vb.) yönetilmesi.
   - Veritabanı veri temizleme ve normalize etme işlemleri.
+- 2. Hafta — Veri Zenginleştirme, Temizleme ve Vektörizasyon
+  - OnSkin ve benzeri platformlardan eksik ürün verilerinin hedeflenerek paralel çekilmesi ve veri havuzunun genişletilmesi.
+  - Yapay zeka dil modelleri aracılığıyla düzensiz ürün içeriklerinin uluslararası INCI standartlarında normalize edilmesi.
+  - Ürün eşleştirme algoritmalarında kullanılmak üzere ürün görsellerinden vektörel temsillerin (embeddings) çıkarılması.
 
 -----------------------------------------
-🛠️ 2. Şimdiye Kadar Neler Yapıldı?
+ 2. Şimdiye Kadar Neler Yapıldı?
 -----------------------------------------
-1. **Veri Çekme (Scraping/Crawling):**
+1. Hafta - Veri Çekme (Scraping/Crawling):
    - Dermokozmetika ve EWG gibi platformlardan binlerce ürünün adı, markası, içerik metni ve görsel linkleri toplandı.
-2. **Görsel Yönetimi & İndirme:**
+1. Hafta - Görsel Yönetimi & İndirme:
    - `download_images.py` gibi betiklerle ürün görselleri barkod veya ID'lerine göre yerel diske indirildi. API'nin bu görselleri sunması sağlandı.
-3. **Fuzzy Matching (Bulanık Eşleştirme):**
+1. Hafta - Fuzzy Matching (Bulanık Eşleştirme):
    - Farklı kaynaklardan gelen aynı ürünü tekilleştirmek için barkod ve isim tabanlı bulanık eşleştirme algoritmaları geliştirildi.
-4. **OCR Altyapısı (Görselden Metne):**
+1. Hafta - OCR Altyapısı (Görselden Metne):
    - `extract_text.py` üzerinden Google Cloud Vision API ile entegrasyon sağlandı. Ürün arkası içerik listelerinin fotoğraflardan okunabilir hale getirilmesi için temel atıldı.
+2. Hafta - API Entegrasyonu & Dinamik Veri Çekimi:
+   - `onskin` klasöründe yer alan `fetch_onskin_products.py` betiği geliştirildi. Eksik olan ürünler için paralel/multithread çalışan, rate limit ve token yönetimi yapabilen dinamik bir veri toplama altyapısı kurularak eksik barkod verileri sistemde tamamlandı.
+2. Hafta - LLM ile İçerik (Ingredient) Standardizasyonu:
+   - `clean_product_ingredients_gemini.py` betiği ile Gemini 3.1 Flash modeli kullanıldı. Karışık ürün içerikleri bölüm başlıklarından ve anlamsız metinlerden arındırılarak uluslararası INCI standardına göre düzenlendi ve MongoDB'ye toplu olarak güncellendi.
+2. Hafta - Görsel Vektörizasyon (Image Embedding):
+   - `embedding` klasöründeki `embed_images.py` betiği kullanılarak yerel diske indirilmiş ürün görselleri Google Gemini Embedding API'ye gönderilip görsel vektörlere dönüştürüldü. İleride görsel veya vektörel aramalarında kullanılmak üzere MongoDB'de doğrudan `embedding` alanı olarak kaydedildi.
+
+

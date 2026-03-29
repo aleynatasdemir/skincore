@@ -1,0 +1,758 @@
+[
+  {
+    "ewg_image": "/loreal_ewg_img/1773517112-901.jpg",
+    "ewg_product": "L'Oreal Paris Voluminous Noir Balm Volumizing Mascara, Black",
+    "local_image": "/loreal_local_img/3600521893500.jpg",
+    "local_product": "Loreal Paris Volume Million Lashes Carbon Black Maskara",
+    "score": 0.8921796631792075
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516221-605.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Le Matte Resistance Liquid...",
+    "local_image": "/loreal_local_img/3600523244416.jpg",
+    "local_product": "Loreal Paris Infaillible Sexy Balm Ruj 108 Whaaat",
+    "score": 0.880950236873382
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514654-106.jpg",
+    "ewg_product": "L'oreal Paris Shiny Lip Stain Be Courageous Lipstick",
+    "local_image": "/loreal_local_img/3600523244478.jpg",
+    "local_product": "Loreal Paris Infaillible Sexy Balm Ruj 203 Yala Yolo",
+    "score": 0.8923692364335152
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514739-132.jpg",
+    "ewg_product": "L'oreal Paris Shiny Lip Stain Be Rebellious Lipstick",
+    "local_image": "/loreal_local_img/3600523244447.jpg",
+    "local_product": "Loreal Paris Infaillible Sexy Balm Ruj 111 Go Pretty Or Go Home",
+    "score": 0.8759158843229147
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516081-559.jpg",
+    "ewg_product": "L'oreal Paris Infallible Pro Last Pencil Eyeliner, 850...",
+    "local_image": "/loreal_local_img/3600523351619.jpg",
+    "local_product": "Loreal Paris Infaillible Paint Gel Crayon Eyeliner Goz Kalemi 02 Grey Fever",
+    "score": 0.8873643287610358
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514654-106.jpg",
+    "ewg_product": "L'oreal Paris Shiny Lip Stain Be Courageous Lipstick",
+    "local_image": "/loreal_local_img/3600523347971.jpg",
+    "local_product": "Loreal Paris Infaillible Lip Paint Likit Ruj Lacquer 102 Pink Lady",
+    "score": 0.8625294242231947
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516535-708.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Matte Resistance Liquid Lipstick,...",
+    "local_image": "/loreal_local_img/3600523348039.jpg",
+    "local_product": "Loreal Paris Infaillible Lip Paint Likit Ruj Matte 205 Apocalypse Red",
+    "score": 0.8747305319447358
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516221-605.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Le Matte Resistance Liquid...",
+    "local_image": "/loreal_local_img/3600523348084.jpg",
+    "local_product": "Loreal Paris Infaillible Lip Paint Likit Ruj Matte 201 Hollywood Beige",
+    "score": 0.8660439859008653
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517314-971.jpg",
+    "ewg_product": "L'oreal Paris Infallible Pro Last Waterproof Pencil...",
+    "local_image": "/loreal_local_img/3600523351589.jpg",
+    "local_product": "Loreal Paris Infaillible Paint Gel Crayon Eyeliner Goz Kalemi 10 Ive Got The Blue",
+    "score": 0.8897145310821202
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514883-176.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Maison...",
+    "local_image": "/loreal_local_img/3600523399864.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 344 Retro Red",
+    "score": 0.9026098356377373
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516100-565.jpg",
+    "ewg_product": "L'Oreal Paris Matte Lipstick , 103 Le Rosy Confident",
+    "local_image": "/loreal_local_img/3600523399826.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 104 Strike A Rose",
+    "score": 0.9139056747936659
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516221-605.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Le Matte Resistance Liquid...",
+    "local_image": "/loreal_local_img/3600523399789.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 633 Moka Chic",
+    "score": 0.8968850869549998
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515890-497.jpg",
+    "ewg_product": "L'Oreal Paris Matte Lipstick , 163 Le Coral Irreverent",
+    "local_image": "/loreal_local_img/3600523399840.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 241 Pink A Porter",
+    "score": 0.883732586270919
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515890-497.jpg",
+    "ewg_product": "L'Oreal Paris Matte Lipstick , 163 Le Coral Irreverent",
+    "local_image": "/loreal_local_img/3600523399833.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 101 Candy Stiletto",
+    "score": 0.8927719484304665
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516199-598.jpg",
+    "ewg_product": "L'Oreal Paris Matte Lipstick , 203 Le Rouge Avant-garde",
+    "local_image": "/loreal_local_img/3600523400010.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 347 Haute Rouge",
+    "score": 0.8875490660291148
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516089-562.jpg",
+    "ewg_product": "L'Oreal Paris Matte Lipstick , 113 Le Nude Admirable",
+    "local_image": "/loreal_local_img/3600523399932.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 640 Erotique",
+    "score": 0.8859827066991411
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516535-708.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Matte Resistance Liquid Lipstick,...",
+    "local_image": "/loreal_local_img/3600523399956.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 430 Mon Jules",
+    "score": 0.8903659300560259
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516160-585.jpg",
+    "ewg_product": "L'oreal Paris Colorista Hair Makeup, #Grey700 (2020...",
+    "local_image": "/loreal_local_img/3600523414215.jpg",
+    "local_product": "Loreal Paris Colorista Effects Renk Acici Ombre",
+    "score": 0.860948602138942
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517099-896.jpg",
+    "ewg_product": "L'Oreal Paris Colorista 1-Day Color Spray, #RoseGold02 (2020...",
+    "local_image": "/loreal_local_img/3600523414345.jpg",
+    "local_product": "Loreal Paris Colorista Sprey Sac Boyasi Pink",
+    "score": 0.9151043149662617
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516221-605.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Le Matte Resistance Liquid...",
+    "local_image": "/loreal_local_img/3600523483402.jpg",
+    "local_product": "Loreal Paris Infaillible Nudist Matte Lip Paint Mat Likit Ruj 209 Nude On Fleek",
+    "score": 0.861960883202173
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516221-605.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Le Matte Resistance Liquid...",
+    "local_image": "/loreal_local_img/3600523483419.jpg",
+    "local_product": "Loreal Paris Infaillible Nudist Matte Lip Paint Mat Likit Ruj 210 Dead Lips",
+    "score": 0.8565510348552594
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515806-470.jpg",
+    "ewg_product": "20 Ivory Foundation",
+    "local_image": "/loreal_local_img/3600523499250.jpg",
+    "local_product": "Loreal Paris Infaillible 24H Ultra Matte Prestige Pudra 123 Warm Vanilla",
+    "score": 0.8514365856154383
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516266-620.jpg",
+    "ewg_product": "L'Oreal Paris True Match Lumi Powder Glow Illuminator C302...",
+    "local_image": "/loreal_local_img/3600523300426.jpg",
+    "local_product": "Loreal Paris True Match Highlight Aydinlatici Pudra 102D 102W Golden Glow",
+    "score": 0.8935024729690184
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516266-620.jpg",
+    "ewg_product": "L'Oreal Paris True Match Lumi Powder Glow Illuminator C302...",
+    "local_image": "/loreal_local_img/3600523300433.jpg",
+    "local_product": "Loreal Paris True Match Highlight Aydinlatici Pudra 302R 302C Icy Glow",
+    "score": 0.8892430318174006
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515856-486.jpg",
+    "ewg_product": "L'Oreal Paris Micro Ink Pen, 630 Blonde (2020 formulation)",
+    "local_image": "/loreal_local_img/3600523527182.jpg",
+    "local_product": "Loreal Paris Brow Artist Micro Tattoo Kas Kalemi 107 Cool Brunette",
+    "score": 0.8791153862508876
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523518777.jpg",
+    "local_product": "Loreal Paris Color Riche Shine Ruj 905 Bae",
+    "score": 0.8929262772751096
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516720-768.jpg",
+    "ewg_product": "L'Oreal Paris Matte Signature Liquid Eyeliner, 720 Greige...",
+    "local_image": "/loreal_local_img/3600523530830.jpg",
+    "local_product": "Loreal Paris Superliner Tattoo Signature Liner Ekstra Siyah",
+    "score": 0.8561725559610948
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523518753.jpg",
+    "local_product": "Loreal Paris Color Riche Shine Ruj 470 Map To Nirvana",
+    "score": 0.8947921717434199
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523465385.jpg",
+    "local_product": "Loreal Paris Color Riche Shine Ruj 643 Hot Irl",
+    "score": 0.8862773763261503
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516081-559.jpg",
+    "ewg_product": "L'oreal Paris Infallible Pro Last Pencil Eyeliner, 850...",
+    "local_image": "/loreal_local_img/3600523492565.jpg",
+    "local_product": "Loreal Paris Infaillible Dudak Kalemi 213 Stripped Brown",
+    "score": 0.8710672145705541
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515059-231.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Le Beige",
+    "local_image": "/loreal_local_img/3600523512836.jpg",
+    "local_product": "Loreal Paris Color Riche X Balmain Ruj 648 Glamazone",
+    "score": 0.8985576602146863
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514552-75.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Berry...",
+    "local_image": "/loreal_local_img/3600523512898.jpg",
+    "local_product": "Loreal Paris Color Riche X Balmain Ruj 468 Liberation",
+    "score": 0.8730438373256713
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515059-231.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Le Beige",
+    "local_image": "/loreal_local_img/3600523512911.jpg",
+    "local_product": "Loreal Paris Color Riche X Balmain Ruj 246 Confession",
+    "score": 0.9096079268907995
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523512928.jpg",
+    "local_product": "Loreal Paris Color Riche X Balmain Ruj 647 Urban Safari",
+    "score": 0.9102350444106572
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514591-87.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Bronze Coin",
+    "local_image": "/loreal_local_img/3600523512874.jpg",
+    "local_product": "Loreal Paris Color Riche X Balmain Ruj 356 Confidence",
+    "score": 0.9068978653726981
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514817-156.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Bronzine",
+    "local_image": "/loreal_local_img/3600523584772.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 473 Obsidian",
+    "score": 0.880973968075986
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516089-562.jpg",
+    "ewg_product": "L'Oreal Paris Matte Lipstick , 113 Le Nude Admirable",
+    "local_image": "/loreal_local_img/3600523584802.jpg",
+    "local_product": "Loreal Paris Color Riche Matte Addiction Ruj 908 Storm",
+    "score": 0.8981971574495198
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516962-848.jpg",
+    "ewg_product": "L'Oreal Paris Magic Root Cover Up, Light Brown (2020...",
+    "local_image": "/loreal_local_img/3600523337651.jpg",
+    "local_product": "Loreal Paris Magic Retouch Beyazlar Icin Aninda Kapatici Sprey Kizil Kahve 75 Ml",
+    "score": 0.8749474007027034
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516962-848.jpg",
+    "ewg_product": "L'Oreal Paris Magic Root Cover Up, Light Brown (2020...",
+    "local_image": "/loreal_local_img/3600523388141.jpg",
+    "local_product": "Loreal Paris Magic Retouch Beyazlar Icin Aninda Kapatici Sprey Acik Sari 75 Ml",
+    "score": 0.8645059885909055
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523597741.jpg",
+    "local_product": "Loreal Paris Color Riche Shine Ruj 656 Beige In The City",
+    "score": 0.9064822557491538
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523597789.jpg",
+    "local_product": "Loreal Paris Color Riche Shine Ruj 659 Blow Your Glow",
+    "score": 0.8691661081521753
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516081-559.jpg",
+    "ewg_product": "L'oreal Paris Infallible Pro Last Pencil Eyeliner, 850...",
+    "local_image": "/loreal_local_img/3600523351558.jpg",
+    "local_product": "Loreal Paris Infaillible Paint Gel Crayon Eyeliner 07 Flash Silver",
+    "score": 0.8726737532585276
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516081-559.jpg",
+    "ewg_product": "L'oreal Paris Infallible Pro Last Pencil Eyeliner, 850...",
+    "local_image": "/loreal_local_img/3600523563524.jpg",
+    "local_product": "Loreal Paris Infaillible Paint Gel Crayon Eyeliner 14 White Is White",
+    "score": 0.8655082180033153
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516081-559.jpg",
+    "ewg_product": "L'oreal Paris Infallible Pro Last Pencil Eyeliner, 850...",
+    "local_image": "/loreal_local_img/3600523563555.jpg",
+    "local_product": "Loreal Paris Infaillible Paint Gel Crayon Eyeliner 17 Christmas Day",
+    "score": 0.8842167439569862
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517027-871.jpg",
+    "ewg_product": "L'Oreal Paris Brow Stylist Kabuki Blender Crayon, 313...",
+    "local_image": "/loreal_local_img/3600523601684.jpg",
+    "local_product": "Loreal Paris Brow Artist High Contour Kas Kalemi 108 Warm Brunette",
+    "score": 0.8500718744386099
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515059-231.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Le Beige",
+    "local_image": "/loreal_local_img/3600523643011.jpg",
+    "local_product": "Loreal Paris Color Riche Ruj 259 Nude After Party",
+    "score": 0.8927891886744999
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514552-75.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Berry...",
+    "local_image": "/loreal_local_img/3600523643028.jpg",
+    "local_product": "Loreal Paris Color Riche Ruj 488 Close At Night",
+    "score": 0.8835573943735561
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514883-176.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Maison...",
+    "local_image": "/loreal_local_img/3600523643035.jpg",
+    "local_product": "Loreal Paris Color Riche Ruj 393 Paris Burning",
+    "score": 0.8976059924463997
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515246-290.jpg",
+    "ewg_product": "L'Oreal Paris Voluminous Lash Paradise Mascara, 201 Black",
+    "local_image": "/loreal_local_img/3600523706082.jpg",
+    "local_product": "Loreal Paris Paradise Orman Meyvesi Kokulu Mor Maskara",
+    "score": 0.8651006522220671
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173170.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 19 Mogul",
+    "score": 0.9124737174759329
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515225-283.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Bottomless Java",
+    "local_image": "/loreal_local_img/30173163.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 18 Superior",
+    "score": 0.8798319946001101
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515338-320.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Iced Latte",
+    "local_image": "/loreal_local_img/30173217.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 23 Charged",
+    "score": 0.8683579717780332
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173262.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 28 Keepon",
+    "score": 0.8754535612248581
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173309.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 32 Commander",
+    "score": 0.8773220334936782
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515098-243.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Timeless Blue Spark",
+    "local_image": "/loreal_local_img/30173378.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 39 Iconic",
+    "score": 0.87269849859066
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515496-371.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Silver Sky",
+    "local_image": "/loreal_local_img/30173293.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 31 Crowned",
+    "score": 0.8551733141298818
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515172-266.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Midnight Blue",
+    "local_image": "/loreal_local_img/30173286.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 30 Skyhigh",
+    "score": 0.8804881187146343
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515654-422.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Golden Emerald",
+    "local_image": "/loreal_local_img/30173347.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 36 Charmer",
+    "score": 0.8672201901353968
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515786-464.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Amber Rush",
+    "local_image": "/loreal_local_img/30173361.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 38 Bravery",
+    "score": 0.8726902118631075
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514537-70.jpg",
+    "ewg_product": "L'oreal Paris Magic Skin Beautifier BB Cream, Light",
+    "local_image": "/loreal_local_img/10173649.jpg",
+    "local_product": "Loreal Paris Cest Magic Bb Krem 02 Light",
+    "score": 0.8648525547782284
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514537-70.jpg",
+    "ewg_product": "L'oreal Paris Magic Skin Beautifier BB Cream, Light",
+    "local_image": "/loreal_local_img/10173650.jpg",
+    "local_product": "Loreal Paris Cest Magic Bb Krem 03 Medium Light",
+    "score": 0.8670364479833544
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514537-70.jpg",
+    "ewg_product": "L'oreal Paris Magic Skin Beautifier BB Cream, Light",
+    "local_image": "/loreal_local_img/3600523723515.jpg",
+    "local_product": "Loreal Paris Cest Magic Bb Krem 05 Medium Dark",
+    "score": 0.8546278704595113
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516408-667.jpg",
+    "ewg_product": "L'Oreal Paris True Match Lumi Glotion, Light",
+    "local_image": "/loreal_local_img/3600523705467.jpg",
+    "local_product": "Loreal Paris Glow Cherie Aydinlik Veren Renkli Nemlendirici Light Glow",
+    "score": 0.8552147363134148
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516408-667.jpg",
+    "ewg_product": "L'Oreal Paris True Match Lumi Glotion, Light",
+    "local_image": "/loreal_local_img/3600523705450.jpg",
+    "local_product": "Loreal Paris Glow Cherie Aydinlik Veren Renkli Nemlendirici Porcelain Glow",
+    "score": 0.8576560759386717
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514537-70.jpg",
+    "ewg_product": "L'oreal Paris Magic Skin Beautifier BB Cream, Light",
+    "local_image": "/loreal_local_img/3600523723485.jpg",
+    "local_product": "Loreal Paris Cest Magic Bb Krem 04 Medium",
+    "score": 0.8619641105358904
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173057.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 07 On Top",
+    "score": 0.8926014048589556
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173040.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 06 Ferocious",
+    "score": 0.8633532680890341
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515225-283.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Bottomless Java",
+    "local_image": "/loreal_local_img/30173019.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 03 Powerhouse",
+    "score": 0.8754466524313469
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173002.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 02 Force",
+    "score": 0.8844109572574642
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173033.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 05 Ruler",
+    "score": 0.8646530509990233
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173101.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 12 Fighter",
+    "score": 0.8943543233834188
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173118.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 13 Dignity",
+    "score": 0.8702548603617636
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515657-423.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Eternal Black",
+    "local_image": "/loreal_local_img/30173149.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 16 Determination",
+    "score": 0.876460441507334
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515172-266.jpg",
+    "ewg_product": "L'oreal Paris Infallible 24 HR Eye Shadow, Midnight Blue",
+    "local_image": "/loreal_local_img/30173095.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 11 Worth It",
+    "score": 0.8765672841887592
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173071.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 09 High Potential",
+    "score": 0.8882979103131898
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517176-923.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Monos Eyeshadow, Petite Perle",
+    "local_image": "/loreal_local_img/30173125.jpg",
+    "local_product": "Loreal Paris Color Queen Tekli Goz Fari 14 Influence",
+    "score": 0.8899644470284214
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514444-41.jpg",
+    "ewg_product": "L'Oreal Paris Elnett Satin Extra Strong Hold with UV Filter...",
+    "local_image": "/loreal_local_img/3600523379767.jpg",
+    "local_product": "Loreal Paris Elnett Dalgali Saclar Icin Kopuk 200 Ml",
+    "score": 0.8519735490083387
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514444-41.jpg",
+    "ewg_product": "L'Oreal Paris Elnett Satin Extra Strong Hold with UV Filter...",
+    "local_image": "/loreal_local_img/3600522506812.jpg",
+    "local_product": "Loreal Paris Elnett Belirgin Ve Dolgun Bukleler Icin Kopuk 200 Ml",
+    "score": 0.8545967710795986
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523687114.jpg",
+    "local_product": "Loreal Paris Color Riche Plump Shine Ruj 101 Nectarine Plump",
+    "score": 0.8898153221516968
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516742-775.jpg",
+    "ewg_product": "L'Oreal Paris Matte Signature Liquid Eyeliner, 730 Burgundy ...",
+    "local_image": "/loreal_local_img/30175242.jpg",
+    "local_product": "Loreal Paris Matte Signature Eyeliner 03 Marron",
+    "score": 0.9355660930114802
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523700431.jpg",
+    "local_product": "Loreal Paris Color Riche Plump Shine Ruj 107 Coconut Plump",
+    "score": 0.897309843319441
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523687145.jpg",
+    "local_product": "Loreal Paris Color Riche Plump Shine Ruj 104 Guava Plump",
+    "score": 0.8849808486792149
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515066-233.jpg",
+    "ewg_product": "L'Oreal Paris Glow Paradise Balm in Lipstick, Pomegranate...",
+    "local_image": "/loreal_local_img/3600523700455.jpg",
+    "local_product": "Loreal Paris Color Riche Plump Shine Ruj 109 Blue Mint Plump",
+    "score": 0.8783834060937652
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516081-559.jpg",
+    "ewg_product": "L'oreal Paris Infallible Pro Last Pencil Eyeliner, 850...",
+    "local_image": "/loreal_local_img/3600523163496.jpg",
+    "local_product": "Loreal Paris Infaillible 24H Goz Kalemi 320 Nude Obsession",
+    "score": 0.8555242421985881
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517399-1001.jpg",
+    "ewg_product": "Loreal Paris Satin Lip Liner, Worth It",
+    "local_image": "/loreal_local_img/3600523827763.jpg",
+    "local_product": "Loreal Paris Color Riche Dudak Kalemi 635 Worth It Medium",
+    "score": 0.8536029105652537
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517399-1001.jpg",
+    "ewg_product": "Loreal Paris Satin Lip Liner, Worth It",
+    "local_image": "/loreal_local_img/3600523827756.jpg",
+    "local_product": "Loreal Paris Color Riche Dudak Kalemi 601 Worth It",
+    "score": 0.8858085058468848
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516221-605.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Le Matte Resistance Liquid...",
+    "local_image": "/loreal_local_img/30144514.jpg",
+    "local_product": "Loreal Paris Color Riche Intense Volume Matte Ruj 520 Nude Defiant",
+    "score": 0.944358831992447
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516499-697.jpg",
+    "ewg_product": "L'oreal Paris True Match Nude Hyaluronic Tinted Serum, 1-2.5...",
+    "local_image": "/loreal_local_img/3600524101404.jpg",
+    "local_product": "Loreal Paris True Match Nude Fondoten Serum 12 Rosy Light",
+    "score": 0.9446005718897894
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517280-960.jpg",
+    "ewg_product": "L'oreal Paris Voluminous Panorama Mascara, Black Waterproof",
+    "local_image": "/loreal_local_img/30189010.jpg",
+    "local_product": "Loreal Paris Panorama Hacim Veren Maskara All Night Black Siyah",
+    "score": 0.863314589464276
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514889-178.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Toasted...",
+    "local_image": "/loreal_local_img/3600524108045.jpg",
+    "local_product": "Loreal Paris Color Riche Saten Bitisli Ruj 601 Worth It",
+    "score": 0.9347552754215014
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514537-70.jpg",
+    "ewg_product": "L'oreal Paris Magic Skin Beautifier BB Cream, Light",
+    "local_image": "/loreal_local_img/3600523723539.jpg",
+    "local_product": "Loreal Paris Magic Bb Renkli Nemlendirici Krem Light",
+    "score": 0.8624688272619251
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514537-70.jpg",
+    "ewg_product": "L'oreal Paris Magic Skin Beautifier BB Cream, Light",
+    "local_image": "/loreal_local_img/3600523723577.jpg",
+    "local_product": "Loreal Paris Magic Bb Renkli Nemlendirici Krem Medium Light",
+    "score": 0.8511814586061134
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516081-559.jpg",
+    "ewg_product": "L'oreal Paris Infallible Pro Last Pencil Eyeliner, 850...",
+    "local_image": "/loreal_local_img/3600524026646.jpg",
+    "local_product": "Loreal Paris Infaillible Automatic Jel Goz Kalemi 002 Mat Siyah",
+    "score": 0.8767173661888463
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514889-178.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Toasted...",
+    "local_image": "/loreal_local_img/3600524105174.jpg",
+    "local_product": "Loreal Paris Color Riche Saten Bitisli Ruj 540 Nude Unstoppable",
+    "score": 0.9340167809948007
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514889-178.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Toasted...",
+    "local_image": "/loreal_local_img/3600524105181.jpg",
+    "local_product": "Loreal Paris Color Riche Saten Bitisli Ruj 550 Nude Unapologetic",
+    "score": 0.9233153471910565
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514846-165.jpg",
+    "ewg_product": "L'Oreal Paris Colour Riche Original Satin Lipstick, Spiced...",
+    "local_image": "/loreal_local_img/3600524105198.jpg",
+    "local_product": "Loreal Paris Color Riche Saten Bitisli Ruj 570 Worth It Intense",
+    "score": 0.9314306830565765
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517112-901.jpg",
+    "ewg_product": "L'Oreal Paris Voluminous Noir Balm Volumizing Mascara, Black",
+    "local_image": "/loreal_local_img/3600521821152.jpg",
+    "local_product": "Loreal Paris Volume Million Lashes Maskara",
+    "score": 0.9039738796001234
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515234-286.jpg",
+    "ewg_product": "L'oreal Paris Bronze Please! Sun Powder Face & Body, La...",
+    "local_image": "/loreal_local_img/3600523969692.jpg",
+    "local_product": "Loreal Paris Bronze To Paradise Mat Bronzlastirici Pudra 02 Baby One More Tan",
+    "score": 0.872316440749589
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516542-710.jpg",
+    "ewg_product": "L'Oreal Paris Bright Reveal Broad Spectrum Sunscreen Lotion,...",
+    "local_image": "/loreal_local_img/3600524187064.jpg",
+    "local_product": "Loreal Paris Bright Reveal Spf50 Ultra Koruyucu Ultra Pratik Stick Gunes Kremi 9 Ml",
+    "score": 0.8766337493247996
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515507-375.jpg",
+    "ewg_product": "L'oreal Paris Revitalift Triple Power Anti Aging Eye Cream",
+    "local_image": "/loreal_local_img/3600524186234.jpg",
+    "local_product": "Loreal Paris Revitalift Lazer Eyebag Instant Eraser Goz Alti Torba Gorunumune Karsi Etkili Goz Kremi 15 Ml",
+    "score": 0.8623396355682618
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516154-583.jpg",
+    "ewg_product": "L'Oreal Paris Foundation Longwear Sunscreen Shaping Stick,...",
+    "local_image": "/loreal_local_img/30188372.jpg",
+    "local_product": "Loreal Paris Infaillible Face Sculpter Stick Kontur 1 Fair",
+    "score": 0.8576716677506896
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514751-136.jpg",
+    "ewg_product": "L'Oreal Paris Waterproof Concealer , 440 Truffle",
+    "local_image": "/loreal_local_img/30188433.jpg",
+    "local_product": "Loreal Paris Infaillible Face Sculpter Stick Kontur 5 Medium",
+    "score": 0.8522959490192958
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514811-154.jpg",
+    "ewg_product": "L'Oreal Paris Waterproof Concealer , 415 Honey",
+    "local_image": "/loreal_local_img/30188396.jpg",
+    "local_product": "Loreal Paris Infaillible Face Sculpter Stick Kontur 3 1 Light",
+    "score": 0.8529210268429187
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517375-993.jpg",
+    "ewg_product": "Loreal Paris Satin Lip Liner, Worth It Medium",
+    "local_image": "/loreal_local_img/3600522860822.jpg",
+    "local_product": "Loreal Paris Color Riche Dudak Kalemi 630 Beige A Nu",
+    "score": 0.8645401410101616
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515881-494.jpg",
+    "ewg_product": "L'oreal Paris Revitalift Derm Intensives 3.5% Glycolic Acid...",
+    "local_image": "/loreal_local_img/3600524165161.jpg",
+    "local_product": "Loreal Paris Revitalift Cilt Yenileme Etkili Temizleme Jeli 150 Ml Glikolik Asit",
+    "score": 0.8593326746684615
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773514870-172.jpg",
+    "ewg_product": "130 True Beige Foundation",
+    "local_image": "/loreal_local_img/3600524258078.jpg",
+    "local_product": "L'Oréal Paris Freshwear Cushion Fondöten 24H Air Wear 130",
+    "score": 0.8511017945053622
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515838-480.jpg",
+    "ewg_product": "L'Oreal Paris Revitalift Pressed Night Cream, 1.7 oz",
+    "local_image": "/loreal_local_img/3600522480082.jpg",
+    "local_product": "L'Oreal Paris Revitalift Laser Gece Kremi 50 ml",
+    "score": 0.8534281352911541
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773515677-429.jpg",
+    "ewg_product": "L'Oreal Paris Infallible Pro-matte Liquid Lipstick, 368 Matador",
+    "local_image": "/loreal_local_img/0000030149502.jpg",
+    "local_product": "L'Oreal Paris Infaillible Matte Resist Likit Ruj 420 Le Rouge Paris",
+    "score": 0.8578239126218267
+  }
+]

@@ -492,3 +492,12 @@ venv/
 venv
 .env
 .venv/
+
+matching_embedding/essence/essence_ewg_img/
+matching_embedding/essence/essence_wats_img/
+matching_embedding/loreal/loreal_ewg_img/
+matching_embedding/loreal/loreal_local_img/ 
+matching_embedding/maybelline/embedding/
+matching_embedding/.venv/
+
+

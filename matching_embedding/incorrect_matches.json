@@ -1,0 +1,37 @@
+[
+  {
+    "ewg_image": null,
+    "ewg_product": "",
+    "local_image": null,
+    "local_product": "",
+    "score": 0
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516838-806.jpg",
+    "ewg_product": "L'oreal Paris Colorista Semi Permanent Color, #Tangerine40...",
+    "local_image": "https://cdn.gratis.com/1oakekr4e/CALL/Image/getImage/10068677-LthPr5ZPAf-01_1024x1024.jpg",
+    "local_product": "Loreal Paris Colorista Remover",
+    "score": 0.8771929824561404
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516388-660.jpg",
+    "ewg_product": "L'oreal Paris Lash Paradise Mascara, 201 Black (2018...",
+    "local_image": "https://www.watsons.com.tr/medias/sys_master/prd-images/h8c/h85/10573993771038/prd-front-BP_1397592_1200x1200/prd-front-BP-1397592-1200x1200.jpg",
+    "local_product": "L'Oreal Paris Lash Paradise Forever Noir Maskara",
+    "score": 0.8433734939759038
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773516388-660.jpg",
+    "ewg_product": "L'oreal Paris Lash Paradise Mascara, 201 Black (2018...",
+    "local_image": "https://cdn.gratis.com/1oakekr4e/CALL/Image/getImage/10208324-EKjC2PlLLE-01_1024x1024.jpg",
+    "local_product": "Loreal Paris Lash Paradise Forever Noir Maskara",
+    "score": 0.8292682926829268
+  },
+  {
+    "ewg_image": "/loreal_ewg_img/1773517316-972.jpg",
+    "ewg_product": "Loreal Paris Paradise Big Deal Buildable Waterproof Mascara",
+    "local_image": "https://cdn.gratis.com/1oakekr4e/CALL/Image/getImage/10208087-BeODeb9gaF-01_1024x1024.jpg",
+    "local_product": "Loreal Paris Paradise Big Deal Maskara Siyah",
+    "score": 0.8266666666666667
+  }
+]
