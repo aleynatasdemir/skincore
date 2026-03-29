@@ -56,6 +56,10 @@ public class Ingredient
     [JsonPropertyName("comedogenic")]
     public object? Comedogenic { get; set; }
 
+    [BsonElement("inci_name")]
+    [JsonPropertyName("inci_name")]
+    public string? InciName { get; set; }
+
     [BsonExtraElements]
     [JsonExtensionData]
     public IDictionary<string, object>? ExtraElements { get; set; }

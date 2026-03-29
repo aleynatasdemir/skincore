@@ -107,6 +107,52 @@ class APIClient {
         return try await request(endpoint: "/products/\(id)")
     }
 
+    func searchProductsByImage(imageData: Data, ocrText: String?, maxResults: Int = 5) async throws -> [Product] {
+        guard let url = URL(string: "\(baseURL)/products/search/image") else {
+            throw APIClientError.invalidURL
+        }
+
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+
+        // image field
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"scan.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n".data(using: .utf8)!)
+
+        // ocrText field
+        if let ocrText = ocrText, !ocrText.isEmpty {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"ocrText\"\r\n\r\n".data(using: .utf8)!)
+            body.append(ocrText.data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+
+        // maxResults field
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"maxResults\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(maxResults)".data(using: .utf8)!)
+        body.append("\r\n".data(using: .utf8)!)
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIClientError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
+        }
+
+        return try JSONDecoder().decode([Product].self, from: data)
+    }
+
     // MARK: - Popular Endpoints
 
     func getPopularProducts(limit: Int = 10) async throws -> [PopularProductResponse] {

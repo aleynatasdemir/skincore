@@ -138,4 +138,9 @@ public class Product
     [JsonPropertyName("image_urls")]
     [BsonSerializer(typeof(ImageUrlListBsonSerializer))]
     public List<ImageUrlItem>? ImageUrls { get; set; }
+
+    [BsonElement("embedding")]
+    [BsonIgnoreIfNull]
+    [JsonIgnore]
+    public List<double>? Embedding { get; set; }
 }

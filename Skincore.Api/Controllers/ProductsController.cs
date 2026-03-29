@@ -15,19 +15,22 @@ public class ProductsController : ControllerBase
     private readonly ProductSearchService _productSearchService;
     private readonly PopularSearchService _popularSearchService;
     private readonly UserProfileService _userProfileService;
+    private readonly ImageSearchService _imageSearchService;
 
     public ProductsController(
-        MongoDbService mongoDbService, 
+        MongoDbService mongoDbService,
         IngredientMatchingService matchingService,
         ProductSearchService productSearchService,
         PopularSearchService popularSearchService,
-        UserProfileService userProfileService)
+        UserProfileService userProfileService,
+        ImageSearchService imageSearchService)
     {
         _mongoDbService = mongoDbService;
         _matchingService = matchingService;
         _productSearchService = productSearchService;
         _popularSearchService = popularSearchService;
         _userProfileService = userProfileService;
+        _imageSearchService = imageSearchService;
     }
 
     private string? GetUserIdIfAuthenticated()
@@ -66,6 +69,38 @@ public class ProductsController : ControllerBase
             var top = results[0];
             _ = _popularSearchService.IncrementSearchCount(top.Id!, top.Name);
             _ = TryRecordSearchHistory(query, top);
+        }
+
+        return Ok(results);
+    }
+
+    /// <summary>
+    /// POST /api/products/search/image
+    /// Fotoğraf + OCR text ile hybrid arama (embedding 0.6 + OCR 0.4)
+    /// </summary>
+    [HttpPost("search/image")]
+    public async Task<ActionResult<List<Product>>> SearchByImage(
+        IFormFile image,
+        [FromForm] string? ocrText = null,
+        [FromForm] int maxResults = 5)
+    {
+        if (image == null || image.Length == 0)
+            return BadRequest(new { message = "Image is required." });
+
+        Console.WriteLine($"[ProductsController] /search/image → imageSize={image.Length}, ocrText=\"{ocrText?.Substring(0, Math.Min(ocrText?.Length ?? 0, 100))}\", maxResults={maxResults}");
+
+        using var ms = new MemoryStream();
+        await image.CopyToAsync(ms);
+        var imageBytes = ms.ToArray();
+
+        var results = await _imageSearchService.SearchByImageAsync(imageBytes, ocrText, maxResults);
+        Console.WriteLine($"[ProductsController] /search/image → {results.Count} sonuç döndü");
+
+        if (results.Count > 0)
+        {
+            var top = results[0];
+            _ = _popularSearchService.IncrementSearchCount(top.Id!, top.Name);
+            _ = TryRecordSearchHistory(ocrText ?? "image_search", top);
         }
 
         return Ok(results);

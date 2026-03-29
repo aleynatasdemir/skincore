@@ -24,6 +24,7 @@ builder.Services.AddSingleton<AuthService>();
 builder.Services.AddSingleton<UserProfileService>();
 builder.Services.AddSingleton<PopularSearchService>();
 builder.Services.AddSingleton<SocialRoutinesService>();
+builder.Services.AddSingleton<ImageSearchService>();
 
 builder.Services.AddControllers();
 
@@ -95,6 +96,9 @@ using (var scope = app.Services.CreateScope())
 
     var productSearchService = scope.ServiceProvider.GetRequiredService<ProductSearchService>();
     productSearchService.InitializeAsync().GetAwaiter().GetResult();
+
+    var imageSearchService = scope.ServiceProvider.GetRequiredService<ImageSearchService>();
+    imageSearchService.InitializeAsync().GetAwaiter().GetResult();
 
     var mongoDbService = scope.ServiceProvider.GetRequiredService<MongoDbService>();
     mongoDbService.CreateIndexesAsync().GetAwaiter().GetResult();

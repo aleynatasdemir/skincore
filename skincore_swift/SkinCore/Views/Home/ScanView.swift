@@ -139,9 +139,9 @@ struct ScanView: View {
                         // ── Sonuç kartları ──
                         if !viewModel.searchResults.isEmpty {
                             LazyVStack(spacing: 12) {
-                                ForEach(viewModel.searchResults) { product in
+                                ForEach(Array(viewModel.searchResults.enumerated()), id: \.element.id) { index, product in
                                     NavigationLink(destination: ProductDetailView(productId: product.id)) {
-                                        ScanResultCard(product: product)
+                                        ScanResultCard(product: product, rank: index + 1)
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -267,7 +267,7 @@ class ScanViewModel: ObservableObject {
         }
     }
 
-    // Fotoğraf çekildikten sonra Vision OCR → API search
+    // Fotoğraf çekildikten sonra: OCR + Image embedding → hybrid search
     func processImage(_ image: UIImage) {
         capturedImage = image
         isProcessing = true
@@ -277,52 +277,57 @@ class ScanViewModel: ObservableObject {
         hasSearched = false
 
         Task { @MainActor in
-            print("📸 Orijinal görsel: \(Int(image.size.width))×\(Int(image.size.height)) orientation=\(image.imageOrientation.rawValue)")
-
             // 1) Orientation normalize + boyut küçült
             let prepared = image.preparedForOCR(maxDimension: 2048)
-            print("📐 Hazırlanan görsel: \(Int(prepared.size.width))×\(Int(prepared.size.height))")
 
-            // 2) Çerçeve alanına göre crop — sadece kare içini al
+            // 2) Çerçeve alanına göre crop
             let cropped = cropToScanFrame(prepared)
-            print("✂️ Crop sonrası: \(Int(cropped.size.width))×\(Int(cropped.size.height))")
 
             guard let cgImage = cropped.cgImage else {
-                print("❌ CGImage oluşturulamadı!")
                 isProcessing = false
                 hasSearched = true
                 return
             }
 
-            print("🔍 Vision OCR başlatılıyor... (\(cgImage.width)×\(cgImage.height) px)")
-            let startTime = CFAbsoluteTimeGetCurrent()
-
+            // 3) OCR — arka planda metin çıkar
             let ocrResults = await recognizeText(from: cgImage)
-            let elapsed = CFAbsoluteTimeGetCurrent() - startTime
-
             allOcrLines = ocrResults.map { $0.text }
-            print("📷 OCR tamamlandı: \(ocrResults.count) satır (\(String(format: "%.1f", elapsed))s)")
-            ocrResults.forEach { print("  → [\(String(format: "%.0f", $0.confidence * 100))%] \($0.text)") }
-
-            isProcessing = false
-
-            guard !ocrResults.isEmpty else {
-                print("⚠️ OCR: hiç metin okunamadı — görsel bulanık veya metin yok olabilir")
-                hasSearched = true
-                return
-            }
 
             let query = buildSearchQuery(from: ocrResults)
+            if !query.isEmpty {
+                detectedText = query
+            }
 
-            guard !query.isEmpty else {
-                print("⚠️ OCR satır var ama anlamlı sorgu oluşturulamadı")
+            // 4) JPEG data hazırla (embedding için)
+            guard let imageData = cropped.jpegData(compressionQuality: 0.8) else {
+                isProcessing = false
                 hasSearched = true
                 return
             }
 
-            print("✅ Arama sorgusu: \(query)")
-            detectedText = query
-            await search(query: query)
+            // 5) Hybrid search: image + OCR text birlikte gönder
+            isProcessing = false
+            isSearching = true
+
+            do {
+                let results = try await APIClient.shared.searchProductsByImage(
+                    imageData: imageData,
+                    ocrText: query.isEmpty ? nil : query,
+                    maxResults: 5
+                )
+                searchResults = results
+            } catch {
+                print("Image search error: \(error)")
+                // Fallback: sadece OCR text ile ara
+                if !query.isEmpty {
+                    await search(query: query)
+                    return
+                }
+                searchResults = []
+            }
+
+            isSearching = false
+            hasSearched = true
         }
     }
 
@@ -719,11 +724,11 @@ private struct CameraResultSheet: View {
             } else {
                 ScrollView(showsIndicators: false) {
                     LazyVStack(spacing: 12) {
-                        ForEach(viewModel.searchResults) { product in
+                        ForEach(Array(viewModel.searchResults.enumerated()), id: \.element.id) { index, product in
                             Button {
                                 selectedProductId = product.id
                             } label: {
-                                ScanResultCard(product: product)
+                                ScanResultCard(product: product, rank: index + 1)
                             }
                             .buttonStyle(.plain)
                         }
@@ -897,13 +902,7 @@ struct CameraPickerView: UIViewControllerRepresentable {
 
 struct ScanResultCard: View {
     let product: Product
-
-    // Fuzzy score yok ama match rating simüle et (ingredient count bazlı)
-    private var matchPercent: Int {
-        let base = 75
-        let bonus = min((product.productIngredients?.count ?? 0) % 25, 24)
-        return base + bonus
-    }
+    let rank: Int // sıralama (1, 2, 3...)
 
     var body: some View {
         HStack(spacing: 14) {
@@ -939,12 +938,12 @@ struct ScanResultCard: View {
                     .foregroundColor(Color(hex: "1A1A2E"))
                     .lineLimit(2)
 
-                // % Match
+                // Sıralama bilgisi
                 HStack(spacing: 5) {
-                    Image(systemName: "checkmark.seal.fill")
+                    Image(systemName: "number")
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "D4728C"))
-                    Text("%\(matchPercent) Eşleşme")
+                    Text("\(rank). en yakın eşleşme")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(Color(hex: "D4728C"))
                 }
@@ -952,22 +951,9 @@ struct ScanResultCard: View {
 
             Spacer()
 
-            // Sağ: MATCH RATING badge + chevron
-            VStack(alignment: .trailing, spacing: 8) {
-                Text("PUAN")
-                    .font(.system(size: 9, weight: .black))
-                    .tracking(0.6)
-                    .foregroundColor(Color(hex: "D4728C"))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(hex: "FFF0F0"))
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(Color(hex: "F3C6D1"), lineWidth: 1))
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Color(hex: "CBD5E1"))
-            }
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(Color(hex: "CBD5E1"))
         }
         .padding(16)
         .background(Color.white)
@@ -1027,11 +1013,21 @@ struct ProductDetailView: View {
     }
 
     private func filteredIngredients(_ items: [IngredientMatchResult]) -> [IngredientMatchResult] {
+        let filtered: [IngredientMatchResult]
         switch selectedFilter {
-        case .all:      return items
-        case .safe:     return items.filter { $0.matchedIngredient?.resolvedSafetyLevel == 1 }
-        case .moderate: return items.filter { $0.matchedIngredient?.resolvedSafetyLevel == 2 }
-        case .avoid:    return items.filter { ($0.matchedIngredient?.resolvedSafetyLevel ?? 0) >= 3 }
+        case .all:      filtered = items
+        case .safe:     filtered = items.filter { $0.matchedIngredient?.resolvedSafetyLevel == 1 }
+        case .moderate: filtered = items.filter { $0.matchedIngredient?.resolvedSafetyLevel == 2 }
+        case .avoid:    filtered = items.filter { ($0.matchedIngredient?.resolvedSafetyLevel ?? 0) >= 3 }
+        }
+        // Riskli olanlar önce (yüksek safety level), eşleşmeyenler en sonda
+        return filtered.sorted { a, b in
+            let aLevel = a.matchedIngredient?.resolvedSafetyLevel ?? 0
+            let bLevel = b.matchedIngredient?.resolvedSafetyLevel ?? 0
+            if aLevel == 0 && bLevel == 0 { return false }
+            if aLevel == 0 { return false }
+            if bLevel == 0 { return true }
+            return aLevel > bLevel
         }
     }
 
