@@ -14,7 +14,7 @@ public class Ingredient
 
     [BsonElement("inci_name")]
     [JsonPropertyName("inci_name")]
-    public string? INCIName { get; set; }
+    public string? InciName { get; set; }
 
     [BsonElement("name")]
     [JsonPropertyName("name")]
@@ -56,11 +56,6 @@ public class Ingredient
     [JsonPropertyName("comedogenic")]
     public object? Comedogenic { get; set; }
 
-<<<<<<< HEAD
-    [BsonElement("inci_name")]
-    [JsonPropertyName("inci_name")]
-    public string? InciName { get; set; }
-=======
     [BsonElement("comedogenic_rating")]
     [JsonPropertyName("comedogenic_rating")]
     public int? ComedogenicRating { get; set; }
@@ -69,7 +64,6 @@ public class Ingredient
     [BsonElement("skin_compatibility")]
     [JsonPropertyName("skin_compatibility")]
     public SkinCompatibility? SkinCompatibility { get; set; }
->>>>>>> cb7449ce (ingredients sayfası düzeltildi)
 
     [BsonExtraElements]
     [JsonExtensionData]

@@ -35,7 +35,7 @@ public class IngredientsController : ControllerBase
 
         if (!string.IsNullOrEmpty(search))
         {
-            filters.Add(builder.Regex(i => i.INCIName, new MongoDB.Bson.BsonRegularExpression(search, "i")));
+            filters.Add(builder.Regex(i => i.InciName, new MongoDB.Bson.BsonRegularExpression(search, "i")));
         }
 
         if (minSafety.HasValue && minSafety >= 0)

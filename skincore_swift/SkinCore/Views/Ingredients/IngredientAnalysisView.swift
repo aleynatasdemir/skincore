@@ -452,13 +452,6 @@ struct IngredientListView: View {
     }
 }
 
-<<<<<<< HEAD
-    private var functionText: String? {
-        guard let funcs = ingredient.functions, let first = funcs.first else {
-            return nil
-        }
-        return "FUNCTION: \(first.uppercased())"
-=======
 // MARK: - IngredientCard (Ekran 2 – Liste Elemanı)
 
 struct IngredientCard: View {
@@ -467,11 +460,9 @@ struct IngredientCard: View {
     let categoryBg: Color
     let categoryIcon: String
 
-
     private var functionLabel: String? {
         guard let funcs = ingredient.functions, let first = funcs.first, let name = first.name, !name.isEmpty else { return nil }
         return name.uppercased()
->>>>>>> cb7449ce (ingredients sayfası düzeltildi)
     }
 
     var body: some View {
@@ -500,8 +491,6 @@ struct IngredientCard: View {
                 }
 
                 Spacer()
-
-
             }
 
             if let desc = ingredient.description, !desc.isEmpty {

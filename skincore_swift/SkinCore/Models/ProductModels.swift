@@ -113,8 +113,9 @@ struct IngredientFunction: Codable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case goodFor = "good_for"
-        case badFor  = "bad_for"
+        case name
+        case uri
+        case isDangerous = "is_dangerous"
     }
 }
 
@@ -123,11 +124,10 @@ struct MatchedIngredient: Codable, Identifiable {
     let inciName: String?
     let name: String?
     let nameUpper: String?
-    let inciName: String?
     let aliases: [String]?
     let description: String?
     let ewgScore: String?
-    let functions: [String]?
+    let functions: [IngredientFunction]?
     let safetyLabel: String?
     let safetyLevel: Int?
     let limitedEu: Bool?
@@ -138,7 +138,6 @@ struct MatchedIngredient: Codable, Identifiable {
 
     /// Düzgün formatlı isim: önce inci_name, sonra name_upper, sonra name → capitalized
     var displayName: String {
-        if let inci = inciName, !inci.isEmpty { return inci }
         if let inci = inciName, !inci.isEmpty { return inci }
         if let upper = nameUpper, !upper.isEmpty { return upper }
         return name?.capitalized ?? "-"
@@ -164,7 +163,7 @@ struct MatchedIngredient: Codable, Identifiable {
         case name
         case nameUpper          = "name_upper"
         case description
-        case ewgScore           = "ewg_score"
+        case aliases
         case ewgScore           = "ewg_score"
         case functions
         case safetyLabel        = "safety_label"
