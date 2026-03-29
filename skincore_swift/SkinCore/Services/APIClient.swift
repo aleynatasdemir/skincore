@@ -267,7 +267,7 @@ class APIClient {
 
     // MARK: - Ingredients Endpoints
 
-    func getIngredients(search: String? = nil, page: Int = 1, pageSize: Int = 50, minSafety: Int? = nil, maxSafety: Int? = nil, comedogenic: Bool? = nil) async throws -> [MatchedIngredient] {
+    func getIngredients(search: String? = nil, page: Int = 1, pageSize: Int = 50, minSafety: Int? = nil, maxSafety: Int? = nil, comedogenic: Bool? = nil, safetyLabel: String? = nil) async throws -> [MatchedIngredient] {
         var endpoint = "/ingredients?page=\(page)&pageSize=\(pageSize)"
         if let search = search, !search.isEmpty {
             let encoded = search.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? search
@@ -281,6 +281,10 @@ class APIClient {
         }
         if let com = comedogenic, com {
             endpoint += "&comedogenic=true"
+        }
+        if let label = safetyLabel, !label.isEmpty {
+            let encoded = label.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? label
+            endpoint += "&safetyLabel=\(encoded)"
         }
         return try await request(endpoint: endpoint)
     }

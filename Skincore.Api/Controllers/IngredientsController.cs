@@ -23,34 +23,40 @@ public class IngredientsController : ControllerBase
         [FromQuery] int? minSafety = null,
         [FromQuery] int? maxSafety = null,
         [FromQuery] bool? comedogenic = null,
+        [FromQuery] string? safetyLabel = null,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50)
+        [FromQuery] int pageSize = 5000)
     {
         if (page < 1) page = 1;
-        if (pageSize < 1 || pageSize > 100) pageSize = 50;
+        if (pageSize < 1 || pageSize > 10000) pageSize = 5000;
 
         var builder = Builders<Ingredient>.Filter;
         var filters = new List<FilterDefinition<Ingredient>>();
 
         if (!string.IsNullOrEmpty(search))
         {
-            filters.Add(builder.Regex(i => i.Name, new MongoDB.Bson.BsonRegularExpression(search, "i")));
+            filters.Add(builder.Regex(i => i.INCIName, new MongoDB.Bson.BsonRegularExpression(search, "i")));
         }
 
-        if (minSafety.HasValue)
+        if (minSafety.HasValue && minSafety >= 0)
         {
-            filters.Add(builder.Gte(i => i.SafetyLevel, minSafety.Value));
+            filters.Add(builder.Gte("metrics.safety_level", minSafety.Value));
         }
 
-        if (maxSafety.HasValue)
+        if (maxSafety.HasValue && maxSafety >= 0)
         {
-            filters.Add(builder.Lte(i => i.SafetyLevel, maxSafety.Value));
+            filters.Add(builder.Lte("metrics.safety_level", maxSafety.Value));
         }
 
-        // Comedogenic filtresi: eğer true ise, comedogenic alanı null olmayanları getir
+        // Comedogenic filtresi: comedogenic_rating >= 1 olan ingredient'lar
         if (comedogenic.HasValue && comedogenic.Value)
         {
-            filters.Add(builder.Ne("comedogenic", BsonNull.Value));
+            filters.Add(builder.Gte("metrics.comedogenic_rating", 1));
+        }
+
+        if (!string.IsNullOrEmpty(safetyLabel))
+        {
+            filters.Add(builder.Eq("metrics.safety_label", safetyLabel));
         }
 
         var filter = filters.Count > 0 ? builder.And(filters) : builder.Empty;

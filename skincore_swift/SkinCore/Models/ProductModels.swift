@@ -85,23 +85,32 @@ struct Product: Codable, Identifiable {
 
 // MARK: - Ingredient Models
 
-struct IngredientMetrics: Codable {
-    let comedogenicRating: Int?
-    let ewgScore: String?
-    let safetyLabel: String?
-    let safetyLevel: Int?
+struct IngredientFunction: Codable {
+    let name: String?
+    let uri: String?
+    let isDangerous: Bool?
 
-    enum CodingKeys: String, CodingKey {
-        case comedogenicRating = "comedogenic_rating"
-        case ewgScore          = "ewg_score"
-        case safetyLabel       = "safety_label"
-        case safetyLevel       = "safety_level"
+    init(name: String?, uri: String? = nil, isDangerous: Bool? = nil) {
+        self.name = name
+        self.uri = uri
+        self.isDangerous = isDangerous
     }
-}
 
-struct SkinCompatibility: Codable {
-    let goodFor: [String]?
-    let badFor: [String]?
+    init(from decoder: Decoder) throws {
+        // String formatını destekle (örn: "Nemlendirici", "Boya")
+        if let stringValue = try? decoder.singleValueContainer().decode(String.self) {
+            name = stringValue
+            uri = nil
+            isDangerous = nil
+            return
+        }
+        
+        // Dictionary ({name: "...", uri: "..."}) formatını destekle
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        uri = try container.decodeIfPresent(String.self, forKey: .uri)
+        isDangerous = try container.decodeIfPresent(Bool.self, forKey: .isDangerous)
+    }
 
     enum CodingKeys: String, CodingKey {
         case goodFor = "good_for"
@@ -111,6 +120,7 @@ struct SkinCompatibility: Codable {
 
 struct MatchedIngredient: Codable, Identifiable {
     let id: String?
+    let inciName: String?
     let name: String?
     let nameUpper: String?
     let inciName: String?
@@ -122,48 +132,58 @@ struct MatchedIngredient: Codable, Identifiable {
     let safetyLevel: Int?
     let limitedEu: Bool?
     let limitedUs: Bool?
-    let comedogenic: AnyCodable?
-    let metrics: IngredientMetrics?
+    let safetymakeupUrl: String?
     let skinCompatibility: SkinCompatibility?
+    let comedogenicRating: Int?
 
-    /// Düzgün formatlı isim: önce inci_name, sonra name_upper, sonra name
+    /// Düzgün formatlı isim: önce inci_name, sonra name_upper, sonra name → capitalized
     var displayName: String {
+        if let inci = inciName, !inci.isEmpty { return inci }
         if let inci = inciName, !inci.isEmpty { return inci }
         if let upper = nameUpper, !upper.isEmpty { return upper }
         return name?.capitalized ?? "-"
     }
 
-    /// safety_level: önce metrics'ten, sonra doğrudan alandan, sonra label'dan türet
+    // Convenience properties to stay backward compatible
+    var goodFor: [String]? { skinCompatibility?.goodFor }
+    var badFor: [String]? { skinCompatibility?.badFor }
+
+    /// 0–4 DB değerlerini görünüm badge'i için 1-3 aralığına indirger
     var resolvedSafetyLevel: Int {
-        if let mLvl = metrics?.safetyLevel, mLvl > 0 { return mLvl }
-        let lvl = safetyLevel ?? 0
-        if lvl > 0 { return lvl }
-        let label = (metrics?.safetyLabel ?? safetyLabel)?.lowercased() ?? ""
-        switch label {
-        case "güvenli", "safe", "tamamen güvenli":                      return 1
-        case "orta", "moderate", "dikkatli", "caution",
-             "kabul edilebilir":                                         return 2
-        case "kaçın", "avoid", "tehlikeli", "dangerous":               return 3
-        default:                                                        return 0
+        switch safetyLevel {
+        case 0, 1: return 1   // güvenli
+        case 2:    return 2   // orta
+        case 3, 4: return 3   // riskli
+        default:   return 0
         }
     }
 
     enum CodingKeys: String, CodingKey {
         case id
+        case inciName           = "inci_name"
         case name
         case nameUpper          = "name_upper"
-        case inciName           = "inci_name"
-        case aliases
         case description
+        case ewgScore           = "ewg_score"
         case ewgScore           = "ewg_score"
         case functions
         case safetyLabel        = "safety_label"
         case safetyLevel        = "safety_level"
         case limitedEu          = "limited_eu"
         case limitedUs          = "limited_us"
-        case comedogenic
-        case metrics
+        case safetymakeupUrl    = "safetymakeup_url"
         case skinCompatibility  = "skin_compatibility"
+        case comedogenicRating  = "comedogenic_rating"
+    }
+}
+
+struct SkinCompatibility: Codable {
+    let goodFor: [String]?
+    let badFor: [String]?
+    
+    enum CodingKeys: String, CodingKey {
+        case goodFor = "good_for"
+        case badFor = "bad_for"
     }
 }
 

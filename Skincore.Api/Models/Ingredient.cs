@@ -12,9 +12,13 @@ public class Ingredient
     [JsonPropertyName("id")]
     public string? Id { get; set; }
 
+    [BsonElement("inci_name")]
+    [JsonPropertyName("inci_name")]
+    public string? INCIName { get; set; }
+
     [BsonElement("name")]
     [JsonPropertyName("name")]
-    public string Name { get; set; } = null!;
+    public string? Name { get; set; }
 
     [BsonElement("name_upper")]
     [JsonPropertyName("name_upper")]
@@ -28,21 +32,17 @@ public class Ingredient
     [JsonPropertyName("description")]
     public string? Description { get; set; }
 
-    [BsonElement("ewg_score")]
+    [BsonIgnore]
     [JsonPropertyName("ewg_score")]
-    public string? EwgScore { get; set; }
+    public string? EwgScore => Metrics?.EwgScore;
 
     [BsonElement("functions")]
     [JsonPropertyName("functions")]
     public List<string>? Functions { get; set; }
 
-    [BsonElement("safety_label")]
-    [JsonPropertyName("safety_label")]
-    public string? SafetyLabel { get; set; }
-
-    [BsonElement("safety_level")]
-    [JsonPropertyName("safety_level")]
-    public int? SafetyLevel { get; set; }
+    [BsonElement("metrics")]
+    [JsonPropertyName("metrics")]
+    public IngredientMetrics? Metrics { get; set; }
 
     [BsonElement("limited_eu")]
     [JsonPropertyName("limited_eu")]
@@ -56,11 +56,62 @@ public class Ingredient
     [JsonPropertyName("comedogenic")]
     public object? Comedogenic { get; set; }
 
+<<<<<<< HEAD
     [BsonElement("inci_name")]
     [JsonPropertyName("inci_name")]
     public string? InciName { get; set; }
+=======
+    [BsonElement("comedogenic_rating")]
+    [JsonPropertyName("comedogenic_rating")]
+    public int? ComedogenicRating { get; set; }
+
+    // We can map the nested structure by creating a sub-class or custom deserialization
+    [BsonElement("skin_compatibility")]
+    [JsonPropertyName("skin_compatibility")]
+    public SkinCompatibility? SkinCompatibility { get; set; }
+>>>>>>> cb7449ce (ingredients sayfası düzeltildi)
 
     [BsonExtraElements]
     [JsonExtensionData]
     public IDictionary<string, object>? ExtraElements { get; set; }
+
+    // Convenience properties for direct access
+    [BsonIgnore]
+    [JsonIgnore]
+    public string? SafetyLabel => Metrics?.SafetyLabel;
+
+    [BsonIgnore]
+    [JsonIgnore]
+    public int? SafetyLevel => Metrics?.SafetyLevel;
+}
+
+public class SkinCompatibility
+{
+    [BsonElement("good_for")]
+    [JsonPropertyName("good_for")]
+    public List<string>? GoodFor { get; set; }
+
+    [BsonElement("bad_for")]
+    [JsonPropertyName("bad_for")]
+    public List<string>? BadFor { get; set; }
+}
+
+// Inner class for metrics
+public class IngredientMetrics
+{
+    [BsonElement("safety_label")]
+    [JsonPropertyName("safety_label")]
+    public string? SafetyLabel { get; set; }
+
+    [BsonElement("safety_level")]
+    [JsonPropertyName("safety_level")]
+    public int? SafetyLevel { get; set; }
+
+    [BsonElement("comedogenic_rating")]
+    [JsonPropertyName("comedogenic_rating")]
+    public int? ComedogenicRating { get; set; }
+
+    [BsonElement("ewg_score")]
+    [JsonPropertyName("ewg_score")]
+    public string? EwgScore { get; set; }
 }

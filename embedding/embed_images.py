@@ -17,8 +17,9 @@ import requests
 from io import BytesIO
 from PIL import Image
 from dotenv import load_dotenv
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
 from bson import ObjectId
+from typing import Optional, Union, List, Dict, Any
 
 # ── Ayarlar ──────────────────────────────────────────────────────────────────
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -28,15 +29,16 @@ DB_NAME = "kozmetik"
 COL_NAME = "products"
 IMAGES_DIR = os.path.join(os.path.dirname(__file__), "..", "db_ocr", "images")
 MODEL = "gemini-embedding-2-preview"
+BATCH_SIZE = 100            # Google API sınırı
 MAX_IMAGE_SIDE = 512        # resmi küçült (hız + boyut)
 MAX_IMAGE_MB = 4
-REQUEST_DELAY = 0.25
+REQUEST_DELAY = 1.0         # Batch sonrası biraz bekle
 MAX_RETRIES = 3
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def get_best_image(folder: str) -> str | None:
+def get_best_image(folder: str) -> Optional[str]:
     """Klasördeki en büyük (dosya boyutu) resmi döndürür."""
     files = []
     for ext in IMAGE_EXTENSIONS:
@@ -46,7 +48,7 @@ def get_best_image(folder: str) -> str | None:
     return max(files, key=os.path.getsize)
 
 
-def process_image(image_path: str) -> tuple[str | None, str | None]:
+def process_image(image_path: str) -> tuple[Optional[str], Optional[str]]:
     """Resmi yükle, küçült, base64 döndür."""
     try:
         with Image.open(image_path) as img:
@@ -65,19 +67,23 @@ def process_image(image_path: str) -> tuple[str | None, str | None]:
         return None, "image_corrupted"
 
 
-def get_embedding(api_url: str, image_b64: str) -> list[float] | None:
-    """REST API ile embedding al."""
-    payload = {
-        "model": f"models/{MODEL}",
-        "content": {
-            "parts": [{
-                "inlineData": {
-                    "mimeType": "image/jpeg",
-                    "data": image_b64
-                }
-            }]
-        }
-    }
+def get_embeddings_batch(api_url: str, images_b64: List[str]) -> List[Optional[List[float]]]:
+    """batchEmbedContents ile toplu embedding al."""
+    requests_list = []
+    for b64 in images_b64:
+        requests_list.append({
+            "model": f"models/{MODEL}",
+            "content": {
+                "parts": [{
+                    "inlineData": {
+                        "mimeType": "image/jpeg",
+                        "data": b64
+                    }
+                }]
+            }
+        })
+
+    payload = {"requests": requests_list}
 
     for attempt in range(MAX_RETRIES):
         try:
@@ -85,23 +91,25 @@ def get_embedding(api_url: str, image_b64: str) -> list[float] | None:
                 api_url,
                 json=payload,
                 headers={"Content-Type": "application/json"},
-                timeout=60
+                timeout=120
             )
 
             if r.status_code == 200:
                 data = r.json()
-                if "embedding" in data:
-                    return data["embedding"]["values"]
-                return None
+                if "embeddings" in data:
+                    return [e.get("values") for e in data["embeddings"]]
+                return [None] * len(images_b64)
             elif r.status_code == 429:
-                print("  Rate limit, 30s bekleniyor...")
-                time.sleep(30)
+                print(f"  Rate limit (429), {60 * (attempt + 1)}s bekleniyor...")
+                time.sleep(60 * (attempt + 1))
             else:
-                time.sleep(1)
-        except Exception:
-            time.sleep(1)
+                print(f"  API Hata: {r.status_code} - 5s bekleniyor...")
+                time.sleep(5)
+        except Exception as e:
+            print(f"  Exception: {e} - 5s bekleniyor...")
+            time.sleep(5)
 
-    return None
+    return [None] * len(images_b64)
 
 
 def find_product(col, folder_name: str):
@@ -118,7 +126,7 @@ def main():
         print("GOOGLE_API_KEY .env dosyasında bulunamadı!")
         sys.exit(1)
 
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:embedContent?key={api_key}"
+    batch_url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:batchEmbedContents?key={api_key}"
 
     client_mongo = MongoClient(MONGO_URI)
     col = client_mongo[DB_NAME][COL_NAME]
@@ -138,26 +146,51 @@ def main():
     print(f"Toplam klasor: {total}")
     print(f"Kaynak: {IMAGES_DIR}\n")
 
+    current_batch_images = []
+    current_batch_ids = []
+
+    def flush_batch():
+        nonlocal embedded, errors
+        if not current_batch_images:
+            return
+
+        print(f"  -> Batch gönderiliyor ({len(current_batch_images)} resim)...")
+        vectors = get_embeddings_batch(batch_url, current_batch_images)
+
+        bulk_ops = []
+        for doc_id, vector in zip(current_batch_ids, vectors):
+            if vector:
+                bulk_ops.append(UpdateOne({"_id": doc_id}, {"$set": {"embedding": vector}}))
+                embedded += 1
+            else:
+                errors += 1
+
+        if bulk_ops:
+            col.bulk_write(bulk_ops)
+
+        current_batch_images.clear()
+        current_batch_ids.clear()
+        time.sleep(REQUEST_DELAY)
+
     for i, folder_name in enumerate(product_folders, 1):
         folder_path = os.path.join(IMAGES_DIR, folder_name)
 
-        # En iyi resmi seç
-        image_path = get_best_image(folder_path)
-        if not image_path:
-            no_image += 1
-            continue
-
-        # MongoDB'de ürünü bul
+        # MongoDB'de ürünü bul (Önce kontrol et ki resmi boşuna işlemeyelim)
         doc = find_product(col, folder_name)
         if not doc:
             no_doc += 1
             continue
 
-        # Zaten embedding varsa atla
         if doc.get("embedding"):
             skipped += 1
-            if i % 500 == 0:
+            if i % 1000 == 0:
                 print(f"[{i}/{total}] ... {skipped} atlandı")
+            continue
+
+        # En iyi resmi seç
+        image_path = get_best_image(folder_path)
+        if not image_path:
+            no_image += 1
             continue
 
         # Resmi işle
@@ -167,26 +200,15 @@ def main():
             print(f"[{i}/{total}] SKIP {folder_name}: {reason}")
             continue
 
-        # Embedding al
-        vector = get_embedding(api_url, image_b64)
+        current_batch_images.append(image_b64)
+        current_batch_ids.append(doc["_id"])
 
-        if vector:
-            col.update_one(
-                {"_id": doc["_id"]},
-                {"$set": {"embedding": vector}},
-            )
-            embedded += 1
+        if len(current_batch_images) >= BATCH_SIZE:
+            flush_batch()
+            print(f"[{i}/{total}] embedded: {embedded} | skipped: {skipped} | errors: {errors}")
 
-            if embedded % 10 == 0:
-                print(
-                    f"[{i}/{total}] embedded: {embedded} | "
-                    f"skipped: {skipped} | errors: {errors}"
-                )
-        else:
-            errors += 1
-            print(f"[{i}/{total}] API HATA {folder_name}")
-
-        time.sleep(REQUEST_DELAY)
+    # Kalanları temizle
+    flush_batch()
 
     client_mongo.close()
     print(f"\n{'='*50}")

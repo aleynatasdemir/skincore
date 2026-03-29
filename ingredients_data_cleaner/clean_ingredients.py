@@ -124,11 +124,15 @@ def clean_data():
                 
                 operations = []
                 for item in cleaned_data_array:
+                    # Verileri flatten et: metrics içindeki alanları root level'a taşı
+                    metrics = item.pop("metrics", {})
+                    flattened_item = {**item, **metrics}
+                    
                     # 'inci_name' alanını baz alıyoruz. Eğer veritabanında bu INCI adına sahip bir kayıt 
                     # zaten varsa onu günceller, yoksa yepyeni bir kayıt olarak ekler.
                     # Böylece AŞLA kopya/duplicate veri oluşmaz.
-                    find_query = {"inci_name": item.get("inci_name")}
-                    update_data = {"$set": item}
+                    find_query = {"inci_name": flattened_item.get("inci_name")}
+                    update_data = {"$set": flattened_item}
                     operations.append(UpdateOne(find_query, update_data, upsert=True))
                 
                 if operations:
