@@ -299,11 +299,6 @@ struct CategoryRowView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .background(Color.white)
-        .overlay(
-            Divider()
-                .padding(.leading, 82),
-            alignment: .bottom
-        )
     }
 }
 

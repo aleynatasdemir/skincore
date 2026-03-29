@@ -71,11 +71,11 @@ public class Ingredient
 
     // Convenience properties for direct access
     [BsonIgnore]
-    [JsonIgnore]
+    [JsonPropertyName("safety_label")]
     public string? SafetyLabel => Metrics?.SafetyLabel;
 
     [BsonIgnore]
-    [JsonIgnore]
+    [JsonPropertyName("safety_level")]
     public int? SafetyLevel => Metrics?.SafetyLevel;
 }
 

@@ -30,7 +30,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 MODEL_NAME = "gemini-3.1-flash-lite-preview"
-BATCH_SIZE = 20
+BATCH_SIZE = 100
 DELAY_BETWEEN_BATCHES = 2  # saniye
 
 # Gemini client
@@ -83,7 +83,11 @@ def process_batch(batch: list[dict]) -> list[dict] | None:
             )
         )
         
-        text = response.text.strip()
+        text = response.text
+        if not text:
+            print(f"  ✗ Gemini boş yanıt döndü")
+            return None
+        text = text.strip()
         # Gemini bazen birden fazla JSON bloğu dönüyor, sadece ilkini al
         decoder = json.JSONDecoder()
         result, _ = decoder.raw_decode(text)
