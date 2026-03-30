@@ -12,198 +12,158 @@ extension String: @retroactive Identifiable {
 
 struct ScanView: View {
     @StateObject private var viewModel = ScanViewModel()
+    @State private var showResults = false
 
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(hex: "FFF0F0").ignoresSafeArea()
+                if let image = viewModel.capturedImage {
+                    // ── Arka plan: bulanık fotoğraf ──
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                        .blur(radius: 28)
+                        .opacity(0.45)
+                        .scaleEffect(1.1)
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        // ── "SEARCH RESULTS FOR:" başlık ──
-                        HStack {
-                            Text("ARAMA SONUÇLARI:")
-                                .font(.system(size: 11, weight: .bold))
-                                .tracking(1.2)
-                                .foregroundColor(Color(hex: "D4728C"))
-                            Spacer()
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-                        .padding(.bottom, 12)
+                    Color(hex: "FFF0F0").opacity(0.55).ignoresSafeArea()
 
-                        // ── Önizleme / Kamera alanı ──
-                        ZStack(alignment: .bottomLeading) {
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.white)
-                                .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 3)
+                    VStack(spacing: 28) {
+                        Spacer()
 
-                            if let image = viewModel.capturedImage {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 220)
-                                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                            } else {
-                                Button {
-                                    viewModel.openCamera()
-                                } label: {
-                                    VStack(spacing: 14) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color(hex: "D4728C").opacity(0.10))
-                                                .frame(width: 72, height: 72)
-                                            Image(systemName: "camera.fill")
-                                                .font(.system(size: 30))
-                                                .foregroundColor(Color(hex: "D4728C"))
-                                        }
-                                        Text("Ürünü Tara")
-                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(Color(hex: "1A1A2E"))
-                                        Text("Etiketi çek, içerikler analiz edilsin")
-                                            .font(.caption)
-                                            .foregroundColor(Color(hex: "9CA3AF"))
-                                            .multilineTextAlignment(.center)
-                                            .padding(.horizontal, 32)
-                                    }
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                }
-                            }
+                        // ── Fotoğraf çerçevesi ──
+                        ZStack {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .clipped()
 
-                            // Alt chip
+                            // Üst & alt vignette
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: "D4728C").opacity(0.12),
+                                    Color.clear,
+                                    Color(hex: "D4728C").opacity(0.12)
+                                ],
+                                startPoint: .top, endPoint: .bottom
+                            )
+
+                            // Tarama animasyonu (çerçeve içinde)
                             if viewModel.isProcessing || viewModel.isSearching {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "arrow.2.circlepath")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(.white)
-                                    Text(viewModel.isProcessing ? "TARAMA ANALİZ EDİLİYOR..." : "ÜRÜNLER ARANIYÖR...")
-                                        .font(.system(size: 11, weight: .bold))
-                                        .tracking(0.5)
-                                        .foregroundColor(.white)
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 9)
-                                .background(Color.black.opacity(0.55))
-                                .clipShape(Capsule())
-                                .padding(16)
-                            } else if let text = viewModel.detectedText, !text.isEmpty, viewModel.capturedImage != nil {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "text.viewfinder")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(.white)
-                                    Text(text)
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundColor(.white)
-                                        .lineLimit(1)
-                                }
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
-                                .background(Color.black.opacity(0.50))
-                                .clipShape(Capsule())
-                                .padding(16)
+                                PhotoScanAnimation()
                             }
+
+                            // Köşe braketleri
+                            ScanBrackets()
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 220)
-                        .padding(.horizontal, 16)
+                        .aspectRatio(3/4, contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .shadow(color: .black.opacity(0.18), radius: 24, x: 0, y: 8)
+                        .padding(.horizontal, 28)
 
-                        // ── Sonuç başlığı ──
-                        if viewModel.hasSearched || viewModel.isSearching || viewModel.isProcessing {
-                            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                                if viewModel.isProcessing || viewModel.isSearching {
-                                    Text("Analiz ediliyor")
-                                        .font(.system(size: 22, weight: .bold))
-                                        .foregroundColor(Color(hex: "1A1A2E"))
-                                } else {
-                                    Text("\(viewModel.searchResults.count) ")
-                                        .font(.system(size: 22, weight: .bold))
-                                        .foregroundColor(Color(hex: "1A1A2E"))
-                                    + Text("en yakın eşleşme")
-                                        .font(.system(size: 22, weight: .bold))
-                                        .foregroundColor(Color(hex: "1A1A2E"))
+                        // ── Durum göstergesi ──
+                        if viewModel.isProcessing || viewModel.isSearching {
+                            VStack(spacing: 10) {
+                                HStack(spacing: 10) {
+                                    PulsingDot()
+                                    Text(viewModel.isProcessing ? "Analiz ediliyor…" : "Ürünler aranıyor…")
+                                        .font(.system(size: 15, weight: .bold))
+                                        .foregroundColor(Color(hex: "73585F"))
                                 }
-                                Spacer()
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 24)
+                                .padding(.horizontal, 22)
+                                .padding(.vertical, 13)
+                                .background(Color(hex: "FED9E2").opacity(0.85))
+                                .clipShape(Capsule())
+                                .shadow(color: Color(hex: "D4728C").opacity(0.15), radius: 12)
 
-                            Text("Tarama sonucuna göre en yakın ürünler")
-                                .font(.system(size: 13))
-                                .foregroundColor(Color(hex: "9CA3AF"))
-                                .padding(.horizontal, 20)
-                                .padding(.top, 2)
-                                .padding(.bottom, 12)
-                        }
-
-                        // ── Sonuç kartları ──
-                        if !viewModel.searchResults.isEmpty {
-                            LazyVStack(spacing: 12) {
-                                ForEach(Array(viewModel.searchResults.enumerated()), id: \.element.id) { index, product in
-                                    NavigationLink(destination: ProductDetailView(productId: product.id)) {
-                                        ScanResultCard(product: product, rank: index + 1)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
+                                Text("Ürün veritabanında en yakın eşleşmeler aranıyor")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(Color(hex: "9CA3AF"))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 40)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 32)
-                        } else if viewModel.hasSearched && !viewModel.isSearching && !viewModel.isProcessing {
-                            VStack(spacing: 14) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 36))
-                                    .foregroundColor(Color(hex: "D4728C").opacity(0.35))
-                                Text("Ürün bulunamadı")
-                                    .font(.system(size: 16, weight: .semibold))
+                        } else {
+                            HStack(spacing: 8) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(Color(hex: "4ADE80"))
+                                Text("Analiz tamamlandı")
+                                    .font(.system(size: 15, weight: .bold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
-                                if !viewModel.allOcrLines.isEmpty {
-                                    VStack(spacing: 6) {
-                                        Text("OCR ile okunan satırlar — birini seç")
-                                            .font(.caption)
-                                            .foregroundColor(Color(hex: "9CA3AF"))
-                                        ForEach(viewModel.allOcrLines.prefix(6), id: \.self) { line in
-                                            Button {
-                                                Task { await viewModel.search(query: line) }
-                                            } label: {
-                                                HStack {
-                                                    Text(line)
-                                                        .font(.caption)
-                                                        .foregroundColor(Color(hex: "1A1A2E"))
-                                                    Spacer()
-                                                    Image(systemName: "magnifyingglass")
-                                                        .font(.caption2)
-                                                        .foregroundColor(Color(hex: "D4728C"))
-                                                }
-                                                .padding(.horizontal, 12).padding(.vertical, 8)
-                                                .background(Color.white)
-                                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                            }
-                                        }
-                                    }
-                                    .padding(.horizontal, 24)
-                                }
-                                Button("Tekrar Çek") { viewModel.reset() }
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(Color(hex: "D4728C"))
-                                    .padding(.top, 4)
                             }
-                            .padding(.top, 24)
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 22)
+                            .padding(.vertical, 13)
+                            .background(Color.white.opacity(0.85))
+                            .clipShape(Capsule())
+                            .shadow(color: .black.opacity(0.08), radius: 12)
                         }
+
+                        Spacer()
+                    }
+
+                } else {
+                    // ── Kamera açma ekranı ──
+                    Color(hex: "FFF0F0").ignoresSafeArea()
+
+                    VStack(spacing: 0) {
+                        Spacer()
+                        VStack(spacing: 20) {
+                            Button { viewModel.openCamera() } label: {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color(hex: "D4728C").opacity(0.06))
+                                        .frame(width: 140, height: 140)
+                                    Circle()
+                                        .fill(Color(hex: "D4728C").opacity(0.12))
+                                        .frame(width: 108, height: 108)
+                                    Circle()
+                                        .fill(Color(hex: "D4728C").opacity(0.18))
+                                        .frame(width: 80, height: 80)
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 34))
+                                        .foregroundColor(Color(hex: "D4728C"))
+                                }
+                            }
+                            VStack(spacing: 8) {
+                                Text("Ürünü Tara")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(Color(hex: "1A1A2E"))
+                                Text("Etiketi çek, içerikler analiz edilsin")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(hex: "9CA3AF"))
+                            }
+                        }
+                        Spacer()
                     }
                 }
             }
             .navigationTitle("Tara")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
                 if viewModel.capturedImage != nil {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button { viewModel.reset() } label: {
+                        Button {
+                            viewModel.reset()
+                            showResults = false
+                        } label: {
                             Image(systemName: "arrow.counterclockwise")
                                 .foregroundColor(Color(hex: "D4728C"))
                         }
                     }
                 }
+            }
+            .sheet(isPresented: $showResults) {
+                CameraResultSheet(viewModel: viewModel, onDismiss: {
+                    showResults = false
+                    viewModel.reset()
+                })
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color(hex: "FFF0F0"))
+            }
+            .onChange(of: viewModel.hasSearched) { _, searched in
+                if searched { showResults = true }
             }
             .fullScreenCover(isPresented: $viewModel.showCamera) {
                 SkinCoreCameraView(
@@ -214,12 +174,8 @@ struct ScanView: View {
                             viewModel.processImage(image)
                         }
                     },
-                    onGallery: {
-                        // Galeri kamera view içinde açılır, showCamera kapatılmaz
-                    },
-                    onCancel: {
-                        viewModel.showCamera = false
-                    }
+                    onGallery: {},
+                    onCancel: { viewModel.showCamera = false }
                 )
             }
             .alert("Kamera İzni Gerekli", isPresented: $viewModel.showPermissionAlert) {
@@ -233,6 +189,108 @@ struct ScanView: View {
                 Text("Ürün taramak için kamera iznine ihtiyaç var.")
             }
         }
+    }
+}
+
+// MARK: - Çerçeve içi tarama animasyonu
+
+private struct PhotoScanAnimation: View {
+    @State private var scanProgress: CGFloat = 0
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            let glowH: CGFloat = 70
+
+            ZStack(alignment: .top) {
+                LinearGradient(
+                    colors: [Color(hex: "D4728C").opacity(0.30), Color.clear],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .frame(height: glowH)
+
+                LinearGradient(
+                    colors: [
+                        Color.clear,
+                        Color(hex: "D4728C").opacity(0.9),
+                        Color.white.opacity(0.9),
+                        Color(hex: "D4728C").opacity(0.9),
+                        Color.clear
+                    ],
+                    startPoint: .leading, endPoint: .trailing
+                )
+                .frame(height: 2.5)
+            }
+            .frame(width: w, height: glowH)
+            .offset(y: (scanProgress - 0.5) * (h - glowH))
+            .onAppear {
+                withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
+                    scanProgress = 1
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Çerçeve köşe braketleri
+
+private struct ScanBrackets: View {
+    let size: CGFloat = 22
+    let lineW: CGFloat = 2.5
+    let color = Color(hex: "D4728C").opacity(0.5)
+    let padding: CGFloat = 14
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+
+            ZStack {
+                // Sol üst
+                bracket(at: CGPoint(x: padding, y: padding), hFlip: false, vFlip: false)
+                // Sağ üst
+                bracket(at: CGPoint(x: w - padding, y: padding), hFlip: true, vFlip: false)
+                // Sol alt
+                bracket(at: CGPoint(x: padding, y: h - padding), hFlip: false, vFlip: true)
+                // Sağ alt
+                bracket(at: CGPoint(x: w - padding, y: h - padding), hFlip: true, vFlip: true)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func bracket(at origin: CGPoint, hFlip: Bool, vFlip: Bool) -> some View {
+        let sx: CGFloat = hFlip ? -1 : 1
+        let sy: CGFloat = vFlip ? -1 : 1
+
+        Path { p in
+            p.move(to: CGPoint(x: origin.x, y: origin.y + sy * size))
+            p.addLine(to: origin)
+            p.addLine(to: CGPoint(x: origin.x + sx * size, y: origin.y))
+        }
+        .stroke(color, style: StrokeStyle(lineWidth: lineW, lineCap: .round))
+    }
+}
+
+// MARK: - Pulsing dot
+
+private struct PulsingDot: View {
+    @State private var pulsing = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color(hex: "D4728C").opacity(0.35))
+                .frame(width: 14, height: 14)
+                .scaleEffect(pulsing ? 2 : 1)
+                .opacity(pulsing ? 0 : 1)
+                .animation(.easeOut(duration: 1.1).repeatForever(autoreverses: false), value: pulsing)
+            Circle()
+                .fill(Color(hex: "D4728C"))
+                .frame(width: 8, height: 8)
+        }
+        .onAppear { pulsing = true }
     }
 }
 
@@ -555,10 +613,12 @@ struct SkinCoreCameraView: View {
                 Spacer()
 
                 // Köşe çerçevesi overlay — orta bölgeyi kaplar
-                ScanFrameOverlay()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: UIScreen.main.bounds.height * 0.50)
-                    .padding(.horizontal, 24)
+                ScanFrameOverlay(
+                    isAnimating: !viewModel.isProcessing && !viewModel.isSearching
+                )
+                .frame(maxWidth: .infinity)
+                .frame(height: UIScreen.main.bounds.height * 0.50)
+                .padding(.horizontal, 24)
 
                 // "Analiz ediliyor" / "hizala" chip
                 if viewModel.isProcessing || viewModel.isSearching {
@@ -678,15 +738,23 @@ private struct CameraResultSheet: View {
     let onDismiss: () -> Void
 
     @State private var selectedProductId: String? = nil
+    @State private var showProductRequest = false
 
     var body: some View {
         VStack(spacing: 0) {
-            // Başlık
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
+            // ── Drag handle ──
+            RoundedRectangle(cornerRadius: 2.5)
+                .fill(Color(hex: "D1D5DB"))
+                .frame(width: 40, height: 5)
+                .padding(.top, 10)
+                .padding(.bottom, 6)
+
+            // ── Başlık ──
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text("ARAMA SONUÇLARI")
-                        .font(.system(size: 11, weight: .bold))
-                        .tracking(1.2)
+                        .font(.system(size: 10, weight: .bold))
+                        .tracking(1.4)
                         .foregroundColor(Color(hex: "D4728C"))
                     Text("\(viewModel.searchResults.count) eşleşme bulundu")
                         .font(.system(size: 20, weight: .bold))
@@ -694,36 +762,49 @@ private struct CameraResultSheet: View {
                 }
                 Spacer()
                 Button { onDismiss() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 26))
-                        .foregroundColor(Color(hex: "CBD5E1"))
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: "F3F4F6"))
+                            .frame(width: 34, height: 34)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Color(hex: "6B7280"))
+                    }
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.top, 20)
             .padding(.bottom, 16)
 
             if viewModel.searchResults.isEmpty {
-                VStack(spacing: 14) {
+                // ── Boş durum ──
+                VStack(spacing: 16) {
                     Spacer()
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 40))
-                        .foregroundColor(Color(hex: "D4728C").opacity(0.35))
+                        .font(.system(size: 44))
+                        .foregroundColor(Color(hex: "D4728C").opacity(0.30))
                     Text("Ürün bulunamadı")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(hex: "1A1A2E"))
                     Text("Etiketi daha yakından çekip tekrar dene")
-                        .font(.caption)
+                        .font(.system(size: 14))
                         .foregroundColor(Color(hex: "9CA3AF"))
-                    Button("Tekrar Çek") { onDismiss() }
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(Color(hex: "D4728C"))
-                        .padding(.top, 4)
+                    Button { onDismiss() } label: {
+                        Text("Tekrar Çek")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color(hex: "1A1A2E"))
+                            .cornerRadius(25)
+                    }
+                    .padding(.horizontal, 32)
+                    .padding(.top, 4)
                     Spacer()
                 }
             } else {
+                // ── Sonuç kartları ──
                 ScrollView(showsIndicators: false) {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: 10) {
                         ForEach(Array(viewModel.searchResults.enumerated()), id: \.element.id) { index, product in
                             Button {
                                 selectedProductId = product.id
@@ -732,6 +813,25 @@ private struct CameraResultSheet: View {
                             }
                             .buttonStyle(.plain)
                         }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+
+                    // ── Ürün bulunamadı mı? ──
+                    Button {
+                        showProductRequest = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.circle")
+                                .font(.system(size: 14))
+                            Text("Aradığınız ürün bunlar değil mi?")
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .foregroundColor(Color(hex: "D4728C"))
+                        .padding(.vertical, 14)
+                        .frame(maxWidth: .infinity)
+                        .background(Color(hex: "D4728C").opacity(0.08))
+                        .cornerRadius(12)
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 32)
@@ -756,48 +856,85 @@ private struct CameraResultSheet: View {
                     }
             }
         }
+        .sheet(isPresented: $showProductRequest) {
+            NavigationStack {
+                ProductRequestView()
+            }
+        }
     }
 }
 
-// MARK: - Scan Frame Overlay (pembe köşeli çerçeve)
+// MARK: - Scan Frame Overlay (köşeli çerçeve + Google Lens tarama animasyonu)
 
 private struct ScanFrameOverlay: View {
-    let cornerLength: CGFloat = 30
+    var isAnimating: Bool = true
+
+    let cornerLength: CGFloat = 32
     let lineWidth: CGFloat = 3
     let color = Color(hex: "D4728C")
+
+    @State private var scanProgress: CGFloat = 0
 
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height
-            ZStack {
-                // Yatay orta kılavuz çizgisi
-                Rectangle()
-                    .fill(color.opacity(0.30))
-                    .frame(width: w * 0.65, height: 1)
+            let glowH: CGFloat = 56
 
-                // Sol üst
+            ZStack {
+                // ── Tarama çizgisi + glow (Google Lens efekti) ──
+                if isAnimating {
+                    ZStack(alignment: .top) {
+                        // Alt glow
+                        LinearGradient(
+                            colors: [color.opacity(0.22), color.opacity(0)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: glowH)
+
+                        // Çizgi
+                        LinearGradient(
+                            colors: [color.opacity(0), color, color.opacity(0)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .frame(height: 2)
+                    }
+                    .frame(width: w, height: glowH)
+                    .offset(y: (scanProgress - 0.5) * (h - glowH))
+                    .onAppear {
+                        withAnimation(
+                            .easeInOut(duration: 2.2)
+                            .repeatForever(autoreverses: true)
+                        ) {
+                            scanProgress = 1
+                        }
+                    }
+                }
+
+                // ── Sol üst köşe ──
                 Path { p in
                     p.move(to: CGPoint(x: 0, y: cornerLength))
                     p.addLine(to: .zero)
                     p.addLine(to: CGPoint(x: cornerLength, y: 0))
                 }.stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
 
-                // Sağ üst
+                // ── Sağ üst köşe ──
                 Path { p in
                     p.move(to: CGPoint(x: w - cornerLength, y: 0))
                     p.addLine(to: CGPoint(x: w, y: 0))
                     p.addLine(to: CGPoint(x: w, y: cornerLength))
                 }.stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
 
-                // Sol alt
+                // ── Sol alt köşe ──
                 Path { p in
                     p.move(to: CGPoint(x: 0, y: h - cornerLength))
                     p.addLine(to: CGPoint(x: 0, y: h))
                     p.addLine(to: CGPoint(x: cornerLength, y: h))
                 }.stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
 
-                // Sağ alt
+                // ── Sağ alt köşe ──
                 Path { p in
                     p.move(to: CGPoint(x: w - cornerLength, y: h))
                     p.addLine(to: CGPoint(x: w, y: h))

@@ -27,8 +27,11 @@ public class MongoDbService
     public IMongoCollection<Routine> RoutinesCollection =>
         _database.GetCollection<Routine>("routines");
 
-    public IMongoCollection<PopularSearch> PopularSearchesCollection => 
+    public IMongoCollection<PopularSearch> PopularSearchesCollection =>
         _database.GetCollection<PopularSearch>("popular_searches");
+
+    public IMongoCollection<ProductRequest> ProductRequestsCollection =>
+        _database.GetCollection<ProductRequest>("product_requests");
 
     public async Task CreateIndexesAsync()
     {
