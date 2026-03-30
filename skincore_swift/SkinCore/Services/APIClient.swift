@@ -94,6 +94,16 @@ class APIClient {
         return try await request(endpoint: "/auth/me", authenticated: true)
     }
 
+    func forgotPassword(email: String) async throws -> MessageResponse {
+        let body = ForgotPasswordRequest(email: email)
+        return try await request(endpoint: "/auth/forgot-password", method: "POST", body: body)
+    }
+
+    func resetPassword(email: String, code: String, newPassword: String) async throws -> MessageResponse {
+        let body = ResetPasswordRequest(email: email, code: code, newPassword: newPassword)
+        return try await request(endpoint: "/auth/reset-password", method: "POST", body: body)
+    }
+
     // MARK: - Product Endpoints
 
     func searchProductsByName(query: String, maxResults: Int = 5) async throws -> [Product] {

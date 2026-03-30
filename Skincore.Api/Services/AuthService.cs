@@ -307,6 +307,84 @@ public class AuthService
         });
     }
 
+    // ── Forgot Password ──
+    public async Task<(bool Success, string Message)> ForgotPasswordAsync(string email)
+    {
+        email = email.Trim().ToLowerInvariant();
+
+        var user = await _mongoDbService.UsersCollection
+            .Find(u => u.Email == email && u.AuthProvider == "email")
+            .FirstOrDefaultAsync();
+
+        // Güvenlik: kullanıcı bulunamasa da aynı mesajı dön (email enumeration önlemi)
+        if (user == null || !user.IsEmailVerified)
+            return (true, "Eğer bu e-posta adresi kayıtlıysa sıfırlama kodu gönderildi.");
+
+        // Rate limiting: son 60 saniyede istek atıldıysa beklet
+        if (user.PasswordResetCodeExpiry.HasValue &&
+            user.PasswordResetCodeExpiry.Value > DateTime.UtcNow.AddMinutes(9))
+            return (false, "Lütfen yeni kod istemek için 60 saniye bekleyin.");
+
+        var code = GenerateVerificationCode();
+
+        var update = Builders<User>.Update
+            .Set(u => u.PasswordResetCode, code)
+            .Set(u => u.PasswordResetCodeExpiry, DateTime.UtcNow.AddMinutes(10))
+            .Set(u => u.PasswordResetAttempts, 0);
+
+        await _mongoDbService.UsersCollection.UpdateOneAsync(u => u.Id == user.Id, update);
+        await _emailService.SendPasswordResetEmailAsync(email, code);
+
+        return (true, "Eğer bu e-posta adresi kayıtlıysa sıfırlama kodu gönderildi.");
+    }
+
+    // ── Reset Password ──
+    public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+
+        var user = await _mongoDbService.UsersCollection
+            .Find(u => u.Email == email && u.AuthProvider == "email")
+            .FirstOrDefaultAsync();
+
+        if (user == null)
+            return (false, "Geçersiz istek.");
+
+        if (user.PasswordResetAttempts >= 5)
+            return (false, "Çok fazla yanlış deneme. Lütfen yeni kod isteyin.");
+
+        if (user.PasswordResetCode == null || user.PasswordResetCodeExpiry < DateTime.UtcNow)
+            return (false, "Sıfırlama kodu süresi dolmuş veya geçersiz. Lütfen yeni kod isteyin.");
+
+        if (user.PasswordResetCode != request.Code)
+        {
+            var attemptUpdate = Builders<User>.Update.Inc(u => u.PasswordResetAttempts, 1);
+            await _mongoDbService.UsersCollection.UpdateOneAsync(u => u.Id == user.Id, attemptUpdate);
+            return (false, "Geçersiz sıfırlama kodu.");
+        }
+
+        var passwordError = ValidatePassword(request.NewPassword);
+        if (passwordError != null)
+            return (false, passwordError);
+
+        if (user.PasswordHash != null && BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
+            return (false, "Yeni şifre eski şifrenizle aynı olamaz.");
+
+        var update = Builders<User>.Update
+            .Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(request.NewPassword))
+            .Set(u => u.PasswordResetCode, null)
+            .Set(u => u.PasswordResetCodeExpiry, null)
+            .Set(u => u.PasswordResetAttempts, 0)
+            // Güvenlik: tüm oturumları geçersiz kıl
+            .Set(u => u.RefreshToken, null)
+            .Set(u => u.RefreshTokenExpiry, null)
+            .Set(u => u.UpdatedAt, DateTime.UtcNow);
+
+        await _mongoDbService.UsersCollection.UpdateOneAsync(u => u.Id == user.Id, update);
+
+        return (true, "Şifreniz başarıyla sıfırlandı. Lütfen yeni şifrenizle giriş yapın.");
+    }
+
     // ── Get User By ID ──
     public async Task<User?> GetUserByIdAsync(string userId)
     {

@@ -11,6 +11,7 @@ class AuthViewModel: ObservableObject {
     // Navigation state
     @Published var showVerifyEmail = false
     @Published var pendingEmail = ""
+    @Published var resetPasswordCompleted = false
     
     init() {
         // Check if user is already logged in
@@ -138,6 +139,46 @@ class AuthViewModel: ObservableObject {
         isLoading = false
     }
     
+    // MARK: - Forgot Password
+
+    func forgotPassword(email: String) async {
+        isLoading = true
+        errorMessage = nil
+        resetPasswordCompleted = false
+
+        do {
+            _ = try await APIClient.shared.forgotPassword(email: email)
+            pendingEmail = email
+        } catch let error as APIClientError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
+    // MARK: - Reset Password
+
+    func resetPassword(code: String, newPassword: String) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            _ = try await APIClient.shared.resetPassword(
+                email: pendingEmail, code: code, newPassword: newPassword
+            )
+            resetPasswordCompleted = true
+            pendingEmail = ""
+        } catch let error as APIClientError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
     // MARK: - Resend Code
     
     func resendCode() async {

@@ -44,6 +44,16 @@ public class User
     [BsonElement("verificationAttempts")]
     public int VerificationAttempts { get; set; }
 
+    // Password Reset
+    [BsonElement("passwordResetCode")]
+    public string? PasswordResetCode { get; set; }
+
+    [BsonElement("passwordResetCodeExpiry")]
+    public DateTime? PasswordResetCodeExpiry { get; set; }
+
+    [BsonElement("passwordResetAttempts")]
+    public int PasswordResetAttempts { get; set; }
+
     // Refresh Token
     [BsonElement("refreshToken")]
     public string? RefreshToken { get; set; }

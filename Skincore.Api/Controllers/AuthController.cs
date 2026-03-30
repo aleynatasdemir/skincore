@@ -103,6 +103,42 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Şifre sıfırlama kodu gönder.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return BadRequest(new MessageResponse { Message = "E-posta gereklidir." });
+
+        var (success, message) = await _authService.ForgotPasswordAsync(request.Email);
+
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message });
+
+        return Ok(new MessageResponse { Message = message });
+    }
+
+    /// <summary>
+    /// Şifre sıfırlama kodunu doğrula ve yeni şifreyi kaydet.
+    /// </summary>
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) ||
+            string.IsNullOrWhiteSpace(request.Code) ||
+            string.IsNullOrWhiteSpace(request.NewPassword))
+            return BadRequest(new MessageResponse { Message = "E-posta, kod ve yeni şifre gereklidir." });
+
+        var (success, message) = await _authService.ResetPasswordAsync(request);
+
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message });
+
+        return Ok(new MessageResponse { Message = message });
+    }
+
+    /// <summary>
     /// Refresh token ile yeni access token al.
     /// </summary>
     [HttpPost("refresh")]

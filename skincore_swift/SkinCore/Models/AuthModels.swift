@@ -32,6 +32,16 @@ struct RefreshTokenRequest: Codable {
     let refreshToken: String
 }
 
+struct ForgotPasswordRequest: Codable {
+    let email: String
+}
+
+struct ResetPasswordRequest: Codable {
+    let email: String
+    let code: String
+    let newPassword: String
+}
+
 // MARK: - Response Models
 
 struct AuthResponse: Codable {

@@ -153,9 +153,10 @@ struct LoginView: View {
 struct EmailLoginView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) var dismiss
-    
+
     @State private var email = ""
     @State private var password = ""
+    @State private var showForgotPassword = false
     
     var body: some View {
         ZStack {
@@ -225,6 +226,20 @@ struct EmailLoginView: View {
                         .padding(.horizontal)
                 }
                 
+                // Forgot Password
+                HStack {
+                    Spacer()
+                    Button {
+                        showForgotPassword = true
+                    } label: {
+                        Text("Forgot Password?")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(hex: "6B7280"))
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, -8)
+
                 // Login Button
                 Button {
                     Task { await authViewModel.login(email: email, password: password) }
@@ -259,6 +274,12 @@ struct EmailLoginView: View {
                         .foregroundColor(Color(hex: "1A1A2E"))
                 }
             }
+        }
+        .navigationDestination(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+        }
+        .onChange(of: authViewModel.resetPasswordCompleted) { _, completed in
+            if completed { showForgotPassword = false }
         }
     }
 }
