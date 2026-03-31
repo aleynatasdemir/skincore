@@ -14,6 +14,7 @@ struct SkinCoreApp: App {
                 }
             }
             .environmentObject(authViewModel)
+            .preferredColorScheme(.light)
         }
     }
 }

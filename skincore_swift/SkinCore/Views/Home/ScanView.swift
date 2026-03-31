@@ -3,6 +3,15 @@ import Vision
 import UIKit
 import AVFoundation
 
+private func setTorch(on: Bool) {
+    guard let device = AVCaptureDevice.default(for: .video),
+          device.hasTorch,
+          device.isTorchAvailable else { return }
+    try? device.lockForConfiguration()
+    device.torchMode = on ? .on : .off
+    device.unlockForConfiguration()
+}
+
 // String'i fullScreenCover(item:) için Identifiable yap
 extension String: @retroactive Identifiable {
     public var id: String { self }
@@ -565,6 +574,7 @@ struct SkinCoreCameraView: View {
     @State private var triggerCapture = false
     @State private var showResultSheet = false
     @State private var showGallerySheet = false
+    @State private var flashOn = false
 
     var body: some View {
         ZStack {
@@ -574,6 +584,7 @@ struct SkinCoreCameraView: View {
             CameraPickerRepresentable(
                 sourceType: .camera,
                 triggerCapture: $triggerCapture,
+                flashOn: $flashOn,
                 onCapture: onCapture,
                 onCancel: onCancel
             )
@@ -598,13 +609,15 @@ struct SkinCoreCameraView: View {
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                     Spacer()
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.20))
-                            .frame(width: 44, height: 44)
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
+                    Button { flashOn.toggle() } label: {
+                        ZStack {
+                            Circle()
+                                .fill(flashOn ? Color.yellow.opacity(0.30) : Color.white.opacity(0.20))
+                                .frame(width: 44, height: 44)
+                            Image(systemName: flashOn ? "bolt.fill" : "bolt.slash.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(flashOn ? .yellow : .white)
+                        }
                     }
                 }
                 .padding(.horizontal, 24)
@@ -651,7 +664,7 @@ struct SkinCoreCameraView: View {
 
                 Spacer()
 
-                // Alt bar: GALERİ + Shutter + BARKOD — şeffaf
+                // Alt bar: GALERİ + Shutter
                 HStack(alignment: .center) {
                     Button { showGallerySheet = true } label: {
                         VStack(spacing: 8) {
@@ -684,16 +697,8 @@ struct SkinCoreCameraView: View {
 
                     Spacer()
 
-                    VStack(spacing: 8) {
-                        Image(systemName: "barcode.viewfinder")
-                            .font(.system(size: 26))
-                            .foregroundColor(.white)
-                        Text("BARKOD")
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(0.8)
-                            .foregroundColor(.white.opacity(0.90))
-                    }
-                    .frame(width: 70)
+                    // Simetri için boş alan
+                    Color.clear.frame(width: 70)
                 }
                 .padding(.horizontal, 48)
                 .padding(.bottom, 44)
@@ -714,6 +719,7 @@ struct SkinCoreCameraView: View {
             CameraPickerRepresentable(
                 sourceType: .photoLibrary,
                 triggerCapture: .constant(false),
+                flashOn: .constant(false),
                 onCapture: { image in
                     showGallerySheet = false
                     // Galeri seçimi sonrası kamerayı kapat, sonuçları işle
@@ -727,6 +733,12 @@ struct SkinCoreCameraView: View {
         }
         .onChange(of: viewModel.hasSearched) { _, searched in
             if searched { showResultSheet = true }
+        }
+        .onChange(of: flashOn) { _, on in
+            setTorch(on: on)
+        }
+        .onDisappear {
+            setTorch(on: false)
         }
     }
 }
@@ -952,6 +964,7 @@ private struct ScanFrameOverlay: View {
 struct CameraPickerRepresentable: UIViewControllerRepresentable {
     let sourceType: UIImagePickerController.SourceType
     @Binding var triggerCapture: Bool
+    @Binding var flashOn: Bool
     let onCapture: (UIImage) -> Void
     let onCancel: () -> Void
 
@@ -963,21 +976,18 @@ struct CameraPickerRepresentable: UIViewControllerRepresentable {
         if sourceType == .camera {
             picker.showsCameraControls = false
             picker.cameraDevice = .rear
-            // Kamera preview'ını tam ekrana scale et (alttaki siyah alanı yok eder)
             let screenH = UIScreen.main.bounds.height
             let screenW = UIScreen.main.bounds.width
             let cameraAspect: CGFloat = 4.0 / 3.0
             let previewH = screenW * cameraAspect
             let scale = screenH / previewH
             picker.cameraViewTransform = CGAffineTransform(scaleX: scale, y: scale)
-            // Boş overlay — SwiftUI overlay'i kendi tarafında çizecek
             picker.cameraOverlayView = UIView()
         }
         return picker
     }
 
     func updateUIViewController(_ picker: UIImagePickerController, context: Context) {
-        // triggerCapture true olunca fotoğraf çek, sonra false'a döndür
         if triggerCapture && sourceType == .camera {
             DispatchQueue.main.async {
                 picker.takePicture()

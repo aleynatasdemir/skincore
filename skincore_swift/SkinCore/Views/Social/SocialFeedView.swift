@@ -150,7 +150,7 @@ struct SocialFeedView: View {
     }
 }
 
-private struct RoutineSelection: Identifiable {
+struct RoutineSelection: Identifiable {
     let id: String
 }
 
@@ -194,15 +194,20 @@ private struct RoutineCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                AvatarView(name: routine.userName)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(routine.userName)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(Color(hex: "1A1A2E"))
-                    Text(timeAgo(routine.createdAt))
-                        .font(.system(size: 12))
-                        .foregroundColor(Color(hex: "9CA3AF"))
+                NavigationLink(destination: UserProfileView(userName: routine.userName)) {
+                    HStack(spacing: 10) {
+                        AvatarView(name: routine.userName)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(routine.userName)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(Color(hex: "1A1A2E"))
+                            Text(timeAgo(routine.createdAt))
+                                .font(.system(size: 12))
+                                .foregroundColor(Color(hex: "9CA3AF"))
+                        }
+                    }
                 }
+                .buttonStyle(.plain)
                 Spacer()
                 if let skinType = routine.skinType, !skinType.isEmpty {
                     Text(skinType)
