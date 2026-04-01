@@ -4,6 +4,8 @@ import SwiftUI
 // SearchHistoryView is implemented in Views/History/SearchHistoryView.swift
 
 struct WishlistView: View {
+    @EnvironmentObject var lang: LanguageManager
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -12,10 +14,10 @@ struct WishlistView: View {
                     Image(systemName: "heart.fill")
                         .font(.system(size: 48))
                         .foregroundColor(Color(hex: "D4728C").opacity(0.3))
-                    Text("Favorites")
+                    Text(lang.s(.placeholderFavorites))
                         .font(.title2.bold())
                         .foregroundColor(Color(hex: "1A1A2E"))
-                    Text("Your saved products")
+                    Text(lang.s(.placeholderFavoritesDesc))
                         .foregroundColor(Color(hex: "9CA3AF"))
                 }
             }
@@ -24,6 +26,8 @@ struct WishlistView: View {
 }
 
 struct ProfilePlaceholderView: View {
+    @EnvironmentObject var lang: LanguageManager
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -32,10 +36,10 @@ struct ProfilePlaceholderView: View {
                     Image(systemName: "person.fill")
                         .font(.system(size: 48))
                         .foregroundColor(Color(hex: "D4728C").opacity(0.3))
-                    Text("Profile")
+                    Text(lang.s(.placeholderProfile))
                         .font(.title2.bold())
                         .foregroundColor(Color(hex: "1A1A2E"))
-                    Text("Coming Soon")
+                    Text(lang.s(.placeholderComingSoon))
                         .foregroundColor(Color(hex: "9CA3AF"))
                 }
             }

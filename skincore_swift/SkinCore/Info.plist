@@ -3,7 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<string>tr</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>tr</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,14 +31,18 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Ürün etiketini okumak ve içerikleri analiz etmek için kamera kullanılır.</string>
+	<string>Camera is used to scan product labels and analyze ingredients.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Fotoğraftan ürün taraması yapmak için galeri erişimi kullanılır.</string>
+	<string>Photo library access is used to scan products from existing photos.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIRequiresFullScreen</key>

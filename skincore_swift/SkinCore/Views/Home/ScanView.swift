@@ -21,6 +21,7 @@ extension String: @retroactive Identifiable {
 
 struct ScanView: View {
     @StateObject private var viewModel = ScanViewModel()
+    @EnvironmentObject var lang: LanguageManager
     @State private var showResults = false
 
     var body: some View {
@@ -76,7 +77,7 @@ struct ScanView: View {
                             VStack(spacing: 10) {
                                 HStack(spacing: 10) {
                                     PulsingDot()
-                                    Text(viewModel.isProcessing ? "Analiz ediliyor…" : "Ürünler aranıyor…")
+                                    Text(viewModel.isProcessing ? lang.s(.scanAnalyzing) : lang.s(.scanSearchingProducts))
                                         .font(.system(size: 15, weight: .bold))
                                         .foregroundColor(Color(hex: "73585F"))
                                 }
@@ -86,7 +87,7 @@ struct ScanView: View {
                                 .clipShape(Capsule())
                                 .shadow(color: Color(hex: "D4728C").opacity(0.15), radius: 12)
 
-                                Text("Ürün veritabanında en yakın eşleşmeler aranıyor")
+                                Text(lang.s(.scanDBSearching))
                                     .font(.system(size: 13))
                                     .foregroundColor(Color(hex: "9CA3AF"))
                                     .multilineTextAlignment(.center)
@@ -96,7 +97,7 @@ struct ScanView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundColor(Color(hex: "4ADE80"))
-                                Text("Analiz tamamlandı")
+                                Text(lang.s(.scanAnalyzeDone))
                                     .font(.system(size: 15, weight: .bold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
                             }
@@ -134,10 +135,10 @@ struct ScanView: View {
                                 }
                             }
                             VStack(spacing: 8) {
-                                Text("Ürünü Tara")
+                                Text(lang.s(.scanTapProduct))
                                     .font(.system(size: 20, weight: .bold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
-                                Text("Etiketi çek, içerikler analiz edilsin")
+                                Text(lang.s(.scanTapProductDesc))
                                     .font(.system(size: 14))
                                     .foregroundColor(Color(hex: "9CA3AF"))
                             }
@@ -146,7 +147,7 @@ struct ScanView: View {
                     }
                 }
             }
-            .navigationTitle("Tara")
+            .navigationTitle(lang.s(.scanTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
@@ -187,15 +188,15 @@ struct ScanView: View {
                     onCancel: { viewModel.showCamera = false }
                 )
             }
-            .alert("Kamera İzni Gerekli", isPresented: $viewModel.showPermissionAlert) {
-                Button("Ayarları Aç") {
+            .alert(lang.s(.scanCameraPermissionTitle), isPresented: $viewModel.showPermissionAlert) {
+                Button(lang.s(.scanOpenSettings)) {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
                         UIApplication.shared.open(url)
                     }
                 }
-                Button("İptal", role: .cancel) {}
+                Button(lang.s(.cancel), role: .cancel) {}
             } message: {
-                Text("Ürün taramak için kamera iznine ihtiyaç var.")
+                Text(lang.s(.scanCameraPermissionMsg))
             }
         }
     }
@@ -567,6 +568,7 @@ class ScanViewModel: ObservableObject {
 
 struct SkinCoreCameraView: View {
     @ObservedObject var viewModel: ScanViewModel
+    @EnvironmentObject var lang: LanguageManager
     let onCapture: (UIImage) -> Void
     let onGallery: () -> Void
     let onCancel: () -> Void
@@ -605,7 +607,7 @@ struct SkinCoreCameraView: View {
                         }
                     }
                     Spacer()
-                    Text("Skincore")
+                    Text(lang.s(.appBrand))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                     Spacer()
@@ -637,7 +639,7 @@ struct SkinCoreCameraView: View {
                 if viewModel.isProcessing || viewModel.isSearching {
                     HStack(spacing: 8) {
                         ProgressView().tint(.white).scaleEffect(0.8)
-                        Text(viewModel.isProcessing ? "Analiz ediliyor…" : "Ürünler aranıyor…")
+                        Text(viewModel.isProcessing ? lang.s(.scanAnalyzing) : lang.s(.scanSearchingProducts))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.white)
                     }
@@ -651,7 +653,7 @@ struct SkinCoreCameraView: View {
                         Image(systemName: "viewfinder")
                             .font(.system(size: 13))
                             .foregroundColor(.white)
-                        Text("Ürünü çerçeve içine hizala")
+                        Text(lang.s(.scanAlignHint))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.white)
                     }
@@ -671,7 +673,7 @@ struct SkinCoreCameraView: View {
                             Image(systemName: "photo.on.rectangle.angled")
                                 .font(.system(size: 26))
                                 .foregroundColor(.white)
-                            Text("GALERİ")
+                            Text(lang.s(.scanGallery))
                                 .font(.system(size: 10, weight: .bold))
                                 .tracking(0.8)
                                 .foregroundColor(.white.opacity(0.90))
@@ -747,6 +749,7 @@ struct SkinCoreCameraView: View {
 
 private struct CameraResultSheet: View {
     @ObservedObject var viewModel: ScanViewModel
+    @EnvironmentObject var lang: LanguageManager
     let onDismiss: () -> Void
 
     @State private var selectedProductId: String? = nil
@@ -764,11 +767,11 @@ private struct CameraResultSheet: View {
             // ── Başlık ──
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("ARAMA SONUÇLARI")
+                    Text(lang.s(.scanResultsTitle))
                         .font(.system(size: 10, weight: .bold))
                         .tracking(1.4)
                         .foregroundColor(Color(hex: "D4728C"))
-                    Text("\(viewModel.searchResults.count) eşleşme bulundu")
+                    Text("\(viewModel.searchResults.count) \(lang.s(.matchesFound))")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(Color(hex: "1A1A2E"))
                 }
@@ -794,14 +797,14 @@ private struct CameraResultSheet: View {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 44))
                         .foregroundColor(Color(hex: "D4728C").opacity(0.30))
-                    Text("Ürün bulunamadı")
+                    Text(lang.s(.scanProductNotFound))
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(hex: "1A1A2E"))
-                    Text("Etiketi daha yakından çekip tekrar dene")
+                    Text(lang.s(.scanRetryPhotoDesc))
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "9CA3AF"))
                     Button { onDismiss() } label: {
-                        Text("Tekrar Çek")
+                        Text(lang.s(.scanRetryPhoto))
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -836,7 +839,7 @@ private struct CameraResultSheet: View {
                         HStack(spacing: 8) {
                             Image(systemName: "plus.circle")
                                 .font(.system(size: 14))
-                            Text("Aradığınız ürün bunlar değil mi?")
+                            Text(lang.s(.scanNotYourProduct))
                                 .font(.system(size: 14, weight: .medium))
                         }
                         .foregroundColor(Color(hex: "D4728C"))
@@ -860,7 +863,7 @@ private struct CameraResultSheet: View {
                             } label: {
                                 HStack(spacing: 4) {
                                     Image(systemName: "chevron.left")
-                                    Text("Sonuçlar")
+                                    Text(lang.s(.scanBackToResults))
                                 }
                                 .foregroundColor(Color(hex: "D4728C"))
                             }
@@ -1050,6 +1053,7 @@ struct CameraPickerView: UIViewControllerRepresentable {
 struct ScanResultCard: View {
     let product: Product
     let rank: Int // sıralama (1, 2, 3...)
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         HStack(spacing: 14) {
@@ -1090,7 +1094,7 @@ struct ScanResultCard: View {
                     Image(systemName: "number")
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "D4728C"))
-                    Text("\(rank). en yakın eşleşme")
+                    Text("\(rank). \(lang.s(.nearestMatch))")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(Color(hex: "D4728C"))
                 }
@@ -1119,12 +1123,19 @@ struct ProductDetailView: View {
     @State private var selectedFilter: SafetyFilter = .all
     @State private var isFavorite: Bool = false
     @State private var isFavoriteLoading: Bool = false
+    @EnvironmentObject var lang: LanguageManager
 
     enum SafetyFilter: String, CaseIterable {
-        case all      = "Tümü"
-        case safe     = "Güvenli"
-        case moderate = "Orta"
-        case avoid    = "Riskli"
+        case all, safe, moderate, avoid
+    }
+
+    private func filterLabel(_ filter: SafetyFilter) -> String {
+        switch filter {
+        case .all: return lang.s(.filterAll)
+        case .safe: return lang.s(.filterSafe)
+        case .moderate: return lang.s(.filterModerate)
+        case .avoid: return lang.s(.filterRisky)
+        }
     }
 
     // Safety Score: level1=100p, level2=50p, level3=0p
@@ -1142,15 +1153,15 @@ struct ProductDetailView: View {
     }
 
     private func safetyLabel(for score: Int) -> String {
-        if score > 80 { return "Güvenli & Temiz" }
-        if score > 50 { return "Dikkatli Kullan" }
-        return "Yüksek Risk"
+        if score > 80 { return lang.s(.scanSafetyClean) }
+        if score > 50 { return lang.s(.scanSafetyCaution) }
+        return lang.s(.scanSafetyHighRisk)
     }
 
     private func safetyDescription(for score: Int) -> String {
-        if score > 80 { return "Bu ürün, tahriş veya toksisite riski düşük kaliteli içerikler barındırıyor." }
-        if score > 50 { return "Bu ürün, hassas cilt tipleri için hafif tahriş yapabilecek bazı içerikler içeriyor." }
-        return "Bu ürün zararlı olabilecek içerikler barındırıyor. Alternatif ürünleri değerlendirmenizi öneririz."
+        if score > 80 { return lang.s(.scanSafetyCleanDesc) }
+        if score > 50 { return lang.s(.scanSafetyCautionDesc) }
+        return lang.s(.scanSafetyHighRiskDesc)
     }
 
     private func safetyRingColor(for score: Int) -> Color {
@@ -1187,7 +1198,7 @@ struct ProductDetailView: View {
                     ProgressView()
                         .scaleEffect(1.4)
                         .tint(Color(hex: "D4728C"))
-                    Text("Analiz ediliyor…")
+                    Text(lang.s(.analyzing))
                         .font(.subheadline)
                         .foregroundColor(Color(hex: "9CA3AF"))
                 }
@@ -1247,19 +1258,19 @@ struct ProductDetailView: View {
                                     .clipShape(Capsule())
                                     .overlay(Capsule().stroke(Color(hex: "F3C6D1"), lineWidth: 1))
                             }
-                            Text(product.name ?? "Ürün")
+                            Text(product.name ?? lang.s(.productDefault))
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(Color(hex: "1A1A2E"))
                                 .fixedSize(horizontal: false, vertical: true)
 
                             HStack(spacing: 6) {
                                 if let count = product.productIngredients?.count {
-                                    Text("\(count) İçerik")
+                                    Text("\(count) \(lang.s(.productIngredientCount))")
                                         .font(.system(size: 12))
                                         .foregroundColor(Color(hex: "6B7280"))
                                     Circle().fill(Color(hex: "CBD5E1")).frame(width: 3, height: 3)
                                 }
-                                Text("Vegan & Temiz")
+                                Text(lang.s(.scanVeganClean))
                                     .font(.system(size: 12))
                                     .foregroundColor(Color(hex: "6B7280"))
                             }
@@ -1272,7 +1283,7 @@ struct ProductDetailView: View {
                         // ── Overall Safety Score Card ──────────────────
                         VStack(spacing: 16) {
                             // "GENEL GÜVENLİK SKORU" üst başlık
-                            Text("GENEL GÜVENLİK SKORU")
+                            Text(lang.s(.scanOverallScore))
                                 .font(.system(size: 11, weight: .bold))
                                 .tracking(1.4)
                                 .foregroundColor(Color(hex: "94A3B8"))
@@ -1301,7 +1312,7 @@ struct ProductDetailView: View {
                                     Text("\(score)")
                                         .font(.system(size: 52, weight: .black, design: .rounded))
                                         .foregroundColor(Color(hex: "1A1A2E"))
-                                    Text("100 üzerinden")
+                                    Text(lang.s(.scanScoreOutOf))
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundColor(Color(hex: "94A3B8"))
                                 }
@@ -1336,7 +1347,7 @@ struct ProductDetailView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             // Section header
                             HStack {
-                                Text("İçerikler")
+                                Text(lang.s(.scanIngredientsList))
                                     .font(.system(size: 20, weight: .bold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
                                 Text("(\(ingredients.count))")
@@ -1347,7 +1358,7 @@ struct ProductDetailView: View {
                                     // filter action
                                 } label: {
                                     HStack(spacing: 4) {
-                                        Text("Filtrele")
+                                        Text(lang.s(.scanFilterButton))
                                             .font(.system(size: 13, weight: .medium))
                                             .foregroundColor(Color(hex: "9CA3AF"))
                                         Image(systemName: "line.3.horizontal.decrease")
@@ -1369,7 +1380,7 @@ struct ProductDetailView: View {
                                                 selectedFilter = filter
                                             }
                                         } label: {
-                                            Text(filter.rawValue)
+                                            Text(filterLabel(filter))
                                                 .font(.caption.bold())
                                                 .padding(.horizontal, 14)
                                                 .padding(.vertical, 7)
@@ -1401,7 +1412,7 @@ struct ProductDetailView: View {
                                         Image(systemName: "tray")
                                             .font(.system(size: 32))
                                             .foregroundColor(Color(hex: "CBD5E1"))
-                                        Text("Bu kategoride içerik yok")
+                                        Text(lang.s(.scanNoIngredientsInCategory))
                                             .font(.subheadline)
                                             .foregroundColor(Color(hex: "94A3B8"))
                                     }
@@ -1491,6 +1502,7 @@ private struct SafetyStatBadge: View {
 
 struct IngredientDetailCard: View {
     let item: IngredientMatchResult
+    @EnvironmentObject var lang: LanguageManager
 
     private var safetyLevel: Int { item.matchedIngredient?.resolvedSafetyLevel ?? 0 }
     private var isMatched: Bool  { item.matchedIngredient != nil }
@@ -1506,10 +1518,10 @@ struct IngredientDetailCard: View {
 
     private var badgeText: String {
         switch safetyLevel {
-        case 1: return "GÜVENLİ"
-        case 2: return "ORTA"
-        case 3: return "KAÇIN"
-        default: return "BİLİNMİYOR"
+        case 1: return lang.s(.ingredientBadgeSafe)
+        case 2: return lang.s(.ingredientBadgeModerate)
+        case 3: return lang.s(.ingredientBadgeAvoid)
+        default: return lang.s(.ingredientBadgeUnknown)
         }
     }
 
@@ -1576,7 +1588,7 @@ struct IngredientDetailCard: View {
             // EWG score row
             if let ewg = item.matchedIngredient?.ewgScore, !ewg.isEmpty {
                 HStack(spacing: 6) {
-                    Text("EWG Skoru:")
+                    Text(lang.s(.ewgScoreLabel))
                         .font(.caption2.bold())
                         .foregroundColor(Color(hex: "94A3B8"))
                     Text(ewg)
@@ -1601,7 +1613,7 @@ struct IngredientDetailCard: View {
                         if isLimitedUs { r.append("ABD") }
                         return r
                     }
-                    Text("⚠ \(regions.joined(separator: " & "))'de kısıtlı / potansiyel uyarı")
+                    Text("⚠ \(regions.joined(separator: " & "))\(lang.s(.restrictedRegion))")
                         .font(.caption2.bold())
                         .foregroundColor(Color(hex: "B91C1C"))
                 }

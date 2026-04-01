@@ -3,6 +3,14 @@ import UIKit
 
 struct AvatarView: View {
     let name: String
+    let imageUrl: String?
+    var size: CGFloat = 38
+
+    init(name: String, imageUrl: String? = nil, size: CGFloat = 38) {
+        self.name = name
+        self.imageUrl = imageUrl
+        self.size = size
+    }
 
     var initials: String {
         let parts = name.split(separator: " ")
@@ -12,12 +20,33 @@ struct AvatarView: View {
     }
 
     var body: some View {
+        Group {
+            if let resolvedPath = APIClient.resolveImageUrl(imageUrl), let url = URL(string: resolvedPath) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: size, height: size)
+                            .clipShape(Circle())
+                    default:
+                        placeholder
+                    }
+                }
+            } else {
+                placeholder
+            }
+        }
+    }
+
+    private var placeholder: some View {
         ZStack {
             Circle()
                 .fill(Color(hex: "F3D5DC"))
-                .frame(width: 38, height: 38)
+                .frame(width: size, height: size)
             Text(initials.isEmpty ? "S" : initials)
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: size * 0.38, weight: .bold))
                 .foregroundColor(Color(hex: "9A4C5E"))
         }
     }

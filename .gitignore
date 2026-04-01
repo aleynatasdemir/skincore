@@ -8,7 +8,10 @@
 
 # Sensitive app settings
 appsettings.Development.json
-
+GoogleService-Info.plist
+GoogleService-Info 2.plist
+AuthKey_5B3X4Y8VWS.p8
+firebase-adminsdk.json
 # User-specific files
 *.rsuser
 *.suo

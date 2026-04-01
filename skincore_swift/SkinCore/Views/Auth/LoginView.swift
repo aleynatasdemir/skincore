@@ -3,6 +3,7 @@ import AuthenticationServices
 
 struct LoginView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @State private var showLogin = false
     @State private var showRegister = false
     
@@ -17,19 +18,19 @@ struct LoginView: View {
                     Spacer()
                     
                     // Logo
-                    Text("skincore.")
+                    Text(lang.s(.appBrand))
                         .font(.system(size: 48, weight: .light, design: .serif))
                         .foregroundColor(Color(hex: "D4728C"))
                         .padding(.bottom, 32)
                     
                     // Title
-                    Text("Welcome to Skincore")
+                    Text(lang.s(.loginWelcome))
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(Color(hex: "1A1A2E"))
                         .padding(.bottom, 12)
-                    
+
                     // Subtitle
-                    Text("Science-backed skincare starts here.\nAnalyze ingredients for your best skin ever.")
+                    Text(lang.s(.loginSubtitle))
                         .font(.system(size: 15))
                         .foregroundColor(Color(hex: "6B7280"))
                         .multilineTextAlignment(.center)
@@ -61,7 +62,7 @@ struct LoginView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "envelope.fill")
                                     .font(.system(size: 16))
-                                Text("Continue with Email")
+                                Text(lang.s(.loginContinueEmail))
                                     .font(.system(size: 17, weight: .medium))
                             }
                             .frame(maxWidth: .infinity)
@@ -84,23 +85,23 @@ struct LoginView: View {
                             showLogin = true
                         } label: {
                             HStack(spacing: 6) {
-                                Text("Already have an account?")
+                                Text(lang.s(.alreadyHaveAccount))
                                     .foregroundColor(Color(hex: "6B7280"))
-                                Text("Log In")
+                                Text(lang.s(.loginButton))
                                     .fontWeight(.semibold)
                                     .foregroundColor(Color(hex: "1A1A2E"))
                             }
                             .font(.system(size: 14))
                         }
-                        
+
                         // New to Skincore? Sign Up
                         Button {
                             showRegister = true
                         } label: {
                             HStack(spacing: 6) {
-                                Text("New to Skincore?")
+                                Text(lang.s(.newToSkincore))
                                     .foregroundColor(Color(hex: "6B7280"))
-                                Text("Sign Up")
+                                Text(lang.s(.signUp))
                                     .fontWeight(.semibold)
                                     .foregroundColor(Color(hex: "1A1A2E"))
                             }
@@ -121,12 +122,12 @@ struct LoginView: View {
                     
                     // Terms
                     VStack(spacing: 2) {
-                        Text("By continuing, you agree to Skincore's ") +
-                        Text("Terms of").underline() +
+                        Text(lang.s(.termsPrefix)) +
+                        Text(lang.s(.termsOf)).underline() +
                         Text("\n") +
-                        Text("Service").underline() +
-                        Text(" and ") +
-                        Text("Privacy Policy").underline()
+                        Text(lang.s(.termService)).underline() +
+                        Text(lang.s(.termsAnd)) +
+                        Text(lang.s(.termsPrivacy)).underline()
                     }
                     .font(.system(size: 12))
                     .foregroundColor(Color(hex: "9CA3AF"))
@@ -152,6 +153,7 @@ struct LoginView: View {
 
 struct EmailLoginView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) var dismiss
 
     @State private var email = ""
@@ -166,15 +168,15 @@ struct EmailLoginView: View {
                 Spacer().frame(height: 20)
                 
                 // Header
-                Text("skincore.")
+                Text(lang.s(.appBrand))
                     .font(.system(size: 36, weight: .light, design: .serif))
                     .foregroundColor(Color(hex: "D4728C"))
                 
-                Text("Log In")
+                Text(lang.s(.loginButton))
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(Color(hex: "1A1A2E"))
                     .padding(.bottom, 8)
-                
+
                 // Form
                 VStack(spacing: 14) {
                     // Email
@@ -183,7 +185,7 @@ struct EmailLoginView: View {
                             .foregroundColor(Color(hex: "9CA3AF"))
                             .frame(width: 24)
                         TextField("", text: $email,
-                                 prompt: Text("Email").foregroundColor(Color(hex: "6B7280")))
+                                 prompt: Text(lang.s(.email)).foregroundColor(Color(hex: "6B7280")))
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
@@ -204,7 +206,7 @@ struct EmailLoginView: View {
                             .foregroundColor(Color(hex: "9CA3AF"))
                             .frame(width: 24)
                         SecureField("", text: $password,
-                                   prompt: Text("Password").foregroundColor(Color(hex: "6B7280")))
+                                   prompt: Text(lang.s(.password)).foregroundColor(Color(hex: "6B7280")))
                             .foregroundColor(Color(hex: "1A1A2E"))
                             .accentColor(Color(hex: "1A1A2E"))
                     }
@@ -232,7 +234,7 @@ struct EmailLoginView: View {
                     Button {
                         showForgotPassword = true
                     } label: {
-                        Text("Forgot Password?")
+                        Text(lang.s(.forgotPassword) + "?")
                             .font(.system(size: 14))
                             .foregroundColor(Color(hex: "6B7280"))
                     }
@@ -248,7 +250,7 @@ struct EmailLoginView: View {
                         if authViewModel.isLoading {
                             ProgressView().tint(.white)
                         } else {
-                            Text("Log In")
+                            Text(lang.s(.loginButton))
                                 .font(.system(size: 17, weight: .semibold))
                         }
                     }
@@ -313,4 +315,5 @@ extension Color {
 #Preview {
     LoginView()
         .environmentObject(AuthViewModel())
+        .environmentObject(LanguageManager.shared)
 }

@@ -96,46 +96,76 @@ public class EmailService
 
     private static string GetPasswordResetEmailHtml(string code)
     {
-        return $"""
+        return $$"""
         <!DOCTYPE html>
-        <html>
+        <html lang="tr">
         <head>
-            <meta charset="utf-8">
+            <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Skincore Şifre Sıfırlama</title>
+            <style>
+                /* E-posta istemcileri için sıfırlamalar */
+                body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+                table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+                img { -ms-interpolation-mode: bicubic; }
+                
+                /* Genel Stil */
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background-color: #FFFFFF;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    -webkit-font-smoothing: antialiased;
+                }
+            </style>
         </head>
-        <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f4f7;padding:40px 0;">
+        <body style="margin: 0; padding: 0; background-color: #FFFFFF;">
+        
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
+                
                 <tr>
-                    <td align="center">
-                        <table role="presentation" width="420" cellspacing="0" cellpadding="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <td align="center" style="background-color: #DDA9B1; padding: 40px 20px;">
+                        <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #FFFFFF; letter-spacing: -1px;">Skincore</h1>
+                    </td>
+                </tr>
+        
+                <tr>
+                    <td align="left" style="padding: 40px 30px 20px 30px;">
+                        <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #1A1A1A;">Şifreni mi unuttun?</h2>
+                        <p style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #4A4A4A;">
+                            Şifrenizi sıfırlamak için aşağıdaki 6 haneli kodu uygulamanın şifre sıfırlama ekranına girebilirsin:
+                        </p>
+                    </td>
+                </tr>
+        
+                <tr>
+                    <td align="center" style="padding: 0 30px 40px 30px;">
+                        <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 300px;">
                             <tr>
-                                <td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px;text-align:center;">
-                                    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">SkinCore</h1>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:32px;">
-                                    <h2 style="margin:0 0 12px;color:#1a1a2e;font-size:20px;">Şifre Sıfırlama</h2>
-                                    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;line-height:1.5;">
-                                        Şifrenizi sıfırlamak için aşağıdaki kodu uygulamada girin. Kod <strong>10 dakika</strong> geçerlidir.
-                                    </p>
-                                    <div style="background-color:#f0f0ff;border:2px dashed #6366f1;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px;">
-                                        <span style="font-size:32px;font-weight:700;letter-spacing:8px;color:#6366f1;">{code}</span>
+                                <td align="center" style="background-color: #FFF5F7; border: 2px dashed #DDA9B1; border-radius: 12px; padding: 25px 10px;">
+                                    <div style="font-size: 36px; font-weight: 800; color: #DDA9B1; letter-spacing: 8px;">
+                                        {{code}}
                                     </div>
-                                    <p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.5;">
-                                        Bu işlemi siz yapmadıysanız şifreniz değiştirilmemiştir. Bu e-postayı görmezden gelebilirsiniz.
-                                    </p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="background-color:#f9fafb;padding:16px 32px;text-align:center;">
-                                    <p style="margin:0;color:#9ca3af;font-size:12px;">© 2026 SkinCore</p>
                                 </td>
                             </tr>
                         </table>
                     </td>
                 </tr>
+        
+                <tr>
+                    <td align="center" style="padding: 20px 30px; border-top: 1px solid #EEEEEE;">
+                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #999999;">
+                            Bu kod 10 dakika boyunca geçerlidir.<br>
+                            Eğer bu talebi sen yapmadıysan, şifren değiştirilmemiştir ve bu e-postayı görmezden gelebilirsin.
+                        </p>
+                        <p style="margin: 15px 0 0 0; font-size: 12px; color: #A0A0A0;">
+                            &copy; 2026 Skincore. Otomatik sistem e-postasıdır.
+                        </p>
+                    </td>
+                </tr>
+        
             </table>
+        
         </body>
         </html>
         """;
@@ -143,46 +173,76 @@ public class EmailService
 
     private static string GetVerificationEmailHtml(string code)
     {
-        return $"""
+        return $$"""
         <!DOCTYPE html>
-        <html>
+        <html lang="tr">
         <head>
-            <meta charset="utf-8">
+            <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Skincore Doğrulama Kodu</title>
+            <style>
+                /* E-posta istemcileri için sıfırlamalar */
+                body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+                table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+                img { -ms-interpolation-mode: bicubic; }
+                
+                /* Genel Stil */
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background-color: #FFFFFF;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    -webkit-font-smoothing: antialiased;
+                }
+            </style>
         </head>
-        <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f4f7;padding:40px 0;">
+        <body style="margin: 0; padding: 0; background-color: #FFFFFF;">
+        
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF;">
+                
                 <tr>
-                    <td align="center">
-                        <table role="presentation" width="420" cellspacing="0" cellpadding="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <td align="center" style="background-color: #DDA9B1; padding: 40px 20px;">
+                        <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #FFFFFF; letter-spacing: -1px;">Skincore</h1>
+                    </td>
+                </tr>
+        
+                <tr>
+                    <td align="left" style="padding: 40px 30px 20px 30px;">
+                        <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #1A1A1A;">Neredeyse hazırsın!</h2>
+                        <p style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #4A4A4A;">
+                            E-posta adresini doğrulamak ve Skincore dünyasına giriş yapmak için aşağıdaki 6 haneli kodu uygulamadaki ilgili alana girmen yeterli:
+                        </p>
+                    </td>
+                </tr>
+        
+                <tr>
+                    <td align="center" style="padding: 0 30px 40px 30px;">
+                        <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 300px;">
                             <tr>
-                                <td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px;text-align:center;">
-                                    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">SkinCore</h1>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:32px;">
-                                    <h2 style="margin:0 0 12px;color:#1a1a2e;font-size:20px;">E-posta Doğrulama</h2>
-                                    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;line-height:1.5;">
-                                        Hesabınızı doğrulamak için aşağıdaki kodu uygulamada girin. Kod <strong>10 dakika</strong> geçerlidir.
-                                    </p>
-                                    <div style="background-color:#f0f0ff;border:2px dashed #6366f1;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px;">
-                                        <span style="font-size:32px;font-weight:700;letter-spacing:8px;color:#6366f1;">{code}</span>
+                                <td align="center" style="background-color: #FFF5F7; border: 2px dashed #DDA9B1; border-radius: 12px; padding: 25px 10px;">
+                                    <div style="font-size: 36px; font-weight: 800; color: #DDA9B1; letter-spacing: 8px;">
+                                        {{code}}
                                     </div>
-                                    <p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.5;">
-                                        Bu işlemi siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.
-                                    </p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="background-color:#f9fafb;padding:16px 32px;text-align:center;">
-                                    <p style="margin:0;color:#9ca3af;font-size:12px;">© 2026 SkinCore</p>
                                 </td>
                             </tr>
                         </table>
                     </td>
                 </tr>
+        
+                <tr>
+                    <td align="center" style="padding: 20px 30px; border-top: 1px solid #EEEEEE;">
+                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #999999;">
+                            Bu kod 10 dakika boyunca geçerlidir.<br>
+                            Eğer bu talebi sen yapmadıysan, bu e-postayı görmezden gelebilirsin.
+                        </p>
+                        <p style="margin: 15px 0 0 0; font-size: 12px; color: #A0A0A0;">
+                            &copy; 2026 Skincore. Otomatik sistem e-postasıdır.
+                        </p>
+                    </td>
+                </tr>
+        
             </table>
+        
         </body>
         </html>
         """;

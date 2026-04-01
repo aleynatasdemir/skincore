@@ -109,13 +109,15 @@ class IngredientAnalysisViewModel: ObservableObject {
 
 struct IngredientAnalysisView: View {
     @StateObject private var viewModel = IngredientAnalysisViewModel()
+    @EnvironmentObject var lang: LanguageManager
     @FocusState private var isSearchFocused: Bool
     @State private var navigatingTo: IngredientCategoryItem? = nil
+    @State private var selectedIngredient: MatchedIngredient? = nil
 
-    private let categories: [IngredientCategoryItem] = [
+    private var categories: [IngredientCategoryItem] {[
         IngredientCategoryItem(
-            title: "Completely Safe",
-            description: "Ingredients with no known risks or irritants even for sensitive skin.",
+            title: lang.s(.ingredientCatCompletelySafe),
+            description: lang.s(.ingredientCatCompletelySafeDesc),
             icon: "shield.fill",
             color: Color(hex: "22C55E"),
             backgroundColor: Color(hex: "DCFCE7"),
@@ -124,8 +126,8 @@ struct IngredientAnalysisView: View {
             isComedogenic: false
         ),
         IngredientCategoryItem(
-            title: "Safe",
-            description: "Widely used ingredients considered safe for most skin types.",
+            title: lang.s(.ingredientCatSafe),
+            description: lang.s(.ingredientCatSafeDesc),
             icon: "checkmark.seal.fill",
             color: Color(hex: "3B82F6"),
             backgroundColor: Color(hex: "DBEAFE"),
@@ -134,8 +136,8 @@ struct IngredientAnalysisView: View {
             isComedogenic: false
         ),
         IngredientCategoryItem(
-            title: "Acceptable",
-            description: "Generally safe but may cause mild reaction in rare cases.",
+            title: lang.s(.ingredientCatAcceptable),
+            description: lang.s(.ingredientCatAcceptableDesc),
             icon: "info.circle.fill",
             color: Color(hex: "EAB308"),
             backgroundColor: Color(hex: "FEF9C3"),
@@ -144,8 +146,8 @@ struct IngredientAnalysisView: View {
             isComedogenic: false
         ),
         IngredientCategoryItem(
-            title: "Moderate Safety",
-            description: "Potential for irritation. Use with caution on compromised barriers.",
+            title: lang.s(.ingredientCatModerate),
+            description: lang.s(.ingredientCatModerateDesc),
             icon: "exclamationmark.triangle.fill",
             color: Color(hex: "F97316"),
             backgroundColor: Color(hex: "FFEDD5"),
@@ -154,8 +156,8 @@ struct IngredientAnalysisView: View {
             isComedogenic: false
         ),
         IngredientCategoryItem(
-            title: "Risky",
-            description: "High risk of irritation or harm. Avoid or use with extreme caution.",
+            title: lang.s(.ingredientCatRisky),
+            description: lang.s(.ingredientCatRiskyDesc),
             icon: "xmark.shield.fill",
             color: Color(hex: "EF4444"),
             backgroundColor: Color(hex: "FEE2E2"),
@@ -164,8 +166,8 @@ struct IngredientAnalysisView: View {
             isComedogenic: false
         ),
         IngredientCategoryItem(
-            title: "Comedogenicity",
-            description: "Likelihood of the ingredient to clog pores and cause breakouts.",
+            title: lang.s(.ingredientCatComedogenic),
+            description: lang.s(.ingredientCatComedogenicDesc),
             icon: "square.grid.2x2.fill",
             color: Color(hex: "9CA3AF"),
             backgroundColor: Color(hex: "F3F4F6"),
@@ -173,7 +175,7 @@ struct IngredientAnalysisView: View {
             maxSafetyLevel: nil,
             isComedogenic: true
         ),
-    ]
+    ]}
 
     var body: some View {
         NavigationStack {
@@ -192,7 +194,7 @@ struct IngredientAnalysisView: View {
                                     endPoint: .bottomTrailing
                                 ))
                             VStack(alignment: .leading, spacing: 14) {
-                                Text("Discover what's inside,\nprotect your skin.")
+                                Text(lang.s(.ingredientsHeroBanner))
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
                                     .fixedSize(horizontal: false, vertical: true)
@@ -202,7 +204,7 @@ struct IngredientAnalysisView: View {
                                     Image(systemName: "magnifyingglass")
                                         .font(.system(size: 16))
                                         .foregroundColor(Color(hex: "9CA3AF"))
-                                    TextField("Search ingredients (e.g. Retinol)", text: $viewModel.searchText)
+                                    TextField(lang.s(.ingredientsSearchPlaceholder), text: $viewModel.searchText)
                                         .focused($isSearchFocused)
                                         .foregroundColor(Color(hex: "1A1A2E"))
                                         .font(.system(size: 15))
@@ -217,32 +219,68 @@ struct IngredientAnalysisView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 16)
 
-                        // Categories Header
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Ingredient Categories")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(Color(hex: "1A1A2E"))
-                            Text("Understand the safety profile of your products")
-                                .font(.system(size: 13))
-                                .foregroundColor(Color(hex: "6B7280"))
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-                        .padding(.bottom, 12)
-
-                        // Category Rows
-                        VStack(spacing: 0) {
-                            ForEach(categories) { category in
-                                Button {
-                                    navigatingTo = category
-                                } label: {
-                                    CategoryRowView(category: category)
-                                }
-                                .buttonStyle(.plain)
+                        if !viewModel.searchText.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(lang.s(.ingredientAnalysisResult))
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(Color(hex: "1A1A2E"))
                             }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 24)
+                            .padding(.bottom, 12)
+
+                            if viewModel.isLoading && viewModel.ingredients.isEmpty {
+                                HStack { Spacer(); ProgressView().tint(Color(hex: "D4728C")); Spacer() }.padding()
+                            } else if viewModel.ingredients.isEmpty {
+                                HStack { Spacer(); Text(lang.s(.ingredientNoData)).foregroundColor(.gray); Spacer() }.padding()
+                            } else {
+                                LazyVStack(spacing: 12) {
+                                    ForEach(viewModel.ingredients) { ingredient in
+                                        IngredientCard(
+                                            ingredient: ingredient,
+                                            categoryColor: Color(hex: "9CA3AF"),
+                                            categoryBg: Color(hex: "F3F4F6"),
+                                            categoryIcon: "magnifyingglass"
+                                        )
+                                        .onTapGesture {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                                                selectedIngredient = ingredient
+                                            }
+                                        }
+                                        .onAppear { viewModel.loadMoreIfNeeded(currentItem: ingredient) }
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 32)
+                            }
+                        } else {
+                            // Categories Header
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(lang.s(.ingredientsCatHeader))
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(Color(hex: "1A1A2E"))
+                                Text(lang.s(.ingredientsCatSubtitle))
+                                    .font(.system(size: 13))
+                                    .foregroundColor(Color(hex: "6B7280"))
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 24)
+                            .padding(.bottom, 12)
+
+                            // Category Rows
+                            VStack(spacing: 0) {
+                                ForEach(categories) { category in
+                                    Button {
+                                        navigatingTo = category
+                                    } label: {
+                                        CategoryRowView(category: category)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 32)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 32)
                     }
                 }
                 .scrollIndicators(.hidden)
@@ -250,7 +288,7 @@ struct IngredientAnalysisView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Ingredient Analysis")
+                    Text(lang.s(.ingredientsTitle))
                         .font(.headline)
                         .foregroundColor(Color(hex: "1A1A2E"))
                 }
@@ -258,6 +296,29 @@ struct IngredientAnalysisView: View {
             .navigationDestination(item: $navigatingTo) { category in
                 IngredientListView(category: category)
             }
+            .overlay(
+                ZStack {
+                    if let ingredient = selectedIngredient {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    selectedIngredient = nil
+                                }
+                            }
+                            .zIndex(1)
+                        
+                        IngredientDetailSheet(ingredient: ingredient) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                selectedIngredient = nil
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                        .transition(.scale(scale: 0.95).combined(with: .opacity))
+                        .zIndex(2)
+                    }
+                }
+            )
         }
     }
 }
@@ -309,6 +370,7 @@ struct IngredientListView: View {
     @StateObject private var vm = IngredientAnalysisViewModel()
     @State private var selectedIngredient: MatchedIngredient? = nil
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         ZStack {
@@ -327,15 +389,15 @@ struct IngredientListView: View {
                     }
                     VStack(alignment: .leading, spacing: 3) {
                         if vm.isLoading && vm.ingredients.isEmpty {
-                            Text("Loading...")
+                            Text(lang.s(.loading))
                                 .font(.system(size: 17, weight: .bold))
                                 .foregroundColor(Color(hex: "1A1A2E"))
                         } else {
-                            Text("\(vm.ingredients.count) Ingredients Found")
+                            Text("\(vm.ingredients.count) \(lang.s(.ingredientFoundCount))")
                                 .font(.system(size: 17, weight: .bold))
                                 .foregroundColor(Color(hex: "1A1A2E"))
                         }
-                        Text("All components in \(category.title.lowercased()) category.")
+                        Text(lang.s(.ingredientCategorySubtitle))
                             .font(.system(size: 13))
                             .foregroundColor(Color(hex: "6B7280"))
                     }
@@ -351,7 +413,7 @@ struct IngredientListView: View {
 
                 // Section Header
                 HStack {
-                    Text("SAFE INGREDIENTS")
+                    Text(lang.s(.ingredientSafeSection))
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(Color(hex: "D4728C"))
                         .tracking(1)
@@ -368,7 +430,7 @@ struct IngredientListView: View {
                     Spacer()
                 } else if vm.ingredients.isEmpty {
                     Spacer()
-                    Text("No ingredients found")
+                    Text(lang.s(.ingredientNoData))
                         .foregroundColor(.gray)
                     Spacer()
                 } else {
@@ -411,7 +473,7 @@ struct IngredientListView: View {
                     Text(category.title)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(Color(hex: "1A1A2E"))
-                    Text("ANALYSIS RESULT")
+                    Text(lang.s(.ingredientAnalysisResult))
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(Color(hex: "D4728C"))
                         .tracking(1)
@@ -456,7 +518,7 @@ struct IngredientCard: View {
     let categoryIcon: String
 
     private var functionLabel: String? {
-        guard let funcs = ingredient.functions, let first = funcs.first, let name = first.name, !name.isEmpty else { return nil }
+        guard let funcs = ingredient.localizedFunctions, let first = funcs.first, let name = first.name, !name.isEmpty else { return nil }
         return name.uppercased()
     }
 
@@ -488,7 +550,7 @@ struct IngredientCard: View {
                 Spacer()
             }
 
-            if let desc = ingredient.description, !desc.isEmpty {
+            if let desc = ingredient.localizedDescription, !desc.isEmpty {
                 Text(desc)
                     .font(.system(size: 13))
                     .foregroundColor(Color(hex: "4B5563"))
@@ -509,6 +571,7 @@ struct IngredientCard: View {
 struct IngredientDetailSheet: View {
     let ingredient: MatchedIngredient
     var onClose: () -> Void
+    @EnvironmentObject var lang: LanguageManager
 
     private var ewgScoreInt: Int? {
         guard let str = ingredient.ewgScore else { return nil }
@@ -518,9 +581,9 @@ struct IngredientDetailSheet: View {
     private var ewgScoreLabel: String {
         guard let score = ewgScoreInt else { return "N/A" }
         switch score {
-        case 1...2: return "Low Risk"
-        case 3...6: return "Moderate Risk"
-        default:    return "High Risk"
+        case 1...2: return lang.s(.ingredientLowRisk)
+        case 3...6: return lang.s(.ingredientModerateRisk)
+        default:    return lang.s(.ingredientHighRisk)
         }
     }
 
@@ -562,7 +625,7 @@ struct IngredientDetailSheet: View {
                         Text(ingredient.displayName)
                             .font(.system(size: 26, weight: .bold))
                             .foregroundColor(Color(hex: "1A1A2E"))
-                        if let desc = ingredient.description, !desc.isEmpty {
+                        if let desc = ingredient.localizedDescription, !desc.isEmpty {
                             Text(desc)
                                 .font(.system(size: 15))
                                 .foregroundColor(Color(hex: "4B5563"))
@@ -575,7 +638,7 @@ struct IngredientDetailSheet: View {
                     // Good For
                     if let good = ingredient.goodFor, !good.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("GOOD FOR")
+                            Text(lang.s(.ingredientGoodFor))
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundColor(Color(hex: "9CA3AF"))
                                 .tracking(1)
@@ -589,7 +652,7 @@ struct IngredientDetailSheet: View {
                     // Bad For
                     if let bad = ingredient.badFor, !bad.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("BAD FOR")
+                            Text(lang.s(.ingredientBadFor))
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundColor(Color(hex: "9CA3AF"))
                                 .tracking(1)
@@ -605,7 +668,7 @@ struct IngredientDetailSheet: View {
                         Divider().padding(.horizontal, 24)
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("EWG SCORE")
+                                Text(lang.s(.ingredientEwgScore))
                                     .font(.system(size: 11, weight: .bold))
                                     .foregroundColor(Color(hex: "9CA3AF"))
                                     .tracking(1)

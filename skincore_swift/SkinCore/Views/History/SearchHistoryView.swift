@@ -40,6 +40,7 @@ class SearchHistoryViewModel: ObservableObject {
 
 struct SearchHistoryView: View {
     @StateObject private var viewModel = SearchHistoryViewModel()
+    @EnvironmentObject var lang: LanguageManager
     @State private var selectedProductId: String?
 
     var body: some View {
@@ -52,7 +53,7 @@ struct SearchHistoryView: View {
                         ProgressView()
                             .scaleEffect(1.2)
                             .tint(Color(hex: "D4728C"))
-                        Text("Yükleniyor...")
+                        Text(lang.s(.loading))
                             .font(.subheadline)
                             .foregroundColor(Color(hex: "9CA3AF"))
                     }
@@ -61,10 +62,10 @@ struct SearchHistoryView: View {
                         Image(systemName: "clock.arrow.counterclockwise")
                             .font(.system(size: 56))
                             .foregroundColor(Color(hex: "D4728C").opacity(0.25))
-                        Text("Henüz arama geçmişi yok")
+                        Text(lang.s(.historyEmpty))
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(Color(hex: "1A1A2E"))
-                        Text("Ürün aradığınızda burada görünecek")
+                        Text(lang.s(.historyEmptySubtitle))
                             .font(.system(size: 14))
                             .foregroundColor(Color(hex: "9CA3AF"))
                     }
@@ -88,7 +89,7 @@ struct SearchHistoryView: View {
                     }
                 }
             }
-            .navigationTitle("Search History")
+            .navigationTitle(lang.s(.historyTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -96,7 +97,7 @@ struct SearchHistoryView: View {
                         Button {
                             Task { await viewModel.clearAll() }
                         } label: {
-                            Text("Clear All")
+                            Text(lang.s(.historyClearAll))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(hex: "D4728C"))
                         }
@@ -131,16 +132,17 @@ struct SearchHistoryView: View {
 private struct HistoryCard: View {
     let item: SearchHistoryResponse
     let onDelete: () -> Void
+    @EnvironmentObject var lang: LanguageManager
 
     private var badge: (text: String, color: Color)? {
         guard let category = item.category?.lowercased(), !category.isEmpty else { return nil }
         switch category {
         case let c where c.contains("clean") || c.contains("temiz"):
-            return ("CLEAN", Color(hex: "10B981"))
+            return (lang.s(.badgeClean), Color(hex: "10B981"))
         case let c where c.contains("safe") || c.contains("güvenli"):
-            return ("SAFE", Color(hex: "3B82F6"))
+            return (lang.s(.badgeSafe), Color(hex: "3B82F6"))
         case let c where c.contains("alert") || c.contains("dikkat") || c.contains("uyarı"):
-            return ("ALERT", Color(hex: "EF4444"))
+            return (lang.s(.badgeAlert), Color(hex: "EF4444"))
         default:
             return nil
         }

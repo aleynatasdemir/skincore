@@ -31,6 +31,7 @@ class FavoritesViewModel: ObservableObject {
 
 struct FavoritesView: View {
     @StateObject private var viewModel = FavoritesViewModel()
+    @EnvironmentObject var lang: LanguageManager
     @State private var selectedProductId: String?
 
     var body: some View {
@@ -42,7 +43,7 @@ struct FavoritesView: View {
                     // ── Tab bar (sadece All Products) ──
                     HStack(spacing: 0) {
                         VStack(spacing: 6) {
-                            Text("All Products")
+                            Text(lang.s(.favAllProducts))
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(Color(hex: "D4728C"))
                             RoundedRectangle(cornerRadius: 1.5)
@@ -62,7 +63,7 @@ struct FavoritesView: View {
                             ProgressView()
                                 .scaleEffect(1.2)
                                 .tint(Color(hex: "D4728C"))
-                            Text("Loading...")
+                            Text(lang.s(.loading))
                                 .font(.subheadline)
                                 .foregroundColor(Color(hex: "9CA3AF"))
                         }
@@ -73,10 +74,10 @@ struct FavoritesView: View {
                             Image(systemName: "heart.slash")
                                 .font(.system(size: 56))
                                 .foregroundColor(Color(hex: "D4728C").opacity(0.25))
-                            Text("No favorites yet")
+                            Text(lang.s(.favNoFavorites))
                                 .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(Color(hex: "1A1A2E"))
-                            Text("Products you favorite will appear here")
+                            Text(lang.s(.favNoFavoritesSubtitle))
                                 .font(.system(size: 14))
                                 .foregroundColor(Color(hex: "9CA3AF"))
                         }
@@ -100,7 +101,7 @@ struct FavoritesView: View {
                     }
                 }
             }
-            .navigationTitle("My Favorites")
+            .navigationTitle(lang.s(.favTitle))
             .navigationBarTitleDisplayMode(.inline)
             .fullScreenCover(item: $selectedProductId) { productId in
                 NavigationStack {
@@ -130,11 +131,12 @@ struct FavoritesView: View {
 private struct FavoriteCard: View {
     let favorite: FavoriteResponse
     let onRemove: () -> Void
+    @EnvironmentObject var lang: LanguageManager
 
     /// Badge bilgisi – category yoksa CLEAN default
     private var badgeInfo: (text: String, color: Color) {
         // Backend'den category bilgisi gelmediğinden varsayılan CLEAN
-        return ("CLEAN", Color(hex: "10B981"))
+        return (lang.s(.badgeClean), Color(hex: "10B981"))
     }
 
     var body: some View {
@@ -172,7 +174,7 @@ private struct FavoriteCard: View {
                     HStack(spacing: 6) {
                         Image(systemName: "heart.slash.fill")
                             .font(.system(size: 13))
-                        Text("Remove")
+                        Text(lang.s(.favRemove))
                             .font(.system(size: 14, weight: .medium))
                     }
                     .foregroundColor(Color(hex: "D4728C"))
@@ -232,4 +234,5 @@ private struct FavoriteCard: View {
 
 #Preview {
     FavoritesView()
+        .environmentObject(LanguageManager.shared)
 }

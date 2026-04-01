@@ -3,20 +3,45 @@ import AuthenticationServices
 
 @MainActor
 class AuthViewModel: ObservableObject {
-    @Published var isAuthenticated = false
+    @Published var isAuthenticated = false {
+        didSet {
+            if isAuthenticated {
+                updateFcmTokenIfNeeded()
+            }
+        }
+    }
+    
+    // Yere kaydedilen FCM token'ı C# backendine yolluyoruz
+    private func updateFcmTokenIfNeeded() {
+        if let token = UserDefaults.standard.string(forKey: "fcm_token") {
+            Task {
+                try? await APIClient.shared.updateFcmToken(token)
+            }
+        }
+    }
     @Published var currentUser: UserResponse?
     @Published var isLoading = false
+    @Published var isInitializing = true
     @Published var errorMessage: String?
-    
+
     // Navigation state
     @Published var showVerifyEmail = false
     @Published var pendingEmail = ""
     @Published var resetPasswordCompleted = false
+
+    var needsUsername: Bool {
+        isAuthenticated && (currentUser?.username == nil || currentUser?.username?.isEmpty == true)
+    }
     
     init() {
         // Check if user is already logged in
         if KeychainService.shared.getAccessToken() != nil {
-            Task { await checkAuth() }
+            Task { 
+                await checkAuth() 
+                self.isInitializing = false
+            }
+        } else {
+            self.isInitializing = false
         }
     }
     
@@ -36,7 +61,7 @@ class AuthViewModel: ObservableObject {
         } catch let error as APIClientError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin."
         }
         
         isLoading = false
@@ -59,7 +84,7 @@ class AuthViewModel: ObservableObject {
         } catch let error as APIClientError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin."
         }
         
         isLoading = false
@@ -79,9 +104,15 @@ class AuthViewModel: ObservableObject {
             currentUser = response.user
             isAuthenticated = true
         } catch let error as APIClientError {
-            errorMessage = error.errorDescription
+            if case .serverError(let message) = error, message == "Lütfen önce e-posta adresinizi doğrulayın." {
+                pendingEmail = email
+                showVerifyEmail = true
+                Task { await resendCode() }
+            } else {
+                errorMessage = error.errorDescription
+            }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin."
         }
         
         isLoading = false
@@ -127,7 +158,7 @@ class AuthViewModel: ObservableObject {
             } catch let error as APIClientError {
                 errorMessage = error.errorDescription
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = "Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin."
             }
             
         case .failure(let error):
@@ -152,7 +183,7 @@ class AuthViewModel: ObservableObject {
         } catch let error as APIClientError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin."
         }
 
         isLoading = false
@@ -173,7 +204,26 @@ class AuthViewModel: ObservableObject {
         } catch let error as APIClientError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin."
+        }
+
+        isLoading = false
+    }
+
+    // MARK: - Setup Username
+
+    func setupUsername(_ username: String) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            _ = try await APIClient.shared.updateProfile(username: username)
+            let user = try await APIClient.shared.getMe()
+            currentUser = user
+        } catch let error as APIClientError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = "Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin."
         }
 
         isLoading = false
@@ -191,7 +241,7 @@ class AuthViewModel: ObservableObject {
         } catch let error as APIClientError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin."
         }
         
         isLoading = false

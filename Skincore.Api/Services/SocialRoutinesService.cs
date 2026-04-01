@@ -8,11 +8,13 @@ public class SocialRoutinesService
 {
     private readonly IMongoCollection<Routine> _routines;
     private readonly IMongoCollection<User> _users;
+    private readonly NotificationService _notificationService;
 
-    public SocialRoutinesService(MongoDbService mongoDbService)
+    public SocialRoutinesService(MongoDbService mongoDbService, NotificationService notificationService)
     {
         _routines = mongoDbService.RoutinesCollection;
         _users = mongoDbService.UsersCollection;
+        _notificationService = notificationService;
     }
 
     public async Task<List<RoutineFeedItemResponse>> GetFeed(string userId, int limit = 20, string? search = null)
@@ -29,20 +31,29 @@ public class SocialRoutinesService
             );
         }
 
-        var routines = await _routines
-            .Find(filter)
+        var routines = await _routines.Find(filter)
             .SortByDescending(r => r.CreatedAt)
             .Limit(limit)
             .ToListAsync();
 
-        return routines.Select(r => MapToFeed(r, userId)).ToList();
+        var userIds = routines.Select(r => r.UserId).Distinct().ToList();
+        var users = await _users.Find(u => userIds.Contains(u.Id)).ToListAsync();
+        var userMap = users.ToDictionary(u => u.Id, u => u.ProfileImageUrl);
+
+        return routines.Select(r => MapToFeed(r, userId, userMap.GetValueOrDefault(r.UserId))).ToList();
     }
     public async Task<RoutineDetailResponse?> GetById(string routineId, string userId)
     {
         var routine = await _routines.Find(r => r.Id == routineId).FirstOrDefaultAsync();
         if (routine == null) return null;
+        
+        var owner = await _users.Find(u => u.Id == routine.UserId).FirstOrDefaultAsync();
+        
+        var commentUserIds = routine.Comments.Select(c => c.UserId).Distinct().ToList();
+        var commentUsers = await _users.Find(u => commentUserIds.Contains(u.Id)).ToListAsync();
+        var commentUserMap = commentUsers.ToDictionary(u => u.Id, u => u.ProfileImageUrl);
 
-        return MapToDetail(routine, userId);
+        return MapToDetail(routine, userId, owner?.ProfileImageUrl, commentUserMap);
     }
 
     public async Task<List<RoutineFeedItemResponse>> GetRoutinesByUserId(string userId)
@@ -52,7 +63,10 @@ public class SocialRoutinesService
             .SortByDescending(r => r.CreatedAt)
             .ToListAsync();
 
-        return routines.Select(r => MapToFeed(r, userId)).ToList();
+        var user = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+        var profileImageUrl = user?.ProfileImageUrl;
+
+        return routines.Select(r => MapToFeed(r, userId, profileImageUrl)).ToList();
     }
 
     public async Task<RoutineDetailResponse> CreateRoutine(string userId, CreateRoutineRequest request)
@@ -97,7 +111,7 @@ public class SocialRoutinesService
         };
 
         await _routines.InsertOneAsync(routine);
-        return MapToDetail(routine, userId);
+        return MapToDetail(routine, userId, user?.ProfileImageUrl, new Dictionary<string, string?>());
     }
 
     public async Task<RoutineCommentResponse?> AddComment(string userId, string routineId, string text)
@@ -122,7 +136,22 @@ public class SocialRoutinesService
 
         await _routines.UpdateOneAsync(r => r.Id == routineId, update);
 
-        return MapToComment(comment);
+        if (routine.UserId != userId)
+        {
+            var routineOwner = await _users.Find(u => u.Id == routine.UserId).FirstOrDefaultAsync();
+            if (routineOwner != null && !string.IsNullOrEmpty(routineOwner.FcmToken))
+            {
+                var snippet = text.Length > 30 ? text.Substring(0, 30) + "..." : text;
+                var title = routineOwner.PreferredLanguage == "en" ? "New Comment on Your Routine 💬" : "Rutinine Yeni Bir Yorum Var 💬";
+                var body = routineOwner.PreferredLanguage == "en" 
+                    ? $"{userName} commented on your routine: \"{snippet}\"" 
+                    : $"{userName} rutinine yorum yaptı: \"{snippet}\"";
+                    
+                await _notificationService.SendPushNotificationAsync(routineOwner.FcmToken, title, body);
+            }
+        }
+
+        return MapToComment(comment, user?.ProfileImageUrl);
     }
 
     public async Task<ToggleLikeResponse?> ToggleLike(string userId, string routineId)
@@ -138,6 +167,23 @@ public class SocialRoutinesService
         update = update.Set(r => r.UpdatedAt, DateTime.UtcNow);
         await _routines.UpdateOneAsync(r => r.Id == routineId, update);
 
+        if (!hasLiked && routine.UserId != userId)
+        {
+            var routineOwner = await _users.Find(u => u.Id == routine.UserId).FirstOrDefaultAsync();
+            if (routineOwner != null && !string.IsNullOrEmpty(routineOwner.FcmToken))
+            {
+                var liker = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+                var likerName = liker?.Username ?? liker?.FullName ?? "User";
+                
+                var title = routineOwner.PreferredLanguage == "en" ? "Routine Liked 💖" : "Rutinin Beğenildi 💖";
+                var body = routineOwner.PreferredLanguage == "en" 
+                    ? $"{likerName} liked your routine!" 
+                    : $"{likerName} rutinini harika buldu!";
+                    
+                await _notificationService.SendPushNotificationAsync(routineOwner.FcmToken, title, body);
+            }
+        }
+
         var likeCount = hasLiked
             ? Math.Max(0, routine.Likes.Count - 1)
             : routine.Likes.Count + 1;
@@ -149,10 +195,11 @@ public class SocialRoutinesService
         };
     }
 
-    private static RoutineFeedItemResponse MapToFeed(Routine routine, string userId) => new()
+    private static RoutineFeedItemResponse MapToFeed(Routine routine, string userId, string? profileImageUrl) => new()
     {
         Id = routine.Id,
         UserName = routine.UserName,
+        UserProfileImageUrl = profileImageUrl,
         SkinType = routine.SkinType,
         Focus = routine.Focus,
         Title = routine.Title,
@@ -166,10 +213,11 @@ public class SocialRoutinesService
         CreatedAt = routine.CreatedAt
     };
 
-    private static RoutineDetailResponse MapToDetail(Routine routine, string userId) => new()
+    private static RoutineDetailResponse MapToDetail(Routine routine, string userId, string? ownerProfileImageUrl, Dictionary<string, string?> commentUserImages) => new()
     {
         Id = routine.Id,
         UserName = routine.UserName,
+        UserProfileImageUrl = ownerProfileImageUrl,
         SkinType = routine.SkinType,
         Focus = routine.Focus,
         Title = routine.Title,
@@ -182,7 +230,7 @@ public class SocialRoutinesService
         HasLiked = routine.Likes?.Contains(userId) ?? false,
         CreatedAt = routine.CreatedAt,
         Products = routine.Products?.Select(MapToProduct).ToList() ?? new List<RoutineProductResponse>(),
-        Comments = routine.Comments?.Select(MapToComment).ToList() ?? new List<RoutineCommentResponse>()
+        Comments = routine.Comments?.Select(c => MapToComment(c, commentUserImages.GetValueOrDefault(c.UserId))).ToList() ?? new List<RoutineCommentResponse>()
     };
 
     private static RoutineProductResponse MapToProduct(RoutineProduct p) => new()
@@ -193,10 +241,11 @@ public class SocialRoutinesService
         ImageUrl = p.ImageUrl
     };
 
-    private static RoutineCommentResponse MapToComment(RoutineComment c) => new()
+    private static RoutineCommentResponse MapToComment(RoutineComment c, string? profileImageUrl) => new()
     {
         Id = c.Id,
         UserName = c.UserName,
+        UserProfileImageUrl = profileImageUrl,
         Text = c.Text,
         CreatedAt = c.CreatedAt
     };

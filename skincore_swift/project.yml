@@ -4,6 +4,15 @@ options:
   deploymentTarget:
     iOS: "26.0"
   xcodeVersion: "15.0"
+  developmentRegion: tr
+  knownRegions:
+    - tr
+    - en
+
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    from: 10.22.0
 
 settings:
   base:
@@ -14,6 +23,11 @@ targets:
     type: application
     platform: iOS
     sources: [SkinCore]
+    dependencies:
+      - package: Firebase
+        product: FirebaseAnalytics
+      - package: Firebase
+        product: FirebaseMessaging
     settings:
       base:
         INFOPLIST_FILE: SkinCore/Info.plist
@@ -26,3 +40,4 @@ targets:
       properties:
         com.apple.developer.applesignin:
           - Default
+        aps-environment: development

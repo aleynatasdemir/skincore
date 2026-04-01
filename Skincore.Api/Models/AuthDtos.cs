@@ -50,6 +50,17 @@ public class ResetPasswordRequest
     public string NewPassword { get; set; } = null!;
 }
 
+public class UpdateFcmTokenRequest
+{
+    public string FcmToken { get; set; } = null!;
+    public string? Language { get; set; }
+}
+
+public class TestNotificationRequest
+{
+    public string FcmToken { get; set; } = null!;
+}
+
 // ── Response DTOs ──
 
 public class AuthResponse
@@ -64,6 +75,8 @@ public class UserResponse
     public string Id { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? FullName { get; set; }
+    public string? Username { get; set; }
+    public string? ProfileImageUrl { get; set; }
     public string AuthProvider { get; set; } = null!;
     public bool IsEmailVerified { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -73,6 +86,8 @@ public class UserResponse
         Id = user.Id,
         Email = user.Email,
         FullName = user.FullName,
+        Username = user.Username,
+        ProfileImageUrl = user.ProfileImageUrl,
         AuthProvider = user.AuthProvider,
         IsEmailVerified = user.IsEmailVerified,
         CreatedAt = user.CreatedAt

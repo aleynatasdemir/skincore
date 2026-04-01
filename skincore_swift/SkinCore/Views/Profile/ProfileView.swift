@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 // MARK: - ProfileView (kendi profili)
 
@@ -10,11 +11,16 @@ private struct ProfileRoutineSelection: Identifiable {
 
 struct ProfileView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @State private var selectedTab: ProfileTab = .routines
     @State private var myRoutines: [RoutineFeedItem] = []
     @State private var favorites: [FavoriteResponse] = []
+    @State private var profileData: UserProfileResponse?
     @State private var isLoading = false
     @State private var showSettings = false
+    @State private var showEditProfile = false
+    @State private var photoPickerItem: PhotosPickerItem?
+    @State private var isUploadingPhoto = false
 
     var body: some View {
         NavigationStack {
@@ -24,12 +30,29 @@ struct ProfileView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
                         // ── Avatar + isim + stats ──
-                        ProfileHeaderSection(
-                            name: authViewModel.currentUser?.fullName ?? "Kullanıcı",
-                            email: authViewModel.currentUser?.email ?? "",
-                            routineCount: myRoutines.count,
-                            isOwnProfile: true
-                        )
+                        PhotosPicker(selection: $photoPickerItem, matching: .images) {
+                            ProfileHeaderSection(
+                                name: profileData?.fullName ?? authViewModel.currentUser?.fullName ?? lang.s(.profileDefaultName),
+                                email: profileData?.username.map { "@\($0)" } ?? authViewModel.currentUser?.email ?? "",
+                                bio: profileData?.bio,
+                                profileImageUrl: profileData?.profileImageUrl,
+                                routineCount: myRoutines.count,
+                                followerCount: profileData?.followerCount ?? 0,
+                                followingCount: profileData?.followingCount ?? 0,
+                                isOwnProfile: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .onChange(of: photoPickerItem) { _, item in
+                            Task { await uploadPhoto(item) }
+                        }
+                        .overlay {
+                            if isUploadingPhoto {
+                                ProgressView()
+                                    .tint(Color(hex: "D4728C"))
+                                    .padding(.top, 70)
+                            }
+                        }
 
                         // ── Tab seçici ──
                         ProfileTabBar(selected: $selectedTab)
@@ -51,9 +74,16 @@ struct ProfileView: View {
                     }
                 }
             }
-            .navigationTitle("MY SKINCORE")
+            .navigationTitle(lang.s(.profileTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { showEditProfile = true } label: {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(Color(hex: "D4728C"))
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { showSettings = true } label: {
                         Image(systemName: "gearshape")
@@ -64,6 +94,14 @@ struct ProfileView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsSheet()
                     .environmentObject(authViewModel)
+                    .environmentObject(lang)
+            }
+            .sheet(isPresented: $showEditProfile) {
+                EditProfileView(profile: profileData) {
+                    Task { await loadData() }
+                }
+                .environmentObject(authViewModel)
+                .environmentObject(lang)
             }
             .task { await loadData() }
         }
@@ -73,9 +111,33 @@ struct ProfileView: View {
         isLoading = true
         async let routinesResult = APIClient.shared.getMyRoutines()
         async let favoritesResult = APIClient.shared.getFavorites()
+        async let profileResult = APIClient.shared.getMyProfile()
         myRoutines = (try? await routinesResult) ?? []
         favorites = (try? await favoritesResult) ?? []
+        profileData = try? await profileResult
         isLoading = false
+    }
+
+    private func uploadPhoto(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        isUploadingPhoto = true
+        if let data = try? await item.loadTransferable(type: Data.self) {
+            if (try? await APIClient.shared.uploadProfileImage(data: data)) != nil {
+                profileData = try? await APIClient.shared.getMyProfile()
+            }
+        }
+        isUploadingPhoto = false
+        photoPickerItem = nil
+    }
+
+    private func resolvedImageUrl(_ path: String?) -> String? {
+        guard let path, !path.isEmpty else { return nil }
+        if path.hasPrefix("http") { return path }
+        #if targetEnvironment(simulator)
+        return "http://localhost:5192\(path)"
+        #else
+        return "http://192.168.0.15:5192\(path)"
+        #endif
     }
 }
 
@@ -83,8 +145,13 @@ struct ProfileView: View {
 
 struct UserProfileView: View {
     let userName: String
+    @EnvironmentObject var lang: LanguageManager
+    @State private var publicProfile: PublicUserProfileResponse?
     @State private var routines: [RoutineFeedItem] = []
+    @State private var favorites: [FavoriteResponse] = []
+    @State private var selectedTab: ProfileTab = .routines
     @State private var isLoading = false
+    @State private var isFollowLoading = false
     @State private var selectedRoutine: ProfileRoutineSelection?
     @Environment(\.dismiss) var dismiss
 
@@ -95,31 +162,59 @@ struct UserProfileView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     ProfileHeaderSection(
-                        name: userName,
-                        email: nil,
+                        name: publicProfile?.fullName ?? userName,
+                        email: publicProfile?.username.map { "@\($0)" },
+                        bio: publicProfile?.bio,
+                        profileImageUrl: publicProfile?.profileImageUrl,
                         routineCount: routines.count,
+                        followerCount: publicProfile?.followerCount ?? 0,
+                        followingCount: publicProfile?.followingCount ?? 0,
                         isOwnProfile: false
                     )
+
+                    // Follow / Unfollow button
+                    if let profile = publicProfile {
+                        Button {
+                            Task { await toggleFollow(profile: profile) }
+                        } label: {
+                            HStack(spacing: 6) {
+                                if isFollowLoading {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                        .tint(profile.isFollowing ? Color(hex: "D4728C") : Color.white)
+                                } else {
+                                    Text(profile.isFollowing ? lang.s(.profileUnfollow) : lang.s(.profileFollow))
+                                        .font(.system(size: 14, weight: .semibold))
+                                }
+                            }
+                            .frame(width: 140, height: 36)
+                            .background(profile.isFollowing ? Color.white : Color(hex: "D4728C"))
+                            .foregroundColor(profile.isFollowing ? Color(hex: "D4728C") : Color.white)
+                            .cornerRadius(18)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(Color(hex: "D4728C"), lineWidth: 1.5)
+                            )
+                        }
+                        .disabled(isFollowLoading)
+                        .padding(.bottom, 8)
+                    }
+
+                    ProfileTabBar(selected: $selectedTab)
+                        .padding(.top, 8)
+
+                    Divider().padding(.horizontal, 20)
 
                     if isLoading {
                         ProgressView()
                             .tint(Color(hex: "D4728C"))
                             .padding(.top, 40)
+                    } else if selectedTab == .routines {
+                        RoutineGridSection(routines: routines, onTap: { id in
+                            selectedRoutine = ProfileRoutineSelection(id: id)
+                        })
                     } else {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Rutinler")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(Color(hex: "7B5455"))
-                                Spacer()
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-
-                            RoutineGridSection(routines: routines, onTap: { id in
-                                selectedRoutine = ProfileRoutineSelection(id: id)
-                            })
-                        }
+                        FavoritesGridSection(favorites: favorites)
                     }
                 }
             }
@@ -141,14 +236,32 @@ struct UserProfileView: View {
             }
             .presentationDetents([.large])
         }
-        .task { await loadRoutines() }
+        .task { await loadData() }
     }
 
-    private func loadRoutines() async {
+    private func loadData() async {
         isLoading = true
-        routines = (try? await APIClient.shared.getRoutineFeed(limit: 50)) ?? []
-        routines = routines.filter { $0.userName == userName }
+        async let profileResult = APIClient.shared.getPublicProfile(username: userName)
+        async let feedResult = APIClient.shared.getRoutineFeed(limit: 50)
+        async let favResult = APIClient.shared.getPublicFavorites(username: userName)
+        publicProfile = try? await profileResult
+        let all = (try? await feedResult) ?? []
+        routines = all.filter { $0.userName == userName }
+        favorites = (try? await favResult) ?? []
         isLoading = false
+    }
+
+    private func toggleFollow(profile: PublicUserProfileResponse) async {
+        isFollowLoading = true
+        do {
+            if profile.isFollowing {
+                _ = try await APIClient.shared.unfollowUser(userId: profile.id)
+            } else {
+                _ = try await APIClient.shared.followUser(userId: profile.id)
+            }
+            publicProfile = try? await APIClient.shared.getPublicProfile(username: userName)
+        } catch {}
+        isFollowLoading = false
     }
 }
 
@@ -157,8 +270,13 @@ struct UserProfileView: View {
 private struct ProfileHeaderSection: View {
     let name: String
     let email: String?
+    let bio: String?
+    let profileImageUrl: String?
     let routineCount: Int
+    let followerCount: Int
+    let followingCount: Int
     let isOwnProfile: Bool
+    @EnvironmentObject var lang: LanguageManager
 
     private var initials: String {
         let parts = name.split(separator: " ").compactMap { $0.first.map(String.init) }
@@ -168,13 +286,18 @@ private struct ProfileHeaderSection: View {
     var body: some View {
         VStack(spacing: 0) {
             // Avatar
-            ZStack {
-                Circle()
-                    .fill(Color(hex: "FED9E2"))
-                    .frame(width: 100, height: 100)
-                Text(initials.isEmpty ? "?" : initials)
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundColor(Color(hex: "7B5455"))
+            ZStack(alignment: .bottomTrailing) {
+                AvatarView(name: name, imageUrl: profileImageUrl, size: 100)
+                
+                if isOwnProfile {
+                    ZStack {
+                        Circle().fill(Color(hex: "D4728C")).frame(width: 30, height: 30)
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white)
+                    }
+                    .offset(x: 4, y: 4)
+                }
             }
             .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 3)
             .padding(.top, 24)
@@ -193,9 +316,32 @@ private struct ProfileHeaderSection: View {
                     .padding(.top, 2)
             }
 
+            // Bio
+            if let bio, !bio.isEmpty {
+                Text(bio)
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(hex: "6B7280"))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 8)
+            }
+
             // Stats
-            HStack(spacing: 40) {
-                StatItem(value: "\(routineCount)", label: "Rutinler")
+            HStack(spacing: 32) {
+                StatItem(value: "\(routineCount)", label: lang.s(.profileRoutines))
+                if isOwnProfile {
+                    NavigationLink(destination: ConnectionsView(mode: .followers)) {
+                        StatItem(value: "\(followerCount)", label: lang.s(.profileFollowers))
+                    }
+                    .buttonStyle(.plain)
+                    NavigationLink(destination: ConnectionsView(mode: .following)) {
+                        StatItem(value: "\(followingCount)", label: lang.s(.profileFollowing))
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    StatItem(value: "\(followerCount)", label: lang.s(.profileFollowers))
+                    StatItem(value: "\(followingCount)", label: lang.s(.profileFollowing))
+                }
             }
             .padding(.top, 20)
             .padding(.bottom, 20)
@@ -227,13 +373,14 @@ enum ProfileTab { case routines, favorites }
 
 private struct ProfileTabBar: View {
     @Binding var selected: ProfileTab
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         HStack(spacing: 0) {
-            TabButton(title: "Rutinlerim", isSelected: selected == .routines) {
+            TabButton(title: lang.s(.profileMyRoutines), isSelected: selected == .routines) {
                 selected = .routines
             }
-            TabButton(title: "Favoriler", isSelected: selected == .favorites) {
+            TabButton(title: lang.s(.profileFavorites), isSelected: selected == .favorites) {
                 selected = .favorites
             }
         }
@@ -265,12 +412,20 @@ private struct TabButton: View {
 
 // MARK: - Routine Grid
 
+private let mockRoutineImages = [
+    "applying_serum_mock",
+    "cosmetic_bottles_mock",
+    "daily_skincare_mock",
+    "skincare_flatlay_mock"
+]
+
 private struct RoutineGridSection: View {
     let routines: [RoutineFeedItem]
     var onTap: ((String) -> Void)? = nil
     @State private var selectedRoutine: ProfileRoutineSelection?
+    @EnvironmentObject var lang: LanguageManager
 
-    private let columns = [GridItem(.flexible(), spacing: 3), GridItem(.flexible(), spacing: 3)]
+    private let columns = [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)]
 
     var body: some View {
         if routines.isEmpty {
@@ -278,13 +433,13 @@ private struct RoutineGridSection: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: 40))
                     .foregroundColor(Color(hex: "D4728C").opacity(0.3))
-                Text("Henüz rutin yok")
+                Text(lang.s(.profileNoRoutines))
                     .font(.system(size: 15))
                     .foregroundColor(Color(hex: "9CA3AF"))
             }
             .padding(.top, 50)
         } else {
-            LazyVGrid(columns: columns, spacing: 3) {
+            LazyVGrid(columns: columns, spacing: 4) {
                 ForEach(routines) { routine in
                     Button {
                         if let onTap { onTap(routine.id) }
@@ -295,11 +450,10 @@ private struct RoutineGridSection: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.top, 3)
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
             .sheet(item: $selectedRoutine) { selection in
-                NavigationStack {
-                    RoutineDetailView(routineId: selection.id)
-                }
+                NavigationStack { RoutineDetailView(routineId: selection.id) }
                 .presentationDetents([.large])
             }
         }
@@ -309,37 +463,36 @@ private struct RoutineGridSection: View {
 private struct RoutineGridCell: View {
     let routine: RoutineFeedItem
 
+    private var mockImage: String {
+        mockRoutineImages[abs(routine.id.hashValue) % mockRoutineImages.count]
+    }
+
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            if let url = routine.coverImageUrl, let imageUrl = URL(string: url) {
-                AsyncImage(url: imageUrl) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable().scaledToFill()
-                    default:
-                        Color(hex: "F3E8E8")
+        GeometryReader { geo in
+            ZStack(alignment: .bottomLeading) {
+                // Görsel
+                Group {
+                    if let url = routine.coverImageUrl, let imageUrl = URL(string: url) {
+                        AsyncImage(url: imageUrl) { phase in
+                            if case .success(let img) = phase {
+                                img.resizable().scaledToFill()
+                            } else {
+                                Image(mockImage).resizable().scaledToFill()
+                            }
+                        }
+                    } else {
+                        Image(mockImage).resizable().scaledToFill()
                     }
                 }
-            } else {
-                Color(hex: "F3E8E8")
-                Image(systemName: "sparkles")
-                    .font(.system(size: 28))
-                    .foregroundColor(Color(hex: "D4728C").opacity(0.4))
-            }
+                .frame(width: geo.size.width, height: geo.size.width)
+                .clipped()
 
-            // Alt gradient + başlık
-            LinearGradient(
-                colors: [.clear, .black.opacity(0.55)],
-                startPoint: .center, endPoint: .bottom
-            )
-            Text(routine.title)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.white)
-                .lineLimit(2)
-                .padding(8)
+            }
+            .frame(width: geo.size.width, height: geo.size.width)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
         }
-        .aspectRatio(1, contentMode: .fill)
-        .clipped()
+        .aspectRatio(1, contentMode: .fit)
     }
 }
 
@@ -347,8 +500,9 @@ private struct RoutineGridCell: View {
 
 private struct FavoritesGridSection: View {
     let favorites: [FavoriteResponse]
+    @EnvironmentObject var lang: LanguageManager
 
-    private let columns = [GridItem(.flexible(), spacing: 3), GridItem(.flexible(), spacing: 3)]
+    private let columns = [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)]
 
     var body: some View {
         if favorites.isEmpty {
@@ -356,46 +510,54 @@ private struct FavoritesGridSection: View {
                 Image(systemName: "heart")
                     .font(.system(size: 40))
                     .foregroundColor(Color(hex: "D4728C").opacity(0.3))
-                Text("Henüz favori yok")
+                Text(lang.s(.profileNoFavorites))
                     .font(.system(size: 15))
                     .foregroundColor(Color(hex: "9CA3AF"))
             }
             .padding(.top, 50)
         } else {
-            LazyVGrid(columns: columns, spacing: 3) {
+            LazyVGrid(columns: columns, spacing: 4) {
                 ForEach(favorites) { fav in
                     NavigationLink(destination: ProductDetailView(productId: fav.productId)) {
-                        ZStack(alignment: .bottomLeading) {
-                            if let url = fav.productImageURL, let imageUrl = URL(string: url) {
-                                AsyncImage(url: imageUrl) { phase in
-                                    switch phase {
-                                    case .success(let img):
-                                        img.resizable().scaledToFill()
-                                    default:
-                                        Color(hex: "F3E8E8")
-                                    }
-                                }
-                            } else {
-                                Color(hex: "F3E8E8")
-                            }
-                            LinearGradient(
-                                colors: [.clear, .black.opacity(0.45)],
-                                startPoint: .center, endPoint: .bottom
-                            )
-                            Text(fav.productName)
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.white)
-                                .lineLimit(2)
-                                .padding(8)
-                        }
-                        .aspectRatio(1, contentMode: .fill)
-                        .clipped()
+                        FavoriteGridCell(fav: fav)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.top, 3)
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
         }
+    }
+}
+
+private struct FavoriteGridCell: View {
+    let fav: FavoriteResponse
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .bottomLeading) {
+                Group {
+                    if let url = fav.productImageURL, let imageUrl = URL(string: url) {
+                        AsyncImage(url: imageUrl) { phase in
+                            if case .success(let img) = phase {
+                                img.resizable().scaledToFill()
+                            } else {
+                                Color(hex: "F3E8E8")
+                            }
+                        }
+                    } else {
+                        Color(hex: "F3E8E8")
+                    }
+                }
+                .frame(width: geo.size.width, height: geo.size.width)
+                .clipped()
+
+            }
+            .frame(width: geo.size.width, height: geo.size.width)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+        }
+        .aspectRatio(1, contentMode: .fit)
     }
 }
 
@@ -403,19 +565,27 @@ private struct FavoritesGridSection: View {
 
 private struct SettingsSheet: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) var dismiss
+    @State private var showEditBio = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(hex: "FFF0F0").ignoresSafeArea()
                 VStack(spacing: 0) {
+                    // Other settings
                     VStack(spacing: 0) {
-                        SettingsRow(icon: "person.fill", title: "Hesap Ayarları")
+                        Button { showEditBio = true } label: {
+                            SettingsRow(icon: "text.quote", title: lang.s(.profileEditBio))
+                        }
+                        .buttonStyle(.plain)
                         Divider().padding(.leading, 56)
-                        SettingsRow(icon: "bell.fill", title: "Bildirimler")
+                        SettingsRow(icon: "person.fill", title: lang.s(.profileAccountSettings))
                         Divider().padding(.leading, 56)
-                        SettingsRow(icon: "shield.lefthalf.fill", title: "Gizlilik")
+                        SettingsRow(icon: "bell.fill", title: lang.s(.profileNotifications))
+                        Divider().padding(.leading, 56)
+                        SettingsRow(icon: "shield.lefthalf.fill", title: lang.s(.profilePrivacy))
                         Divider().padding(.leading, 56)
                         Button {
                             authViewModel.logout()
@@ -424,7 +594,7 @@ private struct SettingsSheet: View {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")
                                     .foregroundColor(Color(hex: "EF4444"))
                                     .frame(width: 24)
-                                Text("Çıkış Yap")
+                                Text(lang.s(.profileLogout))
                                     .foregroundColor(Color(hex: "EF4444"))
                                     .font(.system(size: 15))
                                 Spacer()
@@ -436,11 +606,11 @@ private struct SettingsSheet: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 16)
-                    .padding(.top, 24)
+                    .padding(.top, 12)
                     Spacer()
                 }
             }
-            .navigationTitle("Ayarlar")
+            .navigationTitle(lang.s(.profileSettings))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -450,7 +620,97 @@ private struct SettingsSheet: View {
                     }
                 }
             }
+            .sheet(isPresented: $showEditBio) {
+                EditBioSheet()
+                    .environmentObject(lang)
+            }
         }
+    }
+}
+
+private struct EditBioSheet: View {
+    @EnvironmentObject var lang: LanguageManager
+    @Environment(\.dismiss) var dismiss
+    @State private var bioText = ""
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(hex: "FFF0F0").ignoresSafeArea()
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(lang.s(.profileBio))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(Color(hex: "9CA3AF"))
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
+
+                    TextEditor(text: $bioText)
+                        .frame(height: 120)
+                        .padding(12)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .padding(.horizontal, 16)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(hex: "F3D5DC"), lineWidth: 1)
+                                .padding(.horizontal, 16)
+                        )
+                        .scrollContentBackground(.hidden)
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(hex: "EF4444"))
+                            .padding(.horizontal, 20)
+                    }
+
+                    Spacer()
+                }
+            }
+            .navigationTitle(lang.s(.profileEditBioTitle))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Text(lang.s(.cancel)).foregroundColor(Color(hex: "9CA3AF"))
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Task { await saveBio() }
+                    } label: {
+                        if isLoading {
+                            ProgressView().scaleEffect(0.8)
+                        } else {
+                            Text(lang.s(.save))
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(Color(hex: "D4728C"))
+                        }
+                    }
+                    .disabled(isLoading)
+                }
+            }
+        }
+        .task { await loadCurrentBio() }
+    }
+
+    private func loadCurrentBio() async {
+        if let profile = try? await APIClient.shared.getMyProfile() {
+            bioText = profile.bio ?? ""
+        }
+    }
+
+    private func saveBio() async {
+        isLoading = true
+        do {
+            _ = try await APIClient.shared.updateBio(bio: bioText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : bioText.trimmingCharacters(in: .whitespacesAndNewlines))
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
     }
 }
 
@@ -474,5 +734,190 @@ private struct SettingsRow: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
         .background(Color.white)
+    }
+}
+
+// MARK: - Connections View
+
+enum ConnectionsMode {
+    case followers, following
+    func fetch() async throws -> [PublicUserProfileResponse] {
+        self == .followers
+            ? try await APIClient.shared.getFollowers()
+            : try await APIClient.shared.getFollowing()
+    }
+}
+
+struct ConnectionsView: View {
+    let mode: ConnectionsMode
+    @EnvironmentObject var lang: LanguageManager
+    @State private var users: [PublicUserProfileResponse] = []
+    @State private var isLoading = false
+    @State private var searchText = ""
+    @State private var followingStates: [String: Bool] = [:]
+    @Environment(\.dismiss) var dismiss
+
+    var filtered: [PublicUserProfileResponse] {
+        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !q.isEmpty else { return users }
+        return users.filter {
+            ($0.username?.lowercased().contains(q) ?? false) ||
+            ($0.fullName?.lowercased().contains(q) ?? false)
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Color(hex: "FFF0F0").ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Search bar
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(Color(hex: "D4728C"))
+                    TextField(lang.s(.profileSearch), text: $searchText)
+                        .font(.system(size: 15))
+                        .foregroundColor(Color(hex: "1A1A2E"))
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 14)
+                .background(Color(hex: "F7E9EC"))
+                .cornerRadius(14)
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: "F3D5DC"), lineWidth: 1))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+
+                if isLoading {
+                    Spacer()
+                    ProgressView().tint(Color(hex: "D4728C"))
+                    Spacer()
+                } else if filtered.isEmpty {
+                    Spacer()
+                    VStack(spacing: 10) {
+                        Image(systemName: "person.2")
+                            .font(.system(size: 40))
+                            .foregroundColor(Color(hex: "D4728C").opacity(0.25))
+                        Text(searchText.isEmpty ? lang.s(.profileNobody) : lang.s(.socialNoResults))
+                            .font(.system(size: 15))
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                    }
+                    Spacer()
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        LazyVStack(spacing: 12) {
+                            ForEach(filtered) { user in
+                                ConnectionUserRow(
+                                    user: user,
+                                    isFollowing: followingStates[user.id] ?? user.isFollowing,
+                                    onToggleFollow: { await toggleFollow(user: user) }
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 32)
+                    }
+                }
+            }
+        }
+        .navigationTitle(mode == .followers ? lang.s(.profileFollowersTitle) : lang.s(.profileFollowingTitle))
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(Color(hex: "7B5455"))
+                }
+            }
+        }
+        .task { await loadUsers() }
+    }
+
+    private func loadUsers() async {
+        isLoading = true
+        users = (try? await mode.fetch()) ?? []
+        isLoading = false
+    }
+
+    private func toggleFollow(user: PublicUserProfileResponse) async {
+        let current = followingStates[user.id] ?? user.isFollowing
+        followingStates[user.id] = !current
+        do {
+            if current {
+                _ = try await APIClient.shared.unfollowUser(userId: user.id)
+            } else {
+                _ = try await APIClient.shared.followUser(userId: user.id)
+            }
+        } catch {
+            followingStates[user.id] = current // revert on error
+        }
+    }
+}
+
+private struct ConnectionUserRow: View {
+    let user: PublicUserProfileResponse
+    let isFollowing: Bool
+    let onToggleFollow: () async -> Void
+    @EnvironmentObject var lang: LanguageManager
+
+    private var initials: String {
+        let name = user.fullName ?? user.username ?? "?"
+        let parts = name.split(separator: " ").compactMap { $0.first.map(String.init) }
+        return parts.prefix(2).joined().uppercased().isEmpty
+            ? String(name.prefix(1)).uppercased()
+            : parts.prefix(2).joined().uppercased()
+    }
+
+    var body: some View {
+        NavigationLink(destination: UserProfileView(userName: user.username ?? "")) {
+            HStack(spacing: 14) {
+                // Avatar
+                AvatarView(name: user.username ?? user.fullName ?? "?", imageUrl: user.profileImageUrl, size: 52)
+
+                // İsim + bio
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("@\(user.username ?? user.fullName ?? "")")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(Color(hex: "1A1A2E"))
+                    if let bio = user.bio, !bio.isEmpty {
+                        Text(bio)
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                            .lineLimit(1)
+                    } else if let skinType = user.skinType, !skinType.isEmpty {
+                        Text(skinType)
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                    }
+                }
+
+                Spacer()
+
+                // Follow/Unfollow button
+                Button {
+                    Task { await onToggleFollow() }
+                } label: {
+                    Text(isFollowing ? lang.s(.profileUnfollow) : lang.s(.profileFollow))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(isFollowing ? Color(hex: "7B5455") : Color.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(isFollowing ? Color.white : Color(hex: "D4728C"))
+                        .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color(hex: "D4728C").opacity(isFollowing ? 0.4 : 0), lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(14)
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: Color(hex: "D4728C").opacity(0.06), radius: 8, x: 0, y: 3)
+        }
+        .buttonStyle(.plain)
     }
 }

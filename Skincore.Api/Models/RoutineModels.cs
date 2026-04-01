@@ -121,6 +121,7 @@ public class RoutineFeedItemResponse
 {
     public string Id { get; set; } = null!;
     public string UserName { get; set; } = null!;
+    public string? UserProfileImageUrl { get; set; }
     public string? SkinType { get; set; }
     public string? Focus { get; set; }
     public string Title { get; set; } = null!;
@@ -138,6 +139,7 @@ public class RoutineDetailResponse
 {
     public string Id { get; set; } = null!;
     public string UserName { get; set; } = null!;
+    public string? UserProfileImageUrl { get; set; }
     public string? SkinType { get; set; }
     public string? Focus { get; set; }
     public string Title { get; set; } = null!;
@@ -165,6 +167,7 @@ public class RoutineCommentResponse
 {
     public string Id { get; set; } = null!;
     public string UserName { get; set; } = null!;
+    public string? UserProfileImageUrl { get; set; }
     public string Text { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
 }

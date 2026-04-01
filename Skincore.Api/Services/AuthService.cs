@@ -385,6 +385,22 @@ public class AuthService
         return (true, "Şifreniz başarıyla sıfırlandı. Lütfen yeni şifrenizle giriş yapın.");
     }
 
+    // ── Update FCM Token ──
+    public async Task<(bool Success, string Message)> UpdateFcmTokenAsync(string userId, string fcmToken, string? language = null)
+    {
+        var update = Builders<User>.Update.Set(u => u.FcmToken, fcmToken);
+        if (!string.IsNullOrEmpty(language))
+        {
+            update = update.Set(u => u.PreferredLanguage, language);
+        }
+        var result = await _mongoDbService.UsersCollection.UpdateOneAsync(u => u.Id == userId, update);
+
+        if (result.MatchedCount == 0)
+            return (false, "Kullanıcı bulunamadı.");
+
+        return (true, "FCM token başarıyla kaydedildi.");
+    }
+
     // ── Get User By ID ──
     public async Task<User?> GetUserByIdAsync(string userId)
     {

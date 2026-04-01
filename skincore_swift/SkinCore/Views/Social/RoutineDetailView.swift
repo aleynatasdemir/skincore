@@ -43,6 +43,7 @@ class RoutineDetailViewModel: ObservableObject {
             let comment = RoutineComment(
                 id: response.id,
                 userName: response.userName,
+                userProfileImageUrl: response.userProfileImageUrl,
                 text: response.text,
                 createdAt: response.createdAt
             )
@@ -60,6 +61,7 @@ struct RoutineDetailView: View {
     let onUpdate: (RoutineDetail) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var lang: LanguageManager
     @StateObject private var viewModel: RoutineDetailViewModel
     @State private var commentText: String = ""
 
@@ -78,7 +80,7 @@ struct RoutineDetailView: View {
                     ProgressView()
                         .scaleEffect(1.2)
                         .tint(Color(hex: "D4728C"))
-                    Text("Yükleniyor...")
+                    Text(lang.s(.loading))
                         .font(.subheadline)
                         .foregroundColor(Color(hex: "9CA3AF"))
                 }
@@ -97,7 +99,8 @@ struct RoutineDetailView: View {
                                         image
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
-                                            .frame(height: 230)
+                                            .frame(width: UIScreen.main.bounds.width - 32, height: 230) // Explicitly constrain width to parent's padded width
+                                            .clipped()
                                             .clipShape(RoundedRectangle(cornerRadius: 20))
                                     default:
                                         Image(systemName: "photo")
@@ -111,9 +114,11 @@ struct RoutineDetailView: View {
                                     .foregroundColor(Color(hex: "CBD5E1"))
                             }
                         }
+                        .frame(width: UIScreen.main.bounds.width - 32, height: 230)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
 
                         HStack(spacing: 12) {
-                            AvatarView(name: routine.userName)
+                            AvatarView(name: routine.userName, imageUrl: routine.userProfileImageUrl)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(routine.userName)
                                     .font(.system(size: 16, weight: .semibold))
@@ -181,7 +186,7 @@ struct RoutineDetailView: View {
 
                         if !routine.products.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Ürünler")
+                                Text(lang.s(.routineProducts))
                                     .font(.system(size: 17, weight: .semibold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
 
@@ -192,12 +197,12 @@ struct RoutineDetailView: View {
                         }
 
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Yorumlar")
+                            Text(lang.s(.routineComments))
                                 .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(Color(hex: "1A1A2E"))
 
                             if routine.comments.isEmpty {
-                                Text("Henüz yorum yok")
+                                Text(lang.s(.routineNoComments))
                                     .font(.system(size: 14))
                                     .foregroundColor(Color(hex: "9CA3AF"))
                             } else {
@@ -215,13 +220,13 @@ struct RoutineDetailView: View {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.system(size: 36))
                         .foregroundColor(Color(hex: "D4728C").opacity(0.4))
-                    Text("Rutin yüklenemedi")
+                    Text(lang.s(.routineLoadError))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "1A1A2E"))
                 }
             }
         }
-        .navigationTitle("Rutin")
+        .navigationTitle(lang.s(.routineNavTitle))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -296,7 +301,7 @@ private struct CommentRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            AvatarView(name: comment.userName)
+            AvatarView(name: comment.userName, imageUrl: comment.userProfileImageUrl)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(comment.userName)
@@ -322,10 +327,11 @@ private struct CommentRow: View {
 private struct CommentInputBar: View {
     @Binding var text: String
     let onSend: () -> Void
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         HStack(spacing: 12) {
-            TextField("Yorum yaz...", text: $text)
+            TextField(lang.s(.routineWriteComment), text: $text)
                 .textInputAutocapitalization(.sentences)
                 .disableAutocorrection(false)
                 .padding(.vertical, 10)
@@ -355,4 +361,5 @@ private struct CommentInputBar: View {
         RoutineDetailView(routineId: "demo")
     }
     .environmentObject(AuthViewModel())
+    .environmentObject(LanguageManager.shared)
 }

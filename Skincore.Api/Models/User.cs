@@ -61,6 +61,20 @@ public class User
     [BsonElement("refreshTokenExpiry")]
     public DateTime? RefreshTokenExpiry { get; set; }
 
+    // Profile Image
+    [BsonElement("profileImageUrl")]
+    public string? ProfileImageUrl { get; set; }
+
+    // Bio & Social
+    [BsonElement("bio")]
+    public string? Bio { get; set; }
+
+    [BsonElement("followers")]
+    public List<string> Followers { get; set; } = new();
+
+    [BsonElement("following")]
+    public List<string> Following { get; set; } = new();
+
     // Favoriler
     [BsonElement("favorites")]
     public List<FavoriteProduct> Favorites { get; set; } = new();
@@ -68,6 +82,13 @@ public class User
     // Arama Geçmişi
     [BsonElement("searchHistory")]
     public List<SearchHistoryItem> SearchHistory { get; set; } = new();
+
+    // Notifications
+    [BsonElement("fcmToken")]
+    public string? FcmToken { get; set; }
+
+    [BsonElement("preferredLanguage")]
+    public string PreferredLanguage { get; set; } = "tr"; // default to Turkish
 
     // Timestamps
     [BsonElement("createdAt")]

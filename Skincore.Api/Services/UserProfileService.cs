@@ -7,11 +7,13 @@ public class UserProfileService
 {
     private readonly IMongoCollection<User> _users;
     private readonly IMongoCollection<Product> _products;
+    private readonly NotificationService _notificationService;
 
-    public UserProfileService(MongoDbService mongoDbService)
+    public UserProfileService(MongoDbService mongoDbService, NotificationService notificationService)
     {
         _users = mongoDbService.UsersCollection;
         _products = mongoDbService.ProductsCollection;
+        _notificationService = notificationService;
     }
 
     // ==================== PROFİL ====================
@@ -30,6 +32,9 @@ public class UserProfileService
 
         if (request.DisplayName != null)
             updateDefs.Add(Builders<User>.Update.Set(u => u.FullName, request.DisplayName));
+
+        if (request.Bio != null)
+            updateDefs.Add(Builders<User>.Update.Set(u => u.Bio, request.Bio));
 
         if (request.SkinType != null)
         {
@@ -79,6 +84,183 @@ public class UserProfileService
             u.Username != null && u.Username.ToLower() == sanitizedUsername);
             
         return count == 0;
+    }
+
+    // ==================== BİYOGRAFİ ====================
+
+    public async Task<string?> UpdateProfileImage(string userId, IFormFile file, IWebHostEnvironment env)
+    {
+        var uploadsDir = Path.Combine(env.WebRootPath, "uploads", "profile-images");
+        Directory.CreateDirectory(uploadsDir);
+
+        // Delete old image if exists
+        var user = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+        if (user?.ProfileImageUrl != null)
+        {
+            var oldFile = Path.Combine(env.WebRootPath, user.ProfileImageUrl.TrimStart('/'));
+            if (File.Exists(oldFile)) File.Delete(oldFile);
+        }
+
+        var ext = Path.GetExtension(file.FileName).ToLower();
+        var fileName = $"{userId}_{DateTime.UtcNow.Ticks}{ext}";
+        var filePath = Path.Combine(uploadsDir, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+            await file.CopyToAsync(stream);
+
+        var imageUrl = $"/uploads/profile-images/{fileName}";
+
+        var update = Builders<User>.Update
+            .Set(u => u.ProfileImageUrl, imageUrl)
+            .Set(u => u.UpdatedAt, DateTime.UtcNow);
+        await _users.UpdateOneAsync(u => u.Id == userId, update);
+
+        return imageUrl;
+    }
+
+    public async Task<bool> UpdateBio(string userId, string? bio)
+    {
+        var update = Builders<User>.Update
+            .Set(u => u.Bio, bio)
+            .Set(u => u.UpdatedAt, DateTime.UtcNow);
+
+        var result = await _users.UpdateOneAsync(u => u.Id == userId, update);
+        return result.ModifiedCount > 0;
+    }
+
+    // ==================== TAKİP ====================
+
+    public async Task<List<FavoriteResponse>?> GetPublicFavorites(string username)
+    {
+        var user = await _users.Find(u => u.Username != null && u.Username.ToLower() == username.ToLower()).FirstOrDefaultAsync();
+        if (user == null) return null;
+
+        var productIds = user.Favorites
+            .Select(f => f.ProductId)
+            .Where(id => !string.IsNullOrEmpty(id))
+            .Distinct()
+            .Select(MongoDB.Bson.ObjectId.Parse)
+            .ToList();
+
+        var products = new List<Product>();
+        if (productIds.Count > 0)
+        {
+            var productFilter = Builders<Product>.Filter.In("_id", productIds);
+            products = await _products.Find(productFilter).ToListAsync();
+        }
+
+        return user.Favorites
+            .OrderByDescending(f => f.AddedAt)
+            .Select(f =>
+            {
+                var product = products.FirstOrDefault(p => p.Id == f.ProductId);
+                var response = MapToFavoriteResponse(f);
+                response.ProductImageURL ??= PopularSearchService.ExtractFirstImageUrl(product);
+                return response;
+            })
+            .ToList();
+    }
+
+    public async Task<(bool Success, string Message)> FollowUser(string currentUserId, string targetUserId)
+    {
+        if (currentUserId == targetUserId)
+            return (false, "Kendinizi takip edemezsiniz.");
+
+        var target = await _users.Find(u => u.Id == targetUserId).FirstOrDefaultAsync();
+        if (target == null)
+            return (false, "Kullanıcı bulunamadı.");
+
+        var current = await _users.Find(u => u.Id == currentUserId).FirstOrDefaultAsync();
+        if (current == null)
+            return (false, "Kullanıcı bulunamadı.");
+
+        if (current.Following.Contains(targetUserId))
+            return (false, "Bu kullanıcıyı zaten takip ediyorsunuz.");
+
+        // Add targetUserId to current user's following
+        await _users.UpdateOneAsync(
+            u => u.Id == currentUserId,
+            Builders<User>.Update.AddToSet(u => u.Following, targetUserId)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow));
+
+        // Add currentUserId to target user's followers
+        await _users.UpdateOneAsync(
+            u => u.Id == targetUserId,
+            Builders<User>.Update.AddToSet(u => u.Followers, currentUserId)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow));
+
+        if (!string.IsNullOrEmpty(target.FcmToken))
+        {
+            var title = target.PreferredLanguage == "en" ? "New Follower!" : "Yeni Takipçi!";
+            var body = target.PreferredLanguage == "en" 
+                ? $"{current.Username ?? current.FullName ?? "Someone"} started following you." 
+                : $"{current.Username ?? current.FullName ?? "Biri"} seni takip etmeye başladı.";
+                
+            await _notificationService.SendPushNotificationAsync(target.FcmToken, title, body);
+        }
+
+        return (true, "Takip edildi.");
+    }
+
+    public async Task<(bool Success, string Message)> UnfollowUser(string currentUserId, string targetUserId)
+    {
+        var current = await _users.Find(u => u.Id == currentUserId).FirstOrDefaultAsync();
+        if (current == null || !current.Following.Contains(targetUserId))
+            return (false, "Bu kullanıcıyı takip etmiyorsunuz.");
+
+        await _users.UpdateOneAsync(
+            u => u.Id == currentUserId,
+            Builders<User>.Update.Pull(u => u.Following, targetUserId)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow));
+
+        await _users.UpdateOneAsync(
+            u => u.Id == targetUserId,
+            Builders<User>.Update.Pull(u => u.Followers, currentUserId)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow));
+
+        return (true, "Takipten çıkıldı.");
+    }
+
+    public async Task<List<PublicUserProfileResponse>> GetFollowers(string userId)
+    {
+        var user = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+        if (user == null) return new();
+
+        var followers = await _users.Find(u => user.Followers.Contains(u.Id)).ToListAsync();
+        return followers.Select(f => MapToPublicProfileResponse(f, false)).ToList();
+    }
+
+    public async Task<List<PublicUserProfileResponse>> GetFollowing(string userId)
+    {
+        var user = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+        if (user == null) return new();
+
+        var following = await _users.Find(u => user.Following.Contains(u.Id)).ToListAsync();
+        return following.Select(f => MapToPublicProfileResponse(f, false)).ToList();
+    }
+
+    public async Task<List<PublicUserProfileResponse>> SearchUsers(string query, string currentUserId, int limit = 20)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return new();
+
+        var q = query.Trim().ToLower();
+        var filter = Builders<User>.Filter.And(
+            Builders<User>.Filter.Ne(u => u.Id, currentUserId),
+            Builders<User>.Filter.Ne(u => u.Username, null),
+            Builders<User>.Filter.Regex(u => u.Username, new MongoDB.Bson.BsonRegularExpression(q, "i"))
+        );
+
+        var users = await _users.Find(filter).Limit(limit).ToListAsync();
+        return users.Select(u => MapToPublicProfileResponse(u, u.Followers.Contains(currentUserId))).ToList();
+    }
+
+    public async Task<PublicUserProfileResponse?> GetPublicProfile(string username, string currentUserId)
+    {
+        var user = await _users.Find(u => u.Username != null && u.Username.ToLower() == username.ToLower()).FirstOrDefaultAsync();
+        if (user == null) return null;
+
+        var isFollowing = user.Followers.Contains(currentUserId);
+        return MapToPublicProfileResponse(user, isFollowing);
     }
 
     // ==================== FAVORİLER ====================
@@ -276,8 +458,25 @@ public class UserProfileService
         FullName = user.FullName,
         SkinType = user.SkinType,
         Username = user.Username,
+        Bio = user.Bio,
+        ProfileImageUrl = user.ProfileImageUrl,
+        FollowerCount = user.Followers.Count,
+        FollowingCount = user.Following.Count,
         CreatedAt = user.CreatedAt,
         UpdatedAt = user.UpdatedAt
+    };
+
+    private static PublicUserProfileResponse MapToPublicProfileResponse(User user, bool isFollowing) => new()
+    {
+        Id = user.Id,
+        FullName = user.FullName,
+        Username = user.Username,
+        SkinType = user.SkinType,
+        Bio = user.Bio,
+        ProfileImageUrl = user.ProfileImageUrl,
+        FollowerCount = user.Followers.Count,
+        FollowingCount = user.Following.Count,
+        IsFollowing = isFollowing
     };
 
     private static FavoriteResponse MapToFavoriteResponse(FavoriteProduct f) => new()

@@ -132,9 +132,9 @@ class HomeViewModel: ObservableObject {
 
 struct HomeView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @StateObject private var viewModel = HomeViewModel()
     @FocusState private var isSearchFocused: Bool
-    @State private var isShowingProfile = false
 
     var body: some View {
         NavigationStack {
@@ -143,21 +143,10 @@ struct HomeView: View {
 
                     // ── Header ──
                     HStack {
-                        Text("skincore.")
+                        Text(lang.s(.appBrand))
                             .font(.system(size: 26, weight: .light, design: .serif))
                             .foregroundColor(Color(hex: "D4728C"))
                         Spacer()
-                        Button {
-                            isShowingProfile.toggle()
-                        } label: {
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(Color(hex: "D4728C"))
-                        }
-                        .sheet(isPresented: $isShowingProfile) {
-                            ProfileView()
-                                .environmentObject(authViewModel)
-                        }
                     }
                     .padding(.horizontal)
 
@@ -168,7 +157,7 @@ struct HomeView: View {
                                 .foregroundColor(Color(hex: "9CA3AF"))
                                 .symbolEffect(.rotate, isActive: viewModel.isSearching)
                             TextField("", text: $viewModel.searchText,
-                                     prompt: Text("Search ingredients or products...")
+                                     prompt: Text(lang.s(.homeSearchPlaceholder))
                                         .foregroundColor(Color(hex: "9CA3AF")))
                                 .foregroundColor(Color(hex: "1A1A2E"))
                                 .autocorrectionDisabled()
@@ -231,7 +220,7 @@ struct HomeView: View {
                                 .allowsHitTesting(false)
 
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("NEW FEATURE")
+                                Text(lang.s(.homeScanBadge))
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 10)
@@ -239,11 +228,11 @@ struct HomeView: View {
                                     .background(Color(hex: "D4728C"))
                                     .cornerRadius(6)
 
-                                Text("Scan Your Shelf")
+                                Text(lang.s(.homeScanTitle))
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(.white)
 
-                                Text("Instantly analyze all ingredients and\ncheck safety ratings.")
+                                Text(lang.s(.homeScanDesc))
                                     .font(.system(size: 13))
                                     .foregroundColor(.white.opacity(0.9))
                                     .lineSpacing(2)
@@ -252,7 +241,7 @@ struct HomeView: View {
                                     HStack(spacing: 6) {
                                         Image(systemName: "viewfinder")
                                             .font(.system(size: 14))
-                                        Text("Scan Now")
+                                        Text(lang.s(.homeScanNow))
                                             .font(.system(size: 14, weight: .semibold))
                                     }
                                     .padding(.horizontal, 16)
@@ -270,7 +259,7 @@ struct HomeView: View {
                         // ── Most Searched ──
                         VStack(alignment: .leading, spacing: 14) {
                             HStack {
-                                Text("Most Searched")
+                                Text(lang.s(.homeMostSearched))
                                     .font(.system(size: 20, weight: .bold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
                                 Spacer()
@@ -281,15 +270,16 @@ struct HomeView: View {
                             .padding(.horizontal)
 
                             if viewModel.popularProducts.isEmpty && !viewModel.isLoadingPopular {
-                                Text("Henüz veri yok")
+                                Text(lang.s(.homeNoData))
                                     .font(.caption)
                                     .foregroundColor(Color(hex: "9CA3AF"))
                                     .padding(.horizontal)
                             } else {
                                 LazyVGrid(columns: [
-                                    GridItem(.flexible(), spacing: 14),
-                                    GridItem(.flexible(), spacing: 14)
-                                ], spacing: 14) {
+                                    GridItem(.flexible(), spacing: 10),
+                                    GridItem(.flexible(), spacing: 10),
+                                    GridItem(.flexible(), spacing: 10)
+                                ], spacing: 10) {
                                     ForEach(viewModel.popularProducts) { item in
                                         NavigationLink(destination: ProductDetailView(productId: item.productId)) {
                                             PopularProductCard(item: item)
@@ -305,7 +295,7 @@ struct HomeView: View {
                         if !viewModel.searchHistory.isEmpty || viewModel.isLoadingHistory {
                             VStack(alignment: .leading, spacing: 14) {
                                 HStack {
-                                    Text("Recent Searches")
+                                    Text(lang.s(.homeRecentSearches))
                                         .font(.system(size: 20, weight: .bold))
                                         .foregroundColor(Color(hex: "1A1A2E"))
                                     Spacer()
@@ -315,7 +305,7 @@ struct HomeView: View {
                                         Button {
                                             Task { await viewModel.clearHistory() }
                                         } label: {
-                                            Text("Tümünü Temizle")
+                                            Text(lang.s(.homeClearAll))
                                                 .font(.system(size: 13, weight: .medium))
                                                 .foregroundColor(Color(hex: "EF4444"))
                                         }
@@ -356,44 +346,34 @@ struct HomeView: View {
 
 private struct PopularProductCard: View {
     let item: PopularProductResponse
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Ürün görseli
             ZStack {
-                RoundedRectangle(cornerRadius: 14)
+                RoundedRectangle(cornerRadius: 10)
                     .fill(Color(hex: "F3F4F6"))
-                    .frame(height: 140)
+                    .aspectRatio(1, contentMode: .fit)
 
                 AsyncImage(url: URL(string: item.resolvedImageUrl ?? "")) { phase in
-                    switch phase {
-                    case .success(let img):
+                    if case .success(let img) = phase {
                         img.resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(height: 140)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                    default:
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    } else {
                         Image(systemName: "drop.fill")
-                            .font(.system(size: 36))
+                            .font(.system(size: 24))
                             .foregroundColor(Color(hex: "D4728C").opacity(0.4))
                     }
                 }
             }
             .clipped()
 
-            Text(item.productName ?? "Ürün")
-                .font(.system(size: 14, weight: .semibold))
+            Text(item.productName ?? lang.s(.productDefault))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(Color(hex: "1A1A2E"))
                 .lineLimit(2)
-
-            HStack(spacing: 4) {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(Color(hex: "F59E0B"))
-                Text("Popüler")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(Color(hex: "F59E0B"))
-            }
         }
         .padding(12)
         .background(Color.white)
@@ -538,19 +518,20 @@ struct ProductCard: View {
 
 private struct SearchResultsPanel: View {
     @ObservedObject var viewModel: HomeViewModel
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 if viewModel.isSearching {
                     ProgressView().scaleEffect(0.8).tint(Color(hex: "D4728C"))
-                    Text("Aranıyor…")
+                    Text(lang.s(.homeSearching))
                         .font(.caption.bold())
                         .foregroundColor(Color(hex: "9CA3AF"))
                 } else {
                     Text(viewModel.searchResults.isEmpty
-                         ? "Sonuç bulunamadı"
-                         : "\(viewModel.searchResults.count) ürün bulundu")
+                         ? lang.s(.homeNoResults)
+                         : "\(viewModel.searchResults.count) \(lang.s(.searchProductsFound))")
                         .font(.caption.bold())
                         .foregroundColor(Color(hex: "9CA3AF"))
                 }
@@ -564,7 +545,7 @@ private struct SearchResultsPanel: View {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 36))
                             .foregroundColor(Color(hex: "D4728C").opacity(0.3))
-                        Text("'\(viewModel.searchText)' için ürün bulunamadı")
+                        Text("'\(viewModel.searchText)' \(lang.s(.noProductsForQuery))")
                             .font(.subheadline)
                             .multilineTextAlignment(.center)
                             .foregroundColor(Color(hex: "9CA3AF"))
@@ -592,6 +573,7 @@ private struct SearchResultsPanel: View {
 
 private struct HomeProductRow: View {
     let product: Product
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         HStack(spacing: 12) {
@@ -610,7 +592,7 @@ private struct HomeProductRow: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(product.name ?? "İsimsiz Ürün")
+                Text(product.name ?? lang.s(.productUnnamed))
                     .font(.subheadline.bold())
                     .foregroundColor(Color(hex: "1A1A2E"))
                     .lineLimit(2)
@@ -625,7 +607,7 @@ private struct HomeProductRow: View {
                     HStack(spacing: 4) {
                         Image(systemName: "list.bullet")
                             .font(.system(size: 9))
-                        Text("\(count) içerik")
+                        Text("\(count) \(lang.s(.productIngredientCount))")
                     }
                     .font(.caption2)
                     .foregroundColor(Color(hex: "D4728C"))
@@ -648,4 +630,5 @@ private struct HomeProductRow: View {
 #Preview {
     HomeView()
         .environmentObject(AuthViewModel())
+        .environmentObject(LanguageManager.shared)
 }

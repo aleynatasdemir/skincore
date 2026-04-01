@@ -2,7 +2,11 @@ import SwiftUI
 
 struct VerifyEmailView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) var dismiss
+    
+    @State private var timeRemaining = 60
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     @State private var code = ""
     @FocusState private var isCodeFocused: Bool
@@ -26,11 +30,11 @@ struct VerifyEmailView: View {
                 
                 // Title
                 VStack(spacing: 8) {
-                    Text("Verify Email")
+                    Text(lang.s(.verifyEmail))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(Color(hex: "1A1A2E"))
-                    
-                    Text("We sent a 6-digit code to\n\(authViewModel.pendingEmail)")
+
+                    Text("\(lang.s(.verifyEmailSentPrefix))\n\(authViewModel.pendingEmail)")
                         .font(.system(size: 15))
                         .foregroundColor(Color(hex: "6B7280"))
                         .multilineTextAlignment(.center)
@@ -74,7 +78,7 @@ struct VerifyEmailView: View {
                         if authViewModel.isLoading {
                             ProgressView().tint(.white)
                         } else {
-                            Text("Verify")
+                            Text(lang.s(.verifyButton))
                                 .font(.system(size: 17, weight: .semibold))
                         }
                     }
@@ -89,11 +93,20 @@ struct VerifyEmailView: View {
                 
                 // Resend
                 Button {
-                    Task { await authViewModel.resendCode() }
+                    Task { 
+                        await authViewModel.resendCode() 
+                        timeRemaining = 60
+                    }
                 } label: {
-                    Text("Resend code")
+                    Text(timeRemaining > 0 ? "Tekrar gönder (\(timeRemaining)s)" : lang.s(.resendCode))
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: "D4728C"))
+                        .foregroundColor(timeRemaining > 0 ? Color(hex: "9CA3AF") : Color(hex: "D4728C"))
+                }
+                .disabled(timeRemaining > 0)
+                .onReceive(timer) { _ in
+                    if timeRemaining > 0 {
+                        timeRemaining -= 1
+                    }
                 }
                 
                 Spacer()

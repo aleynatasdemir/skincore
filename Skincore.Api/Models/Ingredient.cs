@@ -28,9 +28,17 @@ public class Ingredient
     [JsonPropertyName("aliases")]
     public List<string>? Aliases { get; set; }
 
+    [BsonElement("aliases_en")]
+    [JsonPropertyName("aliases_en")]
+    public List<string>? AliasesEn { get; set; }
+
     [BsonElement("description")]
     [JsonPropertyName("description")]
     public string? Description { get; set; }
+
+    [BsonElement("description_en")]
+    [JsonPropertyName("description_en")]
+    public string? DescriptionEn { get; set; }
 
     [BsonIgnore]
     [JsonPropertyName("ewg_score")]
@@ -39,6 +47,10 @@ public class Ingredient
     [BsonElement("functions")]
     [JsonPropertyName("functions")]
     public List<string>? Functions { get; set; }
+
+    [BsonElement("functions_en")]
+    [JsonPropertyName("functions_en")]
+    public List<string>? FunctionsEn { get; set; }
 
     [BsonElement("metrics")]
     [JsonPropertyName("metrics")]

@@ -7,6 +7,12 @@ public class UpdateProfileRequest
     public string? DisplayName { get; set; }
     public string? SkinType { get; set; }
     public string? Username { get; set; }
+    public string? Bio { get; set; }
+}
+
+public class UpdateBioRequest
+{
+    public string? Bio { get; set; }
 }
 
 public class CheckUsernameRequest
@@ -43,8 +49,25 @@ public class UserProfileResponse
     public string? FullName { get; set; }
     public string? SkinType { get; set; }
     public string? Username { get; set; }
+    public string? Bio { get; set; }
+    public string? ProfileImageUrl { get; set; }
+    public int FollowerCount { get; set; }
+    public int FollowingCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public class PublicUserProfileResponse
+{
+    public string Id { get; set; } = null!;
+    public string? FullName { get; set; }
+    public string? Username { get; set; }
+    public string? SkinType { get; set; }
+    public string? Bio { get; set; }
+    public string? ProfileImageUrl { get; set; }
+    public int FollowerCount { get; set; }
+    public int FollowingCount { get; set; }
+    public bool IsFollowing { get; set; }
 }
 
 public class FavoriteResponse

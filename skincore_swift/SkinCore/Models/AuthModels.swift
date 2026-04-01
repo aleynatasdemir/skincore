@@ -54,6 +54,8 @@ struct UserResponse: Codable, Identifiable {
     let id: String
     let email: String
     let fullName: String?
+    let username: String?
+    let profileImageUrl: String?
     let authProvider: String
     let isEmailVerified: Bool
     let createdAt: String

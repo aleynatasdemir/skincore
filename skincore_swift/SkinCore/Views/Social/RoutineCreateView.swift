@@ -123,6 +123,7 @@ struct RoutineCreateView: View {
     var onCreated: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var lang: LanguageManager
     @StateObject private var viewModel = RoutineCreateViewModel()
 
     var body: some View {
@@ -132,16 +133,16 @@ struct RoutineCreateView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
-                        Picker("Rutin", selection: $viewModel.routineType) {
-                            Text("Sabah Rutini").tag(RoutineCreateViewModel.RoutineType.morning)
-                            Text("Akşam Rutini").tag(RoutineCreateViewModel.RoutineType.evening)
+                        Picker("", selection: $viewModel.routineType) {
+                            Text(lang.s(.routineMorning)).tag(RoutineCreateViewModel.RoutineType.morning)
+                            Text(lang.s(.routineEvening)).tag(RoutineCreateViewModel.RoutineType.evening)
                         }
                         .pickerStyle(.segmented)
                         .tint(Color(hex: "D4728C"))
                         .padding(.horizontal, 4)
 
                         VStack(alignment: .leading, spacing: 10) {
-                            TextField("Rutin başlığı", text: $viewModel.title)
+                            TextField(lang.s(.routineNamePlaceholder), text: $viewModel.title)
                                 .padding(.vertical, 12)
                                 .padding(.horizontal, 14)
                                 .background(Color.white)
@@ -159,7 +160,7 @@ struct RoutineCreateView: View {
                                 .overlay(
                                     Group {
                                         if viewModel.description.isEmpty {
-                                            Text("Kısa bir açıklama yaz")
+                                            Text(lang.s(.routineDescPlaceholder))
                                                 .foregroundColor(Color(hex: "9CA3AF"))
                                                 .font(.system(size: 14))
                                                 .padding(.horizontal, 16)
@@ -172,7 +173,7 @@ struct RoutineCreateView: View {
 
                         // Photo Picker Section
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("FOTOĞRAF (OPSİYONEL)")
+                            Text(lang.s(.routinePhotoOptional))
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundColor(Color(hex: "9CA3AF"))
                                 .tracking(1)
@@ -202,10 +203,10 @@ struct RoutineCreateView: View {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 28))
                                             .foregroundColor(Color(hex: "D4728C"))
-                                        Text("Rutinine bir fotoğraf ekle")
+                                        Text(lang.s(.routineAddPhoto))
                                             .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(Color(hex: "1A1A2E"))
-                                        Text("Cildinin değişimini paylaş")
+                                        Text(lang.s(.routineShareJourney))
                                             .font(.system(size: 12))
                                             .foregroundColor(Color(hex: "9CA3AF"))
                                     }
@@ -225,7 +226,7 @@ struct RoutineCreateView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "magnifyingglass")
                                     .foregroundColor(Color(hex: "D4728C"))
-                                TextField("Ürün ara...", text: $viewModel.searchQuery)
+                                TextField(lang.s(.routineSearchProduct), text: $viewModel.searchQuery)
                                     .textInputAutocapitalization(.never)
                                     .disableAutocorrection(true)
                                     .onChange(of: viewModel.searchQuery) { _, newValue in viewModel.updateSearch(newValue) }
@@ -243,7 +244,7 @@ struct RoutineCreateView: View {
                                 HStack {
                                     ProgressView()
                                         .tint(Color(hex: "D4728C"))
-                                    Text("Aranıyor...")
+                                    Text(lang.s(.routineSearching))
                                         .font(.system(size: 13))
                                         .foregroundColor(Color(hex: "9CA3AF"))
                                 }
@@ -252,7 +253,7 @@ struct RoutineCreateView: View {
 
                         if !viewModel.searchResults.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Arama Sonuçları")
+                                Text(lang.s(.routineSearchResults))
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(Color(hex: "9CA3AF"))
 
@@ -261,12 +262,12 @@ struct RoutineCreateView: View {
                                         name: product.name ?? "-",
                                         brand: product.brand,
                                         imageUrl: product.firstImageUrl,
-                                        actionTitle: "Ekle",
+                                        actionTitle: lang.s(.routineAdd),
                                         actionColor: Color(hex: "D4728C")
                                     ) {
                                         let item = RoutineProductRequest(
                                             productId: product.id,
-                                            name: product.name ?? "Ürün",
+                                            name: product.name ?? "-",
                                             brand: product.brand,
                                             imageUrl: product.firstImageUrl
                                         )
@@ -275,26 +276,26 @@ struct RoutineCreateView: View {
                                 }
                             }
                         } else if !viewModel.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Text("Sonuç bulunamadı")
+                            Text(lang.s(.routineNoResults))
                                 .font(.system(size: 14))
                                 .foregroundColor(Color(hex: "9CA3AF"))
                         } else if !viewModel.popularProducts.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Popüler Ürünler")
+                                Text(lang.s(.routinePopularProducts))
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(Color(hex: "9CA3AF"))
 
                                 ForEach(viewModel.popularProducts) { product in
                                     RoutineProductPickerRow(
-                                        name: product.productName ?? "Ürün",
+                                        name: product.productName ?? lang.s(.productDefault),
                                         brand: nil,
                                         imageUrl: product.resolvedImageUrl,
-                                        actionTitle: "Ekle",
+                                        actionTitle: lang.s(.routineAdd),
                                         actionColor: Color(hex: "D4728C")
                                     ) {
                                         let item = RoutineProductRequest(
                                             productId: product.productId,
-                                            name: product.productName ?? "Ürün",
+                                            name: product.productName ?? "-",
                                             brand: nil,
                                             imageUrl: product.resolvedImageUrl
                                         )
@@ -306,17 +307,17 @@ struct RoutineCreateView: View {
 
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text("Seçilen Ürünler")
+                                Text(lang.s(.routineSelectedProducts))
                                     .font(.system(size: 17, weight: .semibold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
                                 Spacer()
-                                Text("\(viewModel.selectedProducts.count) ürün")
+                                Text("\(viewModel.selectedProducts.count) \(lang.s(.routineProductCount))")
                                     .font(.system(size: 13))
                                     .foregroundColor(Color(hex: "9CA3AF"))
                             }
 
                             if viewModel.selectedProducts.isEmpty {
-                                Text("Henüz ürün seçilmedi")
+                                Text(lang.s(.routineNoProducts))
                                     .font(.system(size: 14))
                                     .foregroundColor(Color(hex: "9CA3AF"))
                             } else {
@@ -325,7 +326,7 @@ struct RoutineCreateView: View {
                                         name: product.name,
                                         brand: product.brand,
                                         imageUrl: product.imageUrl,
-                                        actionTitle: "Kaldır",
+                                        actionTitle: lang.s(.routineRemove),
                                         actionColor: Color(hex: "9CA3AF")
                                     ) {
                                         viewModel.removeProduct(productId: product.productId)
@@ -339,7 +340,7 @@ struct RoutineCreateView: View {
                     .padding(.bottom, 120)
                 }
             }
-            .navigationTitle("Rutin Oluştur")
+            .navigationTitle(lang.s(.routineTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -363,7 +364,7 @@ struct RoutineCreateView: View {
                 } label: {
                     HStack(spacing: 10) {
                         Image(systemName: "checkmark.circle.fill")
-                        Text(viewModel.isSaving ? "Kaydediliyor..." : "Kaydet")
+                        Text(viewModel.isSaving ? lang.s(.loading) : lang.s(.save))
                             .font(.system(size: 16, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)

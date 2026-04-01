@@ -6,20 +6,21 @@ struct MyRoutinesView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var selectedRoutineId: String?
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         ZStack {
             Color(hex: "FFF0F0").ignoresSafeArea()
 
             if isLoading {
-                ProgressView("Yükleniyor...")
+                ProgressView(lang.s(.loading))
                     .tint(Color(hex: "D4728C"))
             } else if routines.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "pencil.and.outline")
                         .font(.system(size: 48))
                         .foregroundColor(Color(hex: "D4728C").opacity(0.3))
-                    Text("Henüz bir rutin oluşturmadın")
+                    Text(lang.s(.myRoutinesEmpty))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "1A1A2E"))
                 }
@@ -36,7 +37,7 @@ struct MyRoutinesView: View {
                 }
             }
         }
-        .navigationTitle("Rutinlerim")
+        .navigationTitle(lang.s(.myRoutinesTitle))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: Binding(
             get: { selectedRoutineId.map { IdentifiableString(id: $0) } },
@@ -67,6 +68,7 @@ struct MyRoutinesView: View {
 private struct RoutineCardSmall: View {
     let routine: RoutineFeedItem
     let action: () -> Void
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         Button(action: action) {
@@ -104,7 +106,7 @@ private struct RoutineCardSmall: View {
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(Color(hex: "1A1A2E"))
                     
-                    Text("\(routine.products?.count ?? 0) Ürün • \(timeAgo(routine.createdAt))")
+                    Text("\(routine.products?.count ?? 0) \(lang.s(.myRoutinesProductCount)) • \(timeAgo(routine.createdAt))")
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "9CA3AF"))
                 }

@@ -12,10 +12,12 @@ namespace Skincore.Api.Controllers;
 public class UserProfileController : ControllerBase
 {
     private readonly UserProfileService _profileService;
+    private readonly IWebHostEnvironment _env;
 
-    public UserProfileController(UserProfileService profileService)
+    public UserProfileController(UserProfileService profileService, IWebHostEnvironment env)
     {
         _profileService = profileService;
+        _env = env;
     }
 
     private string GetUserId() =>
@@ -66,6 +68,137 @@ public class UserProfileController : ControllerBase
         var isAvailable = await _profileService.IsUsernameAvailable(request.Username);
 
         return Ok(new { isAvailable, message = isAvailable ? "Kullanıcı adı kullanılabilir." : "Bu kullanıcı adı zaten alınmış." });
+    }
+
+    /// <summary>
+    /// POST /api/userprofile/profile-image - Profil fotoğrafı yükle
+    /// </summary>
+    [HttpPost("profile-image")]
+    public async Task<IActionResult> UploadProfileImage(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new MessageResponse { Message = "Dosya seçilmedi." });
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType.ToLower()))
+            return BadRequest(new MessageResponse { Message = "Sadece JPEG, PNG veya WebP yüklenebilir." });
+
+        if (file.Length > 5 * 1024 * 1024)
+            return BadRequest(new MessageResponse { Message = "Dosya boyutu 5MB'ı geçemez." });
+
+        var userId = GetUserId();
+        var imageUrl = await _profileService.UpdateProfileImage(userId, file, _env);
+
+        if (imageUrl == null)
+            return StatusCode(500, new MessageResponse { Message = "Yükleme başarısız." });
+
+        return Ok(new { imageUrl });
+    }
+
+    /// <summary>
+    /// PUT /api/userprofile/bio - Biyografiyi güncelle
+    /// </summary>
+    [HttpPut("bio")]
+    public async Task<IActionResult> UpdateBio([FromBody] UpdateBioRequest request)
+    {
+        var userId = GetUserId();
+        await _profileService.UpdateBio(userId, request.Bio);
+        return Ok(new MessageResponse { Message = "Biyografi güncellendi." });
+    }
+
+    // ==================== TAKİP ====================
+
+    /// <summary>
+    /// POST /api/userprofile/follow/{targetUserId} - Kullanıcıyı takip et
+    /// </summary>
+    [HttpPost("follow/{targetUserId}")]
+    public async Task<IActionResult> Follow(string targetUserId)
+    {
+        var userId = GetUserId();
+        var (success, message) = await _profileService.FollowUser(userId, targetUserId);
+
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message });
+
+        return Ok(new MessageResponse { Message = message });
+    }
+
+    /// <summary>
+    /// DELETE /api/userprofile/follow/{targetUserId} - Takipten çık
+    /// </summary>
+    [HttpDelete("follow/{targetUserId}")]
+    public async Task<IActionResult> Unfollow(string targetUserId)
+    {
+        var userId = GetUserId();
+        var (success, message) = await _profileService.UnfollowUser(userId, targetUserId);
+
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message });
+
+        return Ok(new MessageResponse { Message = message });
+    }
+
+    /// <summary>
+    /// GET /api/userprofile/followers - Takipçilerimi getir
+    /// </summary>
+    [HttpGet("followers")]
+    public async Task<IActionResult> GetFollowers()
+    {
+        var userId = GetUserId();
+        var followers = await _profileService.GetFollowers(userId);
+        return Ok(followers);
+    }
+
+    /// <summary>
+    /// GET /api/userprofile/following - Takip ettiklerimi getir
+    /// </summary>
+    [HttpGet("following")]
+    public async Task<IActionResult> GetFollowing()
+    {
+        var userId = GetUserId();
+        var following = await _profileService.GetFollowing(userId);
+        return Ok(following);
+    }
+
+    /// <summary>
+    /// GET /api/userprofile/public/{username}/favorites - Kullanıcının favorilerini getir
+    /// </summary>
+    [HttpGet("public/{username}/favorites")]
+    public async Task<IActionResult> GetPublicFavorites(string username)
+    {
+        var favorites = await _profileService.GetPublicFavorites(username);
+        if (favorites == null)
+            return NotFound(new MessageResponse { Message = "Kullanıcı bulunamadı." });
+        return Ok(favorites);
+    }
+
+    /// <summary>
+    /// GET /api/userprofile/search?query=xxx - Kullanıcı ara
+    /// </summary>
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchUsers([FromQuery] string query, [FromQuery] int limit = 20)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return Ok(new List<object>());
+
+        var userId = GetUserId();
+        var results = await _profileService.SearchUsers(query, userId, limit);
+        return Ok(results);
+    }
+
+    /// <summary>
+    /// GET /api/userprofile/public/{username} - Başka kullanıcının profilini getir
+    /// </summary>
+    [HttpGet("public/{username}")]
+    public async Task<IActionResult> GetPublicProfile(string username)
+    {
+        var userId = GetUserId();
+        var profile = await _profileService.GetPublicProfile(username, userId);
+
+        if (profile == null)
+            return NotFound(new MessageResponse { Message = "Kullanıcı bulunamadı." });
+
+        return Ok(profile);
     }
 
     // ==================== FAVORİLER ====================

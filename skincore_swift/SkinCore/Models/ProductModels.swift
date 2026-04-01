@@ -125,9 +125,34 @@ struct MatchedIngredient: Codable, Identifiable {
     let name: String?
     let nameUpper: String?
     let aliases: [String]?
+    let aliasesEn: [String]?
+
+    var localizedAliases: [String]? {
+        if LanguageManager.shared.language == .en, let enAl = aliasesEn, !enAl.isEmpty {
+            return enAl
+        }
+        return aliases
+    }
     let description: String?
+    let descriptionEn: String?
+
+    var localizedDescription: String? {
+        if LanguageManager.shared.language == .en, let enDesc = descriptionEn, !enDesc.isEmpty {
+            return enDesc
+        }
+        return description
+    }
     let ewgScore: String?
     let functions: [IngredientFunction]?
+    let functionsEn: [IngredientFunction]?
+    
+    var localizedFunctions: [IngredientFunction]? {
+        if LanguageManager.shared.language == .en, let enFns = functionsEn, !enFns.isEmpty {
+            return enFns
+        }
+        return functions
+    }
+    
     let safetyLabel: String?
     let safetyLevel: Int?
     let limitedEu: Bool?
@@ -163,9 +188,12 @@ struct MatchedIngredient: Codable, Identifiable {
         case name
         case nameUpper          = "name_upper"
         case description
+        case descriptionEn      = "description_en"
         case aliases
+        case aliasesEn          = "aliases_en"
         case ewgScore           = "ewg_score"
         case functions
+        case functionsEn        = "functions_en"
         case safetyLabel        = "safety_label"
         case safetyLevel        = "safety_level"
         case limitedEu          = "limited_eu"

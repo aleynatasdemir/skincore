@@ -12,6 +12,21 @@ class APIClient {
     
     private init() {}
     
+    static func resolveImageUrl(_ path: String?) -> String? {
+        guard let path, !path.isEmpty else { return nil }
+        if path.hasPrefix("http") { return path }
+        
+        let base: String
+        #if targetEnvironment(simulator)
+        base = "http://localhost:5192"
+        #else
+        // Gerçek cihaz testi için Mac'in yerel IP'sini kullanın
+        base = "http://192.168.0.15:5192"
+        #endif
+        
+        return "\(base)\(path)"
+    }
+    
     // MARK: - Generic Request
     
     func request<T: Codable>(
@@ -102,6 +117,11 @@ class APIClient {
     func resetPassword(email: String, code: String, newPassword: String) async throws -> MessageResponse {
         let body = ResetPasswordRequest(email: email, code: code, newPassword: newPassword)
         return try await request(endpoint: "/auth/reset-password", method: "POST", body: body)
+    }
+
+    func updateFcmToken(_ token: String) async throws -> MessageResponse {
+        struct UpdateFcmTokenReq: Encodable { let fcmToken: String; let language: String? }
+        return try await request(endpoint: "/auth/fcm-token", method: "PUT", body: UpdateFcmTokenReq(fcmToken: token, language: LanguageManager.shared.language.rawValue), authenticated: true)
     }
 
     // MARK: - Product Endpoints
@@ -334,6 +354,93 @@ class APIClient {
         struct UploadResponse: Codable { let imageUrl: String }
         let result = try JSONDecoder().decode(UploadResponse.self, from: responseData)
         return result.imageUrl
+    }
+
+    // MARK: - Profile Endpoints
+
+    func uploadProfileImage(data: Data) async throws -> String {
+        guard let url = URL(string: "\(baseURL)/userprofile/profile-image") else {
+            throw APIClientError.invalidURL
+        }
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        if let token = KeychainService.shared.getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"profile.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(data)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        let (responseData, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIClientError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
+        }
+        struct UploadRes: Codable { let imageUrl: String }
+        return try JSONDecoder().decode(UploadRes.self, from: responseData).imageUrl
+    }
+
+    func updateProfile(displayName: String? = nil, skinType: String? = nil, username: String? = nil, bio: String? = nil) async throws -> MessageResponse {
+        let body = UpdateProfileRequest(displayName: displayName, skinType: skinType, username: username, bio: bio)
+        return try await request(endpoint: "/userprofile", method: "PUT", body: body, authenticated: true)
+    }
+
+    func checkUsernameAvailable(_ username: String) async throws -> Bool {
+        struct CheckReq: Encodable { let username: String }
+        struct CheckRes: Codable { let isAvailable: Bool }
+        let res: CheckRes = try await request(
+            endpoint: "/userprofile/check-username",
+            method: "POST",
+            body: CheckReq(username: username),
+            authenticated: true
+        )
+        return res.isAvailable
+    }
+
+    func getMyProfile() async throws -> UserProfileResponse {
+        return try await request(endpoint: "/userprofile", authenticated: true)
+    }
+
+    func updateBio(bio: String?) async throws -> MessageResponse {
+        let body = UpdateBioRequest(bio: bio)
+        return try await request(endpoint: "/userprofile/bio", method: "PUT", body: body, authenticated: true)
+    }
+
+    func followUser(userId: String) async throws -> MessageResponse {
+        return try await request(endpoint: "/userprofile/follow/\(userId)", method: "POST", authenticated: true)
+    }
+
+    func unfollowUser(userId: String) async throws -> MessageResponse {
+        return try await request(endpoint: "/userprofile/follow/\(userId)", method: "DELETE", authenticated: true)
+    }
+
+    func getFollowers() async throws -> [PublicUserProfileResponse] {
+        return try await request(endpoint: "/userprofile/followers", authenticated: true)
+    }
+
+    func getFollowing() async throws -> [PublicUserProfileResponse] {
+        return try await request(endpoint: "/userprofile/following", authenticated: true)
+    }
+
+    func searchUsers(query: String) async throws -> [PublicUserProfileResponse] {
+        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        return try await request(endpoint: "/userprofile/search?query=\(encoded)&limit=15", authenticated: true)
+    }
+
+    func getPublicFavorites(username: String) async throws -> [FavoriteResponse] {
+        let encoded = username.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? username
+        return try await request(endpoint: "/userprofile/public/\(encoded)/favorites", authenticated: true)
+    }
+
+    func getPublicProfile(username: String) async throws -> PublicUserProfileResponse {
+        let encoded = username.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? username
+        return try await request(endpoint: "/userprofile/public/\(encoded)", authenticated: true)
     }
 
     // MARK: - Ingredients Endpoints

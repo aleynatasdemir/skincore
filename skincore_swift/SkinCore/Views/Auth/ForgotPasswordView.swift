@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ForgotPasswordView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) var dismiss
 
     @State private var email = ""
@@ -14,15 +15,15 @@ struct ForgotPasswordView: View {
             VStack(spacing: 24) {
                 Spacer().frame(height: 20)
 
-                Text("skincore.")
+                Text(lang.s(.appBrand))
                     .font(.system(size: 36, weight: .light, design: .serif))
                     .foregroundColor(Color(hex: "D4728C"))
 
-                Text("Forgot Password")
+                Text(lang.s(.forgotPassword))
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(Color(hex: "1A1A2E"))
 
-                Text("Enter your email address and we'll send you a 6-digit reset code.")
+                Text(lang.s(.forgotPasswordSubtitle))
                     .font(.system(size: 15))
                     .foregroundColor(Color(hex: "6B7280"))
                     .multilineTextAlignment(.center)
@@ -35,7 +36,7 @@ struct ForgotPasswordView: View {
                         .foregroundColor(Color(hex: "9CA3AF"))
                         .frame(width: 24)
                     TextField("", text: $email,
-                             prompt: Text("Email").foregroundColor(Color(hex: "6B7280")))
+                             prompt: Text(lang.s(.email)).foregroundColor(Color(hex: "6B7280")))
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
@@ -72,7 +73,7 @@ struct ForgotPasswordView: View {
                         if authViewModel.isLoading {
                             ProgressView().tint(.white)
                         } else {
-                            Text("Send Reset Code")
+                            Text(lang.s(.sendResetCode))
                                 .font(.system(size: 17, weight: .semibold))
                         }
                     }

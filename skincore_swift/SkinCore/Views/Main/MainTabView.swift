@@ -2,26 +2,23 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Home", systemImage: "house.fill", value: 0) {
+            Tab(lang.s(.tabHome), systemImage: "house.fill", value: 0) {
                 HomeView()
             }
-
-            Tab("Ingredients", systemImage: "leaf.fill", value: 1) {
+            Tab(lang.s(.tabIngredients), systemImage: "leaf.fill", value: 1) {
                 IngredientAnalysisView()
             }
-
-            Tab("Scan", systemImage: "viewfinder", value: 2) {
+            Tab(lang.s(.tabScan), systemImage: "viewfinder", value: 2) {
                 ScanView()
             }
-
-            Tab("Social", systemImage: "person.2.fill", value: 3) {
+            Tab(lang.s(.tabSocial), systemImage: "person.2.fill", value: 3) {
                 SocialFeedView()
             }
-
-            Tab("Profile", systemImage: "person.fill", value: 4) {
+            Tab(lang.s(.tabProfile), systemImage: "person.fill", value: 4) {
                 ProfileView()
             }
         }
@@ -32,4 +29,5 @@ struct MainTabView: View {
 #Preview {
     MainTabView()
         .environmentObject(AuthViewModel())
+        .environmentObject(LanguageManager.shared)
 }

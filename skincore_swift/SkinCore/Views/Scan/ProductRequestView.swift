@@ -3,6 +3,7 @@ import PhotosUI
 
 struct ProductRequestView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var lang: LanguageManager
 
     @State private var brandName = ""
     @State private var productName = ""
@@ -33,15 +34,15 @@ struct ProductRequestView: View {
 
                     // Header
                     VStack(spacing: 8) {
-                        Text("skincore.")
+                        Text(lang.s(.appBrand))
                             .font(.system(size: 28, weight: .light, design: .serif))
                             .foregroundColor(Color(hex: "D4728C"))
 
-                        Text("Ürün Talebi")
+                        Text(lang.s(.productRequestTitle))
                             .font(.system(size: 22, weight: .bold))
                             .foregroundColor(Color(hex: "1A1A2E"))
 
-                        Text("Aradığınız ürünü veritabanımıza ekleyebilmemiz için\nbilgileri doldurun.")
+                        Text(lang.s(.productRequestSubtitle))
                             .font(.system(size: 14))
                             .foregroundColor(Color(hex: "6B7280"))
                             .multilineTextAlignment(.center)
@@ -53,12 +54,12 @@ struct ProductRequestView: View {
                     VStack(spacing: 12) {
                         InputField(
                             icon: "tag.fill",
-                            placeholder: "Marka Adı (zorunlu)",
+                            placeholder: lang.s(.productRequestBrandPlaceholder),
                             text: $brandName
                         )
                         InputField(
                             icon: "cube.box.fill",
-                            placeholder: "Ürün Adı (opsiyonel)",
+                            placeholder: lang.s(.productRequestProductPlaceholder),
                             text: $productName
                         )
                     }
@@ -67,8 +68,8 @@ struct ProductRequestView: View {
                     // Fotoğraflar
                     VStack(spacing: 16) {
                         PhotoCard(
-                            title: "Ürünün Ön Yüzü",
-                            subtitle: "Marka ve ürün adının göründüğü taraf",
+                            title: lang.s(.productRequestFrontTitle),
+                            subtitle: lang.s(.productRequestFrontSubtitle),
                             icon: "photo.fill",
                             image: frontImage,
                             pickerItem: $frontPickerItem
@@ -77,8 +78,8 @@ struct ProductRequestView: View {
                         }
 
                         PhotoCard(
-                            title: "İçerik Listesi",
-                            subtitle: "Ingredients / İçindekiler kısmı",
+                            title: lang.s(.productRequestIngredientsTitle),
+                            subtitle: lang.s(.productRequestIngredientsSubtitle),
                             icon: "list.bullet.rectangle.fill",
                             image: ingredientsImage,
                             pickerItem: $ingredientsPickerItem
@@ -106,7 +107,7 @@ struct ProductRequestView: View {
                             } else {
                                 Image(systemName: "paperplane.fill")
                                     .font(.system(size: 15))
-                                Text("Talebi Gönder")
+                                Text(lang.s(.productRequestSubmit))
                                     .font(.system(size: 17, weight: .semibold))
                             }
                         }
@@ -132,10 +133,10 @@ struct ProductRequestView: View {
                 }
             }
         }
-        .alert("Talebiniz Alındı!", isPresented: $showSuccess) {
-            Button("Tamam") { dismiss() }
+        .alert(lang.s(.productRequestAlertTitle), isPresented: $showSuccess) {
+            Button(lang.s(.ok)) { dismiss() }
         } message: {
-            Text("Ürünü en kısa sürede inceleyip veritabanına ekleyeceğiz.")
+            Text(lang.s(.productRequestAlertMsg))
         }
     }
 
@@ -200,6 +201,7 @@ private struct PhotoCard: View {
     let image: UIImage?
     @Binding var pickerItem: PhotosPickerItem?
     let onImageLoaded: (UIImage) -> Void
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -241,7 +243,7 @@ private struct PhotoCard: View {
                             Image(systemName: "plus.circle")
                                 .font(.system(size: 28))
                                 .foregroundColor(Color(hex: "D4728C").opacity(0.6))
-                            Text("Fotoğraf Seç")
+                            Text(lang.s(.productRequestSelectPhoto))
                                 .font(.system(size: 13))
                                 .foregroundColor(Color(hex: "9CA3AF"))
                         }

@@ -25,6 +25,7 @@ builder.Services.AddSingleton<UserProfileService>();
 builder.Services.AddSingleton<PopularSearchService>();
 builder.Services.AddSingleton<SocialRoutinesService>();
 builder.Services.AddSingleton<ImageSearchService>();
+builder.Services.AddSingleton<NotificationService>();
 
 builder.Services.AddControllers();
 

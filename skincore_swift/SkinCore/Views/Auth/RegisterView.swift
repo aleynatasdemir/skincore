@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RegisterView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) var dismiss
     
     @State private var fullName = ""
@@ -26,33 +27,33 @@ struct RegisterView: View {
                     Spacer().frame(height: 20)
                     
                     // Header
-                    Text("skincore.")
+                    Text(lang.s(.appBrand))
                         .font(.system(size: 36, weight: .light, design: .serif))
                         .foregroundColor(Color(hex: "D4728C"))
                     
-                    Text("Create Account")
+                    Text(lang.s(.createAccount))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(Color(hex: "1A1A2E"))
-                    
-                    Text("Start your skincare journey")
+
+                    Text(lang.s(.startJourney))
                         .font(.subheadline)
                         .foregroundColor(Color(hex: "6B7280"))
-                    
+
                     // Form
                     VStack(spacing: 14) {
-                        AuthInputField(icon: "person.fill", placeholder: "Full Name", text: $fullName)
-                        
-                        AuthInputField(icon: "envelope.fill", placeholder: "Email", text: $email)
+                        AuthInputField(icon: "person.fill", placeholder: lang.s(.fullName), text: $fullName)
+
+                        AuthInputField(icon: "envelope.fill", placeholder: lang.s(.email), text: $email)
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
-                        
-                        AuthSecureInputField(icon: "lock.fill", placeholder: "Password (min 8 chars)", text: $password)
-                        
-                        AuthSecureInputField(icon: "lock.rotation", placeholder: "Confirm Password", text: $confirmPassword)
-                        
+
+                        AuthSecureInputField(icon: "lock.fill", placeholder: lang.s(.passwordMinChars), text: $password)
+
+                        AuthSecureInputField(icon: "lock.rotation", placeholder: lang.s(.confirmPassword), text: $confirmPassword)
+
                         if !confirmPassword.isEmpty && !passwordsMatch {
-                            Text("Passwords don't match")
+                            Text(lang.s(.passwordsNoMatch))
                                 .font(.caption)
                                 .foregroundColor(Color(hex: "EF4444"))
                         }
@@ -81,7 +82,7 @@ struct RegisterView: View {
                             if authViewModel.isLoading {
                                 ProgressView().tint(.white)
                             } else {
-                                Text("Sign Up")
+                                Text(lang.s(.signUp))
                                     .font(.system(size: 17, weight: .semibold))
                             }
                         }
@@ -99,9 +100,9 @@ struct RegisterView: View {
                         dismiss()
                     } label: {
                         HStack(spacing: 6) {
-                            Text("Already have an account?")
+                            Text(lang.s(.alreadyHaveAccount))
                                 .foregroundColor(Color(hex: "6B7280"))
-                            Text("Log In")
+                            Text(lang.s(.loginButton))
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color(hex: "1A1A2E"))
                         }
@@ -182,5 +183,6 @@ struct AuthSecureInputField: View {
     NavigationStack {
         RegisterView()
             .environmentObject(AuthViewModel())
+            .environmentObject(LanguageManager.shared)
     }
 }

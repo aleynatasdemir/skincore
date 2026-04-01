@@ -11,10 +11,33 @@ namespace Skincore.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
+    private readonly NotificationService _notificationService;
 
-    public AuthController(AuthService authService)
+    public AuthController(AuthService authService, NotificationService notificationService)
     {
         _authService = authService;
+        _notificationService = notificationService;
+    }
+
+    /// <summary>
+    /// Sadece test amaçlıdır. Girilen FCM Token'a bildirim atar.
+    /// </summary>
+    [HttpPost("test-notification")]
+    public async Task<IActionResult> SendTestNotification([FromBody] TestNotificationRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.FcmToken))
+            return BadRequest(new MessageResponse { Message = "Token gerekli!" });
+
+        bool success = await _notificationService.SendPushNotificationAsync(
+            request.FcmToken, 
+            "✨ Test Başarılı!", 
+            "API üzerinden gönderilen ilk bildirim! Skincore harika çalışıyor 🚀"
+        );
+        
+        if (success)
+            return Ok(new MessageResponse { Message = "Bildirim başarıyla cihaza gönderildi!" });
+        
+        return BadRequest(new MessageResponse { Message = "Bildirim gönderilemedi, detaylar konsolda olabilir." });
     }
 
     /// <summary>
@@ -153,6 +176,28 @@ public class AuthController : ControllerBase
             return Unauthorized(new MessageResponse { Message = message });
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Kullanıcının Push Notification (FCM) token'ını günceller.
+    /// </summary>
+    [Authorize]
+    [HttpPut("fcm-token")]
+    public async Task<IActionResult> UpdateFcmToken([FromBody] UpdateFcmTokenRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new MessageResponse { Message = "Geçersiz token." });
+
+        if (string.IsNullOrWhiteSpace(request.FcmToken))
+            return BadRequest(new MessageResponse { Message = "FCM token gereklidir." });
+
+        var (success, message) = await _authService.UpdateFcmTokenAsync(userId, request.FcmToken, request.Language);
+
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message });
+
+        return Ok(new MessageResponse { Message = message });
     }
 
     /// <summary>

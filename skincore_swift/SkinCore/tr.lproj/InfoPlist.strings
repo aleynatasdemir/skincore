@@ -1,0 +1,2 @@
+NSCameraUsageDescription = "Ürün etiketini okumak ve içerikleri analiz etmek için kamera kullanılır.";
+NSPhotoLibraryUsageDescription = "Fotoğraftan ürün taraması yapmak için galeri erişimi kullanılır.";

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ResetPasswordView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) var dismiss
 
     @State private var code = ""
@@ -21,15 +22,15 @@ struct ResetPasswordView: View {
             VStack(spacing: 24) {
                 Spacer().frame(height: 20)
 
-                Text("skincore.")
+                Text(lang.s(.appBrand))
                     .font(.system(size: 36, weight: .light, design: .serif))
                     .foregroundColor(Color(hex: "D4728C"))
 
-                Text("Reset Password")
+                Text(lang.s(.resetPassword))
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(Color(hex: "1A1A2E"))
 
-                Text("Enter the 6-digit code sent to\n\(authViewModel.pendingEmail)")
+                Text("\(lang.s(.resetCodeSentPrefix))\n\(authViewModel.pendingEmail)")
                     .font(.system(size: 15))
                     .foregroundColor(Color(hex: "6B7280"))
                     .multilineTextAlignment(.center)
@@ -43,7 +44,7 @@ struct ResetPasswordView: View {
                             .foregroundColor(Color(hex: "9CA3AF"))
                             .frame(width: 24)
                         TextField("", text: $code,
-                                 prompt: Text("Reset Code").foregroundColor(Color(hex: "6B7280")))
+                                 prompt: Text(lang.s(.resetCode)).foregroundColor(Color(hex: "6B7280")))
                             .keyboardType(.numberPad)
                             .foregroundColor(Color(hex: "1A1A2E"))
                             .accentColor(Color(hex: "1A1A2E"))
@@ -65,7 +66,7 @@ struct ResetPasswordView: View {
                             .foregroundColor(Color(hex: "9CA3AF"))
                             .frame(width: 24)
                         SecureField("", text: $newPassword,
-                                   prompt: Text("New Password").foregroundColor(Color(hex: "6B7280")))
+                                   prompt: Text(lang.s(.newPassword)).foregroundColor(Color(hex: "6B7280")))
                             .foregroundColor(Color(hex: "1A1A2E"))
                             .accentColor(Color(hex: "1A1A2E"))
                     }
@@ -83,7 +84,7 @@ struct ResetPasswordView: View {
                             .foregroundColor(Color(hex: "9CA3AF"))
                             .frame(width: 24)
                         SecureField("", text: $confirmPassword,
-                                   prompt: Text("Confirm Password").foregroundColor(Color(hex: "6B7280")))
+                                   prompt: Text(lang.s(.confirmPassword)).foregroundColor(Color(hex: "6B7280")))
                             .foregroundColor(Color(hex: "1A1A2E"))
                             .accentColor(Color(hex: "1A1A2E"))
                     }
@@ -103,7 +104,7 @@ struct ResetPasswordView: View {
                 // Validation errors
                 VStack(spacing: 4) {
                     if !passwordsMatch {
-                        Text("Passwords do not match.")
+                        Text(lang.s(.passwordsNoMatch))
                             .font(.caption)
                             .foregroundColor(Color(hex: "EF4444"))
                     }
@@ -133,7 +134,7 @@ struct ResetPasswordView: View {
                         if authViewModel.isLoading {
                             ProgressView().tint(.white)
                         } else {
-                            Text("Reset Password")
+                            Text(lang.s(.resetPasswordButton))
                                 .font(.system(size: 17, weight: .semibold))
                         }
                     }
@@ -158,13 +159,185 @@ struct ResetPasswordView: View {
                 }
             }
         }
-        .alert("Password Reset Successful", isPresented: $showSuccessAlert) {
-            Button("Log In") {
-                // resetPasswordCompleted = true triggers EmailLoginView to pop the stack
+        .alert(lang.s(.passwordResetAlertTitle), isPresented: $showSuccessAlert) {
+            Button(lang.s(.loginButton)) {
                 authViewModel.resetPasswordCompleted = true
             }
         } message: {
-            Text("Your password has been reset. Please log in with your new password.")
+            Text("\(lang.s(.passwordResetSuccess)) \(lang.s(.loginAgain))")
+        }
+    }
+}
+import SwiftUI
+
+struct UsernameSetupView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var lang: LanguageManager
+
+    @State private var username = ""
+    @State private var isAvailable: Bool? = nil
+    @State private var isChecking = false
+    @State private var checkTask: Task<Void, Never>?
+
+    private var isValid: Bool {
+        username.count >= 3 && isAvailable == true
+    }
+
+    var body: some View {
+        ZStack {
+            Color(hex: "FFF0F0").ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Spacer()
+
+                // Header
+                VStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: "FED9E2"))
+                            .frame(width: 80, height: 80)
+                        Image(systemName: "at")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(Color(hex: "D4728C"))
+                    }
+
+                    Text(lang.s(.usernameTitle))
+                        .font(.system(size: 26, weight: .bold))
+                        .foregroundColor(Color(hex: "1A1A2E"))
+
+                    Text(lang.s(.usernameSubtitle))
+                        .font(.system(size: 14))
+                        .foregroundColor(Color(hex: "9CA3AF"))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+
+                Spacer().frame(height: 40)
+
+                // Input
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 10) {
+                        Text("@")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(Color(hex: "D4728C"))
+
+                        TextField(lang.s(.usernamePlaceholder), text: $username)
+                            .font(.system(size: 17))
+                            .foregroundColor(Color(hex: "1A1A2E"))
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .onChange(of: username) { _, newVal in
+                                let cleaned = newVal
+                                    .lowercased()
+                                    .filter { $0.isLetter || $0.isNumber || $0 == "_" }
+                                if cleaned != newVal {
+                                    username = cleaned
+                                }
+                                scheduleCheck(cleaned)
+                            }
+
+                        if isChecking {
+                            ProgressView()
+                                .scaleEffect(0.75)
+                                .tint(Color(hex: "D4728C"))
+                        } else if username.count >= 3, let available = isAvailable {
+                            Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundColor(available ? Color(hex: "22C55E") : Color(hex: "EF4444"))
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .background(Color.white)
+                    .cornerRadius(14)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(borderColor, lineWidth: 1.5)
+                    )
+                    .padding(.horizontal, 24)
+
+                    // Status text
+                    Group {
+                        if username.count > 0 && username.count < 3 {
+                            Text(lang.s(.usernameMinChars))
+                                .foregroundColor(Color(hex: "9CA3AF"))
+                        } else if username.count >= 3, let available = isAvailable, !isChecking {
+                            Text(available ? "@\(username)\(lang.s(.usernameAvailable))" : lang.s(.usernameTaken))
+                                .foregroundColor(available ? Color(hex: "22C55E") : Color(hex: "EF4444"))
+                        }
+                    }
+                    .font(.system(size: 13))
+                    .padding(.horizontal, 28)
+                    .frame(height: 18)
+                }
+
+                if let error = authViewModel.errorMessage {
+                    Text(error)
+                        .font(.system(size: 13))
+                        .foregroundColor(Color(hex: "EF4444"))
+                        .padding(.horizontal, 28)
+                        .padding(.top, 8)
+                }
+
+                Spacer().frame(height: 32)
+
+                // Button
+                Button {
+                    Task { await authViewModel.setupUsername(username) }
+                } label: {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(isValid ? Color(hex: "D4728C") : Color(hex: "F3D5DC"))
+                            .frame(height: 52)
+
+                        if authViewModel.isLoading {
+                            ProgressView().tint(.white)
+                        } else {
+                            Text(lang.s(.continueButton))
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(isValid ? .white : Color(hex: "D4728C").opacity(0.5))
+                        }
+                    }
+                }
+                .disabled(!isValid || authViewModel.isLoading)
+                .padding(.horizontal, 24)
+
+                Spacer().frame(height: 20)
+
+                Button {
+                    authViewModel.logout()
+                } label: {
+                    Text(lang.s(.switchAccount))
+                        .font(.system(size: 13))
+                        .foregroundColor(Color(hex: "9CA3AF"))
+                }
+
+                Spacer()
+            }
+        }
+    }
+
+    private var borderColor: Color {
+        if username.count >= 3, let available = isAvailable, !isChecking {
+            return available ? Color(hex: "22C55E") : Color(hex: "EF4444")
+        }
+        return Color(hex: "F3D5DC")
+    }
+
+    private func scheduleCheck(_ value: String) {
+        isAvailable = nil
+        checkTask?.cancel()
+        guard value.count >= 3 else {
+            isChecking = false
+            return
+        }
+        isChecking = true
+        checkTask = Task {
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s debounce
+            guard !Task.isCancelled else { return }
+            let result = try? await APIClient.shared.checkUsernameAvailable(value)
+            guard !Task.isCancelled else { return }
+            isAvailable = result
+            isChecking = false
         }
     }
 }

@@ -1,11 +1,23 @@
 import SwiftUI
 
+private let mockRoutineImages = [
+    "applying_serum_mock",
+    "cosmetic_bottles_mock",
+    "daily_skincare_mock",
+    "skincare_flatlay_mock"
+]
+
 @MainActor
 class SocialFeedViewModel: ObservableObject {
     @Published var routines: [RoutineFeedItem] = []
+    @Published var matchedUsers: [PublicUserProfileResponse] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var searchText: String = ""
+    @Published var searchText: String = "" {
+        didSet { scheduleUserSearch() }
+    }
+
+    private var searchTask: Task<Void, Never>?
 
     func fetchFeed() async {
         isLoading = true
@@ -52,10 +64,27 @@ class SocialFeedViewModel: ObservableObject {
             || ($0.tags?.joined(separator: " ").lowercased().contains(query) ?? false)
         }
     }
+
+    private func scheduleUserSearch() {
+        searchTask?.cancel()
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard query.count >= 2 else {
+            matchedUsers = []
+            return
+        }
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled else { return }
+            let results = (try? await APIClient.shared.searchUsers(query: query)) ?? []
+            guard !Task.isCancelled else { return }
+            matchedUsers = results
+        }
+    }
 }
 
 struct SocialFeedView: View {
     @StateObject private var viewModel = SocialFeedViewModel()
+    @EnvironmentObject var lang: LanguageManager
     @State private var showCreate = false
     @State private var selectedRoutine: RoutineSelection?
 
@@ -65,7 +94,7 @@ struct SocialFeedView: View {
                 Color(hex: "FFF0F0").ignoresSafeArea()
 
                 VStack(spacing: 12) {
-                    SearchBar(text: $viewModel.searchText)
+                    SearchBar(text: $viewModel.searchText, placeholder: lang.s(.socialSearchPlaceholder))
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
 
@@ -74,37 +103,90 @@ struct SocialFeedView: View {
                             ProgressView()
                                 .scaleEffect(1.2)
                                 .tint(Color(hex: "D4728C"))
-                            Text("Yükleniyor...")
+                            Text(lang.s(.socialLoading))
                                 .font(.subheadline)
-                                .foregroundColor(Color(hex: "9CA3AF"))
-                        }
-                        .padding(.top, 40)
-                    } else if viewModel.filteredRoutines.isEmpty {
-                        VStack(spacing: 14) {
-                            Image(systemName: "person.2.fill")
-                                .font(.system(size: 48))
-                                .foregroundColor(Color(hex: "D4728C").opacity(0.25))
-                            Text(viewModel.searchText.isEmpty ? "Henüz paylaşılmış rutin yok" : "Sonuç bulunamadı")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(Color(hex: "1A1A2E"))
-                            Text(viewModel.searchText.isEmpty ? "İlk rutini sen paylaş" : "Farklı bir arama dene")
-                                .font(.system(size: 14))
                                 .foregroundColor(Color(hex: "9CA3AF"))
                         }
                         .padding(.top, 40)
                     } else {
                         ScrollView {
                             LazyVStack(spacing: 16) {
-                                ForEach(viewModel.filteredRoutines) { routine in
-                                    RoutineCard(
-                                        routine: routine,
-                                        onLike: {
-                                            Task { await viewModel.toggleLike(routineId: routine.id) }
-                                        },
-                                        onOpen: {
-                                            selectedRoutine = RoutineSelection(id: routine.id)
+
+                                // ── Kullanıcı sonuçları ──
+                                if !viewModel.matchedUsers.isEmpty {
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text(lang.s(.socialPeople))
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundColor(Color(hex: "D4728C"))
+                                            .tracking(1.2)
+                                            .padding(.horizontal, 16)
+
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 12) {
+                                                ForEach(viewModel.matchedUsers) { user in
+                                                    NavigationLink(destination: UserProfileView(userName: user.username ?? user.fullName ?? "")) {
+                                                        UserSearchCard(user: user)
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                }
+                                            }
+                                            .padding(.horizontal, 16)
                                         }
-                                    )
+                                    }
+                                    .padding(.top, 4)
+
+                                    if !viewModel.filteredRoutines.isEmpty {
+                                        HStack {
+                                            Text(lang.s(.socialRoutines))
+                                                .font(.system(size: 11, weight: .bold))
+                                                .foregroundColor(Color(hex: "D4728C"))
+                                                .tracking(1.2)
+                                            Spacer()
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.top, 4)
+                                    }
+                                }
+
+                                // ── Rutin sonuçları ──
+                                if viewModel.filteredRoutines.isEmpty && !viewModel.searchText.isEmpty && viewModel.matchedUsers.isEmpty {
+                                    VStack(spacing: 14) {
+                                        Image(systemName: "magnifyingglass")
+                                            .font(.system(size: 40))
+                                            .foregroundColor(Color(hex: "D4728C").opacity(0.25))
+                                        Text(lang.s(.socialNoResults))
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(Color(hex: "1A1A2E"))
+                                        Text(lang.s(.socialDiffSearch))
+                                            .font(.system(size: 14))
+                                            .foregroundColor(Color(hex: "9CA3AF"))
+                                    }
+                                    .padding(.top, 40)
+                                } else if viewModel.filteredRoutines.isEmpty && viewModel.searchText.isEmpty {
+                                    VStack(spacing: 14) {
+                                        Image(systemName: "person.2.fill")
+                                            .font(.system(size: 48))
+                                            .foregroundColor(Color(hex: "D4728C").opacity(0.25))
+                                        Text(lang.s(.socialNoRoutines))
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(Color(hex: "1A1A2E"))
+                                        Text(lang.s(.socialBeFirst))
+                                            .font(.system(size: 14))
+                                            .foregroundColor(Color(hex: "9CA3AF"))
+                                    }
+                                    .padding(.top, 40)
+                                } else {
+                                    ForEach(viewModel.filteredRoutines) { routine in
+                                        RoutineCard(
+                                            routine: routine,
+                                            onLike: {
+                                                Task { await viewModel.toggleLike(routineId: routine.id) }
+                                            },
+                                            onOpen: {
+                                                selectedRoutine = RoutineSelection(id: routine.id)
+                                            }
+                                        )
+                                    }
                                 }
                             }
                             .padding(.horizontal, 16)
@@ -113,21 +195,16 @@ struct SocialFeedView: View {
                     }
                 }
             }
-            .navigationTitle("Skincore")
+            .navigationTitle(lang.s(.socialTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showCreate = true
                     } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color(hex: "F3D5DC"))
-                                .frame(width: 36, height: 36)
-                            Image(systemName: "plus")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(Color(hex: "D4728C"))
-                        }
+                        Image(systemName: "plus")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(hex: "D4728C"))
                     }
                 }
             }
@@ -150,19 +227,50 @@ struct SocialFeedView: View {
     }
 }
 
-struct RoutineSelection: Identifiable {
+private struct RoutineSelection: Identifiable {
     let id: String
+}
+
+private struct UserSearchCard: View {
+    let user: PublicUserProfileResponse
+
+    private var displayName: String { user.username ?? user.fullName ?? "?" }
+
+    private var initials: String {
+        let name = user.fullName ?? user.username ?? "?"
+        let parts = name.split(separator: " ").compactMap { $0.first.map(String.init) }
+        let result = parts.prefix(2).joined().uppercased()
+        return result.isEmpty ? String(name.prefix(1)).uppercased() : result
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            AvatarView(name: displayName, imageUrl: user.profileImageUrl, size: 56)
+            
+            Text("@\(displayName)")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(Color(hex: "1A1A2E"))
+                .lineLimit(1)
+                .frame(width: 72)
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .background(Color.white)
+        .cornerRadius(14)
+        .shadow(color: Color(hex: "D4728C").opacity(0.07), radius: 6, x: 0, y: 2)
+    }
 }
 
 private struct SearchBar: View {
     @Binding var text: String
+    var placeholder: String
     @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(Color(hex: "D4728C"))
-            TextField("Rutin ya da kullanıcı ara", text: $text)
+            TextField(placeholder, text: $text)
                 .focused($isFocused)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
@@ -196,7 +304,7 @@ private struct RoutineCard: View {
             HStack(spacing: 12) {
                 NavigationLink(destination: UserProfileView(userName: routine.userName)) {
                     HStack(spacing: 10) {
-                        AvatarView(name: routine.userName)
+                        AvatarView(name: routine.userName, imageUrl: routine.userProfileImageUrl)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(routine.userName)
                                 .font(.system(size: 15, weight: .semibold))
@@ -232,29 +340,43 @@ private struct RoutineCard: View {
                 }
             }
 
-            if let coverImageUrl = routine.coverImageUrl, !coverImageUrl.isEmpty {
-                 // Kapak resmi varsa resmi göster
-                 ZStack {
-                     RoundedRectangle(cornerRadius: 16)
-                         .fill(Color(hex: "F3F4F6"))
-                         .frame(height: 190)
+            // Kapak resmi — varsa gerçek, yoksa mock
+            let mockImg = mockRoutineImages[abs(routine.id.hashValue) % mockRoutineImages.count]
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(hex: "F3F4F6"))
+                    .frame(height: 190)
 
-                     AsyncImage(url: URL(string: coverImageUrl)) { phase in
-                         switch phase {
-                         case .success(let image):
-                             image
-                                 .resizable()
-                                 .aspectRatio(contentMode: .fill)
-                                 .frame(height: 190)
-                                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                         default:
-                             Image(systemName: "photo")
-                                 .font(.system(size: 32))
-                                 .foregroundColor(Color(hex: "CBD5E1"))
-                         }
-                     }
-                 }
+                if let coverImageUrl = routine.coverImageUrl, !coverImageUrl.isEmpty {
+                    AsyncImage(url: URL(string: coverImageUrl)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: UIScreen.main.bounds.width - 60, height: 190) // 16*2 padding + 14*2 inner card padding approx
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        default:
+                            Image(mockImg)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: UIScreen.main.bounds.width - 60, height: 190)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                    }
+                } else {
+                    Image(mockImg)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: UIScreen.main.bounds.width - 60, height: 190)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
             }
+            .frame(width: UIScreen.main.bounds.width - 60, height: 190)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
 
             // Products list - Always show if products exist, but style differently if no cover image
             if let products = routine.products, !products.isEmpty {

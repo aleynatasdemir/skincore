@@ -1,0 +1,2 @@
+NSCameraUsageDescription = "Camera is used to scan product labels and analyze ingredients.";
+NSPhotoLibraryUsageDescription = "Photo library access is used to scan products from existing photos.";
