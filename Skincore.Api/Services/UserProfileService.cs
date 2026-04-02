@@ -227,7 +227,8 @@ public class UserProfileService
         if (user == null) return new();
 
         var followers = await _users.Find(u => user.Followers.Contains(u.Id)).ToListAsync();
-        return followers.Select(f => MapToPublicProfileResponse(f, false)).ToList();
+        // isFollowing: current user (userId) follows this follower back?
+        return followers.Select(f => MapToPublicProfileResponse(f, user.Following.Contains(f.Id))).ToList();
     }
 
     public async Task<List<PublicUserProfileResponse>> GetFollowing(string userId)
@@ -236,7 +237,8 @@ public class UserProfileService
         if (user == null) return new();
 
         var following = await _users.Find(u => user.Following.Contains(u.Id)).ToListAsync();
-        return following.Select(f => MapToPublicProfileResponse(f, false)).ToList();
+        // isFollowing: always true — these are users the current user follows
+        return following.Select(f => MapToPublicProfileResponse(f, true)).ToList();
     }
 
     public async Task<List<PublicUserProfileResponse>> SearchUsers(string query, string currentUserId, int limit = 20)

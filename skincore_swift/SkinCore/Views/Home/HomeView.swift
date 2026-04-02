@@ -340,6 +340,7 @@ struct HomeView: View {
             }
             .navigationBarHidden(true)
         }
+        .onTapGesture { hideKeyboard() }
     }
 }
 

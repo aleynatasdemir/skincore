@@ -58,6 +58,7 @@ struct UserResponse: Codable, Identifiable {
     let profileImageUrl: String?
     let authProvider: String
     let isEmailVerified: Bool
+    let notificationsEnabled: Bool
     let createdAt: String
 }
 

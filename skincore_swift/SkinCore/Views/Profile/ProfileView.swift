@@ -661,6 +661,7 @@ private struct SettingsSheet: View {
     @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) var dismiss
     @State private var showChangePassword = false
+    @State private var notificationsEnabled: Bool = true
 
     var body: some View {
         NavigationStack {
@@ -674,7 +675,26 @@ private struct SettingsSheet: View {
                         }
                         .buttonStyle(.plain)
                         Divider().padding(.leading, 56)
-                        SettingsRow(icon: "bell.fill", title: lang.s(.profileNotifications))
+                        HStack(spacing: 16) {
+                            Image(systemName: "bell.fill")
+                                .foregroundColor(Color(hex: "7B5455"))
+                                .frame(width: 24)
+                            Text(lang.s(.profileNotifications))
+                                .font(.system(size: 15))
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Toggle("", isOn: $notificationsEnabled)
+                                .labelsHidden()
+                                .tint(Color(hex: "E07D7D"))
+                                .onChange(of: notificationsEnabled) { newValue in
+                                    Task {
+                                        await authViewModel.updateNotifications(enabled: newValue)
+                                    }
+                                }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 14)
+                        .background(Color.white)
                         Divider().padding(.leading, 56)
                         SettingsRow(icon: "shield.lefthalf.fill", title: lang.s(.profilePrivacy))
                         Divider().padding(.leading, 56)
@@ -710,6 +730,9 @@ private struct SettingsSheet: View {
                             .foregroundColor(Color(hex: "7B5455"))
                     }
                 }
+            }
+            .onAppear {
+                notificationsEnabled = authViewModel.currentUser?.notificationsEnabled ?? true
             }
             .sheet(isPresented: $showChangePassword) {
                 ChangePasswordView()
@@ -910,9 +933,11 @@ struct ConnectionsView: View {
                         .padding(.horizontal, 16)
                         .padding(.bottom, 32)
                     }
+                    .scrollDismissesKeyboard(.immediately)
                 }
             }
         }
+        .onTapGesture { hideKeyboard() }
         .navigationTitle(mode == .followers ? lang.s(.profileFollowersTitle) : lang.s(.profileFollowingTitle))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)

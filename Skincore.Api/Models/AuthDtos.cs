@@ -79,6 +79,7 @@ public class UserResponse
     public string? ProfileImageUrl { get; set; }
     public string AuthProvider { get; set; } = null!;
     public bool IsEmailVerified { get; set; }
+    public bool NotificationsEnabled { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public static UserResponse FromUser(User user) => new()
@@ -90,6 +91,7 @@ public class UserResponse
         ProfileImageUrl = user.ProfileImageUrl,
         AuthProvider = user.AuthProvider,
         IsEmailVerified = user.IsEmailVerified,
+        NotificationsEnabled = user.NotificationsEnabled,
         CreatedAt = user.CreatedAt
     };
 }
@@ -103,4 +105,9 @@ public class ChangePasswordRequest
 {
     public string CurrentPassword { get; set; } = null!;
     public string NewPassword { get; set; } = null!;
+}
+
+public class UpdateNotificationsRequest
+{
+    public bool Enabled { get; set; }
 }

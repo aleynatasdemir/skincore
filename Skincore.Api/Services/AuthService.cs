@@ -424,6 +424,18 @@ public class AuthService
         return (true, "FCM token başarıyla kaydedildi.");
     }
 
+    // ── Update Notifications Enabled ──
+    public async Task<(bool Success, string Message)> UpdateNotificationsAsync(string userId, bool enabled)
+    {
+        var update = Builders<User>.Update.Set(u => u.NotificationsEnabled, enabled);
+        var result = await _mongoDbService.UsersCollection.UpdateOneAsync(u => u.Id == userId, update);
+
+        if (result.MatchedCount == 0)
+            return (false, "Kullanıcı bulunamadı.");
+
+        return (true, "Bildirim tercihi güncellendi.");
+    }
+
     // ── Get User By ID ──
     public async Task<User?> GetUserByIdAsync(string userId)
     {

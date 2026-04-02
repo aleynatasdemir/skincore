@@ -192,6 +192,7 @@ struct SocialFeedView: View {
                             .padding(.horizontal, 16)
                             .padding(.bottom, 100)
                         }
+                        .scrollDismissesKeyboard(.immediately)
                     }
                 }
             }
@@ -224,6 +225,7 @@ struct SocialFeedView: View {
                 await viewModel.fetchFeed()
             }
         }
+        .onTapGesture { hideKeyboard() }
     }
 }
 

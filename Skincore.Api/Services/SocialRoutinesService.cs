@@ -139,14 +139,14 @@ public class SocialRoutinesService
         if (routine.UserId != userId)
         {
             var routineOwner = await _users.Find(u => u.Id == routine.UserId).FirstOrDefaultAsync();
-            if (routineOwner != null && !string.IsNullOrEmpty(routineOwner.FcmToken))
+            if (routineOwner != null && routineOwner.NotificationsEnabled && !string.IsNullOrEmpty(routineOwner.FcmToken))
             {
                 var snippet = text.Length > 30 ? text.Substring(0, 30) + "..." : text;
                 var title = routineOwner.PreferredLanguage == "en" ? "New Comment on Your Routine 💬" : "Rutinine Yeni Bir Yorum Var 💬";
-                var body = routineOwner.PreferredLanguage == "en" 
-                    ? $"{userName} commented on your routine: \"{snippet}\"" 
+                var body = routineOwner.PreferredLanguage == "en"
+                    ? $"{userName} commented on your routine: \"{snippet}\""
                     : $"{userName} rutinine yorum yaptı: \"{snippet}\"";
-                    
+
                 await _notificationService.SendPushNotificationAsync(routineOwner.FcmToken, title, body);
             }
         }
@@ -170,16 +170,16 @@ public class SocialRoutinesService
         if (!hasLiked && routine.UserId != userId)
         {
             var routineOwner = await _users.Find(u => u.Id == routine.UserId).FirstOrDefaultAsync();
-            if (routineOwner != null && !string.IsNullOrEmpty(routineOwner.FcmToken))
+            if (routineOwner != null && routineOwner.NotificationsEnabled && !string.IsNullOrEmpty(routineOwner.FcmToken))
             {
                 var liker = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
                 var likerName = liker?.Username ?? liker?.FullName ?? "User";
-                
+
                 var title = routineOwner.PreferredLanguage == "en" ? "Routine Liked 💖" : "Rutinin Beğenildi 💖";
-                var body = routineOwner.PreferredLanguage == "en" 
-                    ? $"{likerName} liked your routine!" 
+                var body = routineOwner.PreferredLanguage == "en"
+                    ? $"{likerName} liked your routine!"
                     : $"{likerName} rutinini harika buldu!";
-                    
+
                 await _notificationService.SendPushNotificationAsync(routineOwner.FcmToken, title, body);
             }
         }

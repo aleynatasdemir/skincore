@@ -226,6 +226,25 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Kullanıcının bildirim tercihini günceller.
+    /// </summary>
+    [Authorize]
+    [HttpPut("notifications")]
+    public async Task<IActionResult> UpdateNotifications([FromBody] UpdateNotificationsRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new MessageResponse { Message = "Geçersiz token." });
+
+        var (success, message) = await _authService.UpdateNotificationsAsync(userId, request.Enabled);
+
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message });
+
+        return Ok(new MessageResponse { Message = message });
+    }
+
+    /// <summary>
     /// Mevcut kullanıcı bilgilerini getir. JWT gerektirir.
     /// </summary>
     [Authorize]

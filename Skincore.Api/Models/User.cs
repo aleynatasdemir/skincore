@@ -87,6 +87,9 @@ public class User
     [BsonElement("fcmToken")]
     public string? FcmToken { get; set; }
 
+    [BsonElement("notificationsEnabled")]
+    public bool NotificationsEnabled { get; set; } = true;
+
     [BsonElement("preferredLanguage")]
     public string PreferredLanguage { get; set; } = "tr"; // default to Turkish
 

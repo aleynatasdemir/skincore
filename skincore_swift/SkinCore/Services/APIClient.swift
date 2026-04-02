@@ -129,6 +129,11 @@ class APIClient {
         return try await request(endpoint: "/auth/fcm-token", method: "PUT", body: UpdateFcmTokenReq(fcmToken: token, language: LanguageManager.shared.language.rawValue), authenticated: true)
     }
 
+    func updateNotifications(enabled: Bool) async throws -> MessageResponse {
+        struct UpdateNotificationsReq: Encodable { let enabled: Bool }
+        return try await request(endpoint: "/auth/notifications", method: "PUT", body: UpdateNotificationsReq(enabled: enabled), authenticated: true)
+    }
+
     // MARK: - Product Endpoints
 
     func searchProductsByName(query: String, maxResults: Int = 5) async throws -> [Product] {

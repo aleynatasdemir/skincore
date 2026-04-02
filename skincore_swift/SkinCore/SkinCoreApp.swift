@@ -72,6 +72,14 @@ struct SkinCoreApp: App {
     }
 }
 
+// MARK: - Keyboard Dismiss
+
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
 // MARK: - Splash View
 struct SplashView: View {
     @State private var pulse = false

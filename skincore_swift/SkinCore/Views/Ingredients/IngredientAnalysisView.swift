@@ -284,6 +284,7 @@ struct IngredientAnalysisView: View {
                     }
                 }
                 .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.immediately)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -320,6 +321,7 @@ struct IngredientAnalysisView: View {
                 }
             )
         }
+        .onTapGesture { hideKeyboard() }
     }
 }
 

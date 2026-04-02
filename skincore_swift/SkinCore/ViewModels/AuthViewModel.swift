@@ -275,8 +275,20 @@ class AuthViewModel: ObservableObject {
         isAuthenticated = false
     }
     
+    // MARK: - Update Notifications
+
+    func updateNotifications(enabled: Bool) async {
+        do {
+            _ = try await APIClient.shared.updateNotifications(enabled: enabled)
+            let user = try await APIClient.shared.getMe()
+            currentUser = user
+        } catch {
+            // Hata olursa sessizce geç
+        }
+    }
+
     // MARK: - Clear Error
-    
+
     func clearError() {
         errorMessage = nil
     }
