@@ -505,3 +505,7 @@ matching_embedding/maybelline/embedding/
 matching_embedding/.venv/
 
 
+
+# AppSettings overrides
+appsettings.json
+appsettings.Development.json
