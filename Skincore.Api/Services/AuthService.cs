@@ -34,6 +34,13 @@ public class AuthService
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
+        // Security: admin emails cannot be registered as mobile users
+        var adminWithSameEmail = await _mongoDbService.AdminUsersCollection
+            .Find(a => a.Email == email)
+            .FirstOrDefaultAsync();
+        if (adminWithSameEmail != null)
+            return (false, "Bu e-posta adresi yönetici hesabı için ayrılmıştır.");
+
         // Check if user already exists
         var existingUser = await _mongoDbService.UsersCollection
             .Find(u => u.Email == email)
@@ -145,10 +152,17 @@ public class AuthService
     // ── Login ──
     public async Task<(bool Success, string Message, AuthResponse? Response)> LoginAsync(LoginRequest request)
     {
-        var email = request.Email.Trim().ToLowerInvariant();
+        var identifier = request.Email.Trim().ToLowerInvariant();
+
+        // Security: admin users are not allowed to log in from mobile auth endpoint
+        var admin = await _mongoDbService.AdminUsersCollection
+            .Find(a => a.Email == identifier || a.Username == identifier)
+            .FirstOrDefaultAsync();
+        if (admin != null)
+            return (false, "Admin hesabı sadece admin panelinden giriş yapabilir.", null);
 
         var user = await _mongoDbService.UsersCollection
-            .Find(u => u.Email == email && u.AuthProvider == "email")
+            .Find(u => (u.Email == identifier || u.Username == identifier) && u.AuthProvider == "email")
             .FirstOrDefaultAsync();
 
         if (user == null)
@@ -156,6 +170,9 @@ public class AuthService
 
         if (!user.IsEmailVerified)
             return (false, "Lütfen önce e-posta adresinizi doğrulayın.", null);
+
+        if (user.IsBanned)
+            return (false, "Hesabınız askıya alınmıştır. Destek için iletişime geçin.", null);
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return (false, "E-posta veya şifre hatalı.", null);
@@ -231,6 +248,9 @@ public class AuthService
                 await _mongoDbService.UsersCollection.UpdateOneAsync(u => u.Id == user.Id, update);
             }
 
+            if (user.IsBanned)
+                return (false, "Hesabınız askıya alınmıştır. Destek için iletişime geçin.", null);
+
             var accessToken = GenerateJwtToken(user);
 
             return (true, "Apple ile giriş başarılı.", new AuthResponse
@@ -263,7 +283,7 @@ public class AuthService
             return (false, "E-posta zaten doğrulanmış.");
 
         // Rate limiting: don't allow resend within 60 seconds
-        if (user.VerificationCodeExpiry.HasValue && 
+        if (user.VerificationCodeExpiry.HasValue &&
             user.VerificationCodeExpiry.Value > DateTime.UtcNow.AddMinutes(9))
             return (false, "Lütfen yeni kod istemek için 60 saniye bekleyin.");
 

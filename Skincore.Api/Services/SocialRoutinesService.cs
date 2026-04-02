@@ -46,9 +46,9 @@ public class SocialRoutinesService
     {
         var routine = await _routines.Find(r => r.Id == routineId).FirstOrDefaultAsync();
         if (routine == null) return null;
-        
+
         var owner = await _users.Find(u => u.Id == routine.UserId).FirstOrDefaultAsync();
-        
+
         var commentUserIds = routine.Comments.Select(c => c.UserId).Distinct().ToList();
         var commentUsers = await _users.Find(u => commentUserIds.Contains(u.Id)).ToListAsync();
         var commentUserMap = commentUsers.ToDictionary(u => u.Id, u => u.ProfileImageUrl);
@@ -147,7 +147,7 @@ public class SocialRoutinesService
                     ? $"{userName} commented on your routine: \"{snippet}\""
                     : $"{userName} rutinine yorum yaptı: \"{snippet}\"";
 
-                await _notificationService.SendPushNotificationAsync(routineOwner.FcmToken, title, body);
+                await _notificationService.SendPushNotificationAsync(routineOwner.FcmToken, title, body, recipientUserId: routineOwner.Id, type: "comment");
             }
         }
 
@@ -180,7 +180,7 @@ public class SocialRoutinesService
                     ? $"{likerName} liked your routine!"
                     : $"{likerName} rutinini harika buldu!";
 
-                await _notificationService.SendPushNotificationAsync(routineOwner.FcmToken, title, body);
+                await _notificationService.SendPushNotificationAsync(routineOwner.FcmToken, title, body, recipientUserId: routineOwner.Id, type: "like");
             }
         }
 

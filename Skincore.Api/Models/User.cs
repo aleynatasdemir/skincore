@@ -83,6 +83,16 @@ public class User
     [BsonElement("searchHistory")]
     public List<SearchHistoryItem> SearchHistory { get; set; } = new();
 
+    // Admin
+    [BsonElement("isAdmin")]
+    public bool IsAdmin { get; set; } = false;
+
+    [BsonElement("isBanned")]
+    public bool IsBanned { get; set; } = false;
+
+    [BsonElement("banReason")]
+    public string? BanReason { get; set; }
+
     // Notifications
     [BsonElement("fcmToken")]
     public string? FcmToken { get; set; }

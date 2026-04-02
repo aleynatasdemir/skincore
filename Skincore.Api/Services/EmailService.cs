@@ -20,7 +20,7 @@ public class EmailService
         {
             BaseAddress = new Uri("https://api.resend.com")
         };
-        _httpClient.DefaultRequestHeaders.Authorization = 
+        _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
     }
 
@@ -48,7 +48,7 @@ public class EmailService
             }
 
             var errorBody = await response.Content.ReadAsStringAsync();
-            _logger.LogError("Failed to send email to {Email}. Status: {Status}, Body: {Body}", 
+            _logger.LogError("Failed to send email to {Email}. Status: {Status}, Body: {Body}",
                 toEmail, response.StatusCode, errorBody);
             return false;
         }

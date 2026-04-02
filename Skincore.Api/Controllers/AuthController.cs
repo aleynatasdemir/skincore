@@ -29,14 +29,14 @@ public class AuthController : ControllerBase
             return BadRequest(new MessageResponse { Message = "Token gerekli!" });
 
         bool success = await _notificationService.SendPushNotificationAsync(
-            request.FcmToken, 
-            "✨ Test Başarılı!", 
+            request.FcmToken,
+            "✨ Test Başarılı!",
             "API üzerinden gönderilen ilk bildirim! Skincore harika çalışıyor 🚀"
         );
-        
+
         if (success)
             return Ok(new MessageResponse { Message = "Bildirim başarıyla cihaza gönderildi!" });
-        
+
         return BadRequest(new MessageResponse { Message = "Bildirim gönderilemedi, detaylar konsolda olabilir." });
     }
 
@@ -50,7 +50,7 @@ public class AuthController : ControllerBase
             return BadRequest(new MessageResponse { Message = "E-posta ve şifre gereklidir." });
 
         var (success, message) = await _authService.RegisterAsync(request);
-        
+
         if (!success)
             return BadRequest(new MessageResponse { Message = message });
 

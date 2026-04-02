@@ -51,9 +51,9 @@ public class UserProfileService
         {
             var sanitizedUsername = request.Username.Trim();
             // Check if username is already taken by someone else (case-insensitive)
-            var existingUser = await _users.Find(u => 
-                u.Id != userId && 
-                u.Username != null && 
+            var existingUser = await _users.Find(u =>
+                u.Id != userId &&
+                u.Username != null &&
                 u.Username.ToLower() == sanitizedUsername.ToLower()
             ).FirstOrDefaultAsync();
 
@@ -61,7 +61,7 @@ public class UserProfileService
             {
                 return false; // Username is already taken
             }
-            
+
             updateDefs.Add(Builders<User>.Update.Set(u => u.Username, sanitizedUsername));
         }
 
@@ -78,11 +78,11 @@ public class UserProfileService
     public async Task<bool> IsUsernameAvailable(string username)
     {
         if (string.IsNullOrWhiteSpace(username)) return false;
-        
+
         var sanitizedUsername = username.Trim().ToLower();
-        var count = await _users.CountDocumentsAsync(u => 
+        var count = await _users.CountDocumentsAsync(u =>
             u.Username != null && u.Username.ToLower() == sanitizedUsername);
-            
+
         return count == 0;
     }
 
@@ -192,10 +192,10 @@ public class UserProfileService
         if (!string.IsNullOrEmpty(target.FcmToken))
         {
             var title = target.PreferredLanguage == "en" ? "New Follower!" : "Yeni Takipçi!";
-            var body = target.PreferredLanguage == "en" 
-                ? $"{current.Username ?? current.FullName ?? "Someone"} started following you." 
+            var body = target.PreferredLanguage == "en"
+                ? $"{current.Username ?? current.FullName ?? "Someone"} started following you."
                 : $"{current.Username ?? current.FullName ?? "Biri"} seni takip etmeye başladı.";
-                
+
             await _notificationService.SendPushNotificationAsync(target.FcmToken, title, body);
         }
 

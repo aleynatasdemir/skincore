@@ -25,7 +25,7 @@ public partial class IngredientMatchingService
     {
         // Load all ingredients into memory for fast matching
         _cachedIngredients = await _mongoDbService.IngredientsCollection.Find(_ => true).ToListAsync();
-        
+
         foreach (var ingredient in _cachedIngredients)
         {
             // inci_name (en güvenilir alan — çoğu kayıtta dolu)
@@ -113,10 +113,10 @@ public partial class IngredientMatchingService
     {
         if (string.IsNullOrWhiteSpace(rawIngredientString))
         {
-            return new EnrichedIngredient 
-            { 
-                OriginalString = rawIngredientString, 
-                MatchType = "None" 
+            return new EnrichedIngredient
+            {
+                OriginalString = rawIngredientString,
+                MatchType = "None"
             };
         }
 
@@ -126,10 +126,10 @@ public partial class IngredientMatchingService
 
         if (string.IsNullOrWhiteSpace(normalizedInput))
         {
-            return new EnrichedIngredient 
-            { 
-                OriginalString = rawIngredientString, 
-                MatchType = "None" 
+            return new EnrichedIngredient
+            {
+                OriginalString = rawIngredientString,
+                MatchType = "None"
             };
         }
 
@@ -183,7 +183,7 @@ public partial class IngredientMatchingService
         if (_searchableKeys.Count > 0)
         {
             var fuzzyResult = Process.ExtractOne(normalizedInput, _searchableKeys);
-            
+
             // 70+ threshold — yazım farklılıklarını yakala
             if (fuzzyResult.Score >= 70)
             {

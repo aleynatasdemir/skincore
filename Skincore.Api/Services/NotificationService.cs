@@ -1,18 +1,21 @@
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
+using Skincore.Api.Models;
 
 namespace Skincore.Api.Services;
 
 public class NotificationService
 {
     private readonly ILogger<NotificationService> _logger;
+    private readonly MongoDbService _mongoDbService;
     private readonly bool _isFirebaseInitialized;
 
-    public NotificationService(ILogger<NotificationService> logger)
+    public NotificationService(ILogger<NotificationService> logger, MongoDbService mongoDbService)
     {
         _logger = logger;
-        
+        _mongoDbService = mongoDbService;
+
         if (FirebaseApp.DefaultInstance == null)
         {
             var credentialPath = Path.Combine(Directory.GetCurrentDirectory(), "firebase-adminsdk.json");
@@ -37,41 +40,59 @@ public class NotificationService
         }
     }
 
-    public async Task<bool> SendPushNotificationAsync(string fcmToken, string title, string body, Dictionary<string, string>? data = null)
+    public async Task<bool> SendPushNotificationAsync(string fcmToken, string title, string body, Dictionary<string, string>? data = null, string? recipientUserId = null, string type = "system")
     {
+        bool success = false;
+
         if (!_isFirebaseInitialized)
         {
             _logger.LogWarning("Cannot send push notification because Firebase is not initialized.");
-            return false;
         }
-
-        if (string.IsNullOrEmpty(fcmToken))
+        else if (string.IsNullOrEmpty(fcmToken))
         {
             _logger.LogWarning("Cannot send push notification to an empty FCM token.");
-            return false;
+        }
+        else
+        {
+            try
+            {
+                var message = new Message()
+                {
+                    Token = fcmToken,
+                    Notification = new Notification()
+                    {
+                        Title = title,
+                        Body = body
+                    },
+                    Data = data ?? new Dictionary<string, string>()
+                };
+
+                string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                _logger.LogInformation($"Successfully sent message: {response}");
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error sending push notification to {fcmToken}");
+            }
         }
 
+        // Her durumda log at
         try
         {
-            var message = new Message()
+            await _mongoDbService.NotificationLogsCollection.InsertOneAsync(new NotificationLog
             {
-                Token = fcmToken,
-                Notification = new Notification()
-                {
-                    Title = title,
-                    Body = body
-                },
-                Data = data ?? new Dictionary<string, string>()
-            };
+                RecipientUserId = recipientUserId,
+                FcmToken = fcmToken,
+                Title = title,
+                Body = body,
+                Type = type,
+                Success = success,
+                SentAt = DateTime.UtcNow
+            });
+        }
+        catch { /* log hatası kritik değil */ }
 
-            string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
-            _logger.LogInformation($"Successfully sent message: {response}");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Error sending push notification to {fcmToken}");
-            return false;
-        }
+        return success;
     }
 }

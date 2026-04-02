@@ -119,19 +119,9 @@ class APIClient {
         return try await request(endpoint: "/auth/reset-password", method: "POST", body: body)
     }
 
-    func changePassword(currentPassword: String, newPassword: String) async throws -> MessageResponse {
-        let body = ChangePasswordRequest(currentPassword: currentPassword, newPassword: newPassword)
-        return try await request(endpoint: "/auth/change-password", method: "POST", body: body, authenticated: true)
-    }
-
     func updateFcmToken(_ token: String) async throws -> MessageResponse {
         struct UpdateFcmTokenReq: Encodable { let fcmToken: String; let language: String? }
         return try await request(endpoint: "/auth/fcm-token", method: "PUT", body: UpdateFcmTokenReq(fcmToken: token, language: LanguageManager.shared.language.rawValue), authenticated: true)
-    }
-
-    func updateNotifications(enabled: Bool) async throws -> MessageResponse {
-        struct UpdateNotificationsReq: Encodable { let enabled: Bool }
-        return try await request(endpoint: "/auth/notifications", method: "PUT", body: UpdateNotificationsReq(enabled: enabled), authenticated: true)
     }
 
     // MARK: - Product Endpoints
@@ -313,11 +303,6 @@ class APIClient {
 
     func getMyRoutines() async throws -> [RoutineFeedItem] {
         return try await request(endpoint: "/routines/my", authenticated: true)
-    }
-
-    func getFavoriteRoutines(limit: Int = 50) async throws -> [RoutineFeedItem] {
-        let all = try await getRoutineFeed(limit: limit)
-        return all.filter { $0.hasLiked }
     }
 
     func getRoutineDetail(id: String) async throws -> RoutineDetail {

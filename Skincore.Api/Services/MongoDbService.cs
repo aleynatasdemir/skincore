@@ -15,14 +15,17 @@ public class MongoDbService
         _database = client.GetDatabase(settings.Value.DatabaseName);
     }
 
-    public IMongoCollection<Product> ProductsCollection => 
+    public IMongoCollection<Product> ProductsCollection =>
         _database.GetCollection<Product>("products");
 
-    public IMongoCollection<Ingredient> IngredientsCollection => 
+    public IMongoCollection<Ingredient> IngredientsCollection =>
         _database.GetCollection<Ingredient>("ingredients");
 
-    public IMongoCollection<User> UsersCollection => 
+    public IMongoCollection<User> UsersCollection =>
         _database.GetCollection<User>("users");
+
+    public IMongoCollection<AdminUser> AdminUsersCollection =>
+        _database.GetCollection<AdminUser>("admin_users");
 
     public IMongoCollection<Routine> RoutinesCollection =>
         _database.GetCollection<Routine>("routines");
@@ -32,6 +35,9 @@ public class MongoDbService
 
     public IMongoCollection<ProductRequest> ProductRequestsCollection =>
         _database.GetCollection<ProductRequest>("product_requests");
+
+    public IMongoCollection<NotificationLog> NotificationLogsCollection =>
+        _database.GetCollection<NotificationLog>("notification_logs");
 
     public async Task CreateIndexesAsync()
     {
@@ -48,5 +54,30 @@ public class MongoDbService
             Builders<User>.IndexKeys.Ascending(u => u.AppleUserId));
 
         await UsersCollection.Indexes.CreateManyAsync(new[] { emailIndex, appleUserIdIndex });
+
+        // Backward compatibility: remove old auto-generated admin index names if they exist.
+        // They can conflict with explicit index options on subsequent runs.
+        try { await AdminUsersCollection.Indexes.DropOneAsync("email_1"); }
+        catch { /* Index may not exist */ }
+        try { await AdminUsersCollection.Indexes.DropOneAsync("username_1"); }
+        catch { /* Index may not exist */ }
+
+        var adminEmailIndex = new CreateIndexModel<AdminUser>(
+            Builders<AdminUser>.IndexKeys.Ascending(a => a.Email),
+            new CreateIndexOptions
+            {
+                Unique = true,
+                Name = "admin_email_unique"
+            });
+
+        var adminUsernameIndex = new CreateIndexModel<AdminUser>(
+            Builders<AdminUser>.IndexKeys.Ascending(a => a.Username),
+            new CreateIndexOptions
+            {
+                Unique = true,
+                Name = "admin_username_unique"
+            });
+
+        await AdminUsersCollection.Indexes.CreateManyAsync(new[] { adminEmailIndex, adminUsernameIndex });
     }
 }

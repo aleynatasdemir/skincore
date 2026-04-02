@@ -59,6 +59,7 @@ struct UserResponse: Codable, Identifiable {
     let authProvider: String
     let isEmailVerified: Bool
     let notificationsEnabled: Bool
+    let isAdmin: Bool
     let createdAt: String
 }
 

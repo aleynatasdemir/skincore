@@ -137,8 +137,8 @@ public class ProductsController : ControllerBase
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
-        var filter = string.IsNullOrEmpty(search) 
-            ? Builders<Product>.Filter.Empty 
+        var filter = string.IsNullOrEmpty(search)
+            ? Builders<Product>.Filter.Empty
             : Builders<Product>.Filter.Regex(p => p.Name, new MongoDB.Bson.BsonRegularExpression(search, "i"));
 
         var products = await _mongoDbService.ProductsCollection

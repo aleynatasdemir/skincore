@@ -80,6 +80,7 @@ public class UserResponse
     public string AuthProvider { get; set; } = null!;
     public bool IsEmailVerified { get; set; }
     public bool NotificationsEnabled { get; set; }
+    public bool IsAdmin { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public static UserResponse FromUser(User user) => new()
@@ -92,6 +93,7 @@ public class UserResponse
         AuthProvider = user.AuthProvider,
         IsEmailVerified = user.IsEmailVerified,
         NotificationsEnabled = user.NotificationsEnabled,
+        IsAdmin = user.IsAdmin,
         CreatedAt = user.CreatedAt
     };
 }
