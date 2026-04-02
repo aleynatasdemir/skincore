@@ -1,6 +1,6 @@
 #!/usr/bin/expect -f
 set timeout -1
-set password "Furkan2626."
+set password "130825AF."
 
 puts "Deploying Admin Panel..."
 spawn bash -c "cd /Users/furkanyilmaz/Desktop/skincore && scp -r adminpanel/dist/* root@91.132.49.137:/var/www/adminpanel/"

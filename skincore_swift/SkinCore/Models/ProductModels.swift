@@ -159,6 +159,7 @@ struct MatchedIngredient: Codable, Identifiable {
     let limitedUs: Bool?
     let safetymakeupUrl: String?
     let skinCompatibility: SkinCompatibility?
+    let skinCompatibilityEn: SkinCompatibility?
     let comedogenicRating: Int?
 
     /// Düzgün formatlı isim: önce inci_name, sonra name_upper, sonra name → capitalized
@@ -168,9 +169,16 @@ struct MatchedIngredient: Codable, Identifiable {
         return name?.capitalized ?? "-"
     }
 
+    var localizedSkinCompatibility: SkinCompatibility? {
+        if LanguageManager.shared.language == .en, let en = skinCompatibilityEn {
+            return en
+        }
+        return skinCompatibility
+    }
+
     // Convenience properties to stay backward compatible
-    var goodFor: [String]? { skinCompatibility?.goodFor }
-    var badFor: [String]? { skinCompatibility?.badFor }
+    var goodFor: [String]? { localizedSkinCompatibility?.goodFor }
+    var badFor: [String]? { localizedSkinCompatibility?.badFor }
 
     /// 0–4 DB değerlerini görünüm badge'i için 1-3 aralığına indirger
     var resolvedSafetyLevel: Int {
@@ -199,8 +207,9 @@ struct MatchedIngredient: Codable, Identifiable {
         case limitedEu          = "limited_eu"
         case limitedUs          = "limited_us"
         case safetymakeupUrl    = "safetymakeup_url"
-        case skinCompatibility  = "skin_compatibility"
-        case comedogenicRating  = "comedogenic_rating"
+        case skinCompatibility   = "skin_compatibility"
+        case skinCompatibilityEn = "skin_compatibility_en"
+        case comedogenicRating   = "comedogenic_rating"
     }
 }
 

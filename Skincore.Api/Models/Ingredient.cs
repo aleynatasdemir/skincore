@@ -77,6 +77,10 @@ public class Ingredient
     [JsonPropertyName("skin_compatibility")]
     public SkinCompatibility? SkinCompatibility { get; set; }
 
+    [BsonElement("skin_compatibility_en")]
+    [JsonPropertyName("skin_compatibility_en")]
+    public SkinCompatibility? SkinCompatibilityEn { get; set; }
+
     [BsonExtraElements]
     [JsonExtensionData]
     public IDictionary<string, object>? ExtraElements { get; set; }

@@ -1532,7 +1532,7 @@ struct IngredientDetailCard: View {
                         .foregroundColor(Color(hex: "1A1A2E"))
                         .lineLimit(2)
 
-                    if let funcs = item.matchedIngredient?.functions, !funcs.isEmpty {
+                    if let funcs = item.matchedIngredient?.localizedFunctions, !funcs.isEmpty {
                         Text(funcs.prefix(3).compactMap { $0.name }.joined(separator: " · "))
                             .font(.caption)
                             .foregroundColor(Color(hex: "94A3B8"))
@@ -1556,7 +1556,7 @@ struct IngredientDetailCard: View {
             .padding(.top, 14)
 
             // Description
-            if let desc = item.matchedIngredient?.description, !desc.isEmpty {
+            if let desc = item.matchedIngredient?.localizedDescription, !desc.isEmpty {
                 Text(desc)
                     .font(.caption)
                     .foregroundColor(Color(hex: "6B7280"))
