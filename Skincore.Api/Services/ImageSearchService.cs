@@ -104,6 +104,8 @@ public class ImageSearchService
         }
 
         // 2. OCR fuzzy search (if OCR text provided)
+        // FURKAN NOT: SUNUCUYA YUK BINDIDIGI ICIN OCR (FuzzySearch) KISMI DEVRE DISI BIRAKILDI
+        /*
         if (!string.IsNullOrWhiteSpace(ocrText) && _ocrIndex.Count > 0)
         {
             var normalizedQuery = ocrText.ToLowerInvariant().Trim();
@@ -132,6 +134,7 @@ public class ImageSearchService
                 Console.WriteLine($"  [OCR] {productId} ocrScore={ocrScore:F2} → weighted={ocrScore * OCR_WEIGHT:F4}");
             }
         }
+        */
 
         // 3. Get top results
         var topScores = scores

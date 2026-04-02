@@ -5,9 +5,9 @@ class APIClient {
     
     // TODO: Production'da gerçek URL'ye değiştir
     #if targetEnvironment(simulator)
-    private let baseURL = "http://localhost:5192/api"
+    private let baseURL = "http://91.132.49.137:5192/api"
     #else
-    private let baseURL = "http://192.168.0.15:5192/api"
+    private let baseURL = "http://91.132.49.137:5192/api"
     #endif
     
     private init() {}
@@ -18,10 +18,10 @@ class APIClient {
         
         let base: String
         #if targetEnvironment(simulator)
-        base = "http://localhost:5192"
+        base = "http://91.132.49.137:5192"
         #else
         // Gerçek cihaz testi için Mac'in yerel IP'sini kullanın
-        base = "http://192.168.0.15:5192"
+        base = "http://91.132.49.137:5192"
         #endif
         
         return "\(base)\(path)"
@@ -119,9 +119,19 @@ class APIClient {
         return try await request(endpoint: "/auth/reset-password", method: "POST", body: body)
     }
 
+    func changePassword(currentPassword: String, newPassword: String) async throws -> MessageResponse {
+        struct ChangePasswordReq: Encodable { let currentPassword: String; let newPassword: String }
+        return try await request(endpoint: "/auth/change-password", method: "PUT", body: ChangePasswordReq(currentPassword: currentPassword, newPassword: newPassword), authenticated: true)
+    }
+
     func updateFcmToken(_ token: String) async throws -> MessageResponse {
         struct UpdateFcmTokenReq: Encodable { let fcmToken: String; let language: String? }
         return try await request(endpoint: "/auth/fcm-token", method: "PUT", body: UpdateFcmTokenReq(fcmToken: token, language: LanguageManager.shared.language.rawValue), authenticated: true)
+    }
+
+    func updateNotifications(enabled: Bool) async throws -> MessageResponse {
+        struct UpdateNotificationsReq: Encodable { let notificationsEnabled: Bool }
+        return try await request(endpoint: "/auth/notifications", method: "PUT", body: UpdateNotificationsReq(notificationsEnabled: enabled), authenticated: true)
     }
 
     // MARK: - Product Endpoints
@@ -303,6 +313,10 @@ class APIClient {
 
     func getMyRoutines() async throws -> [RoutineFeedItem] {
         return try await request(endpoint: "/routines/my", authenticated: true)
+    }
+
+    func getFavoriteRoutines(limit: Int = 20) async throws -> [RoutineFeedItem] {
+        return try await request(endpoint: "/routines/favorites?limit=\(limit)", authenticated: true)
     }
 
     func getRoutineDetail(id: String) async throws -> RoutineDetail {
