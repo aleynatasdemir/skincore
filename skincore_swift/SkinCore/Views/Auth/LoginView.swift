@@ -114,10 +114,29 @@ struct LoginView: View {
                     
                     // Error Message
                     if let error = authViewModel.errorMessage {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(Color(hex: "EF4444"))
-                            .padding(.bottom, 8)
+                        HStack(spacing: 12) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color(hex: "EF4444"))
+                                .frame(width: 24, alignment: .center)
+                            
+                            Text(error)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Color(hex: "DC2626"))
+                                .lineLimit(nil)
+                            
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background(Color(hex: "FEE2E2"))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color(hex: "FECACA"), lineWidth: 1)
+                        )
+                        .cornerRadius(10)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
                     }
                     
                     // Terms
@@ -222,10 +241,29 @@ struct EmailLoginView: View {
                 
                 // Error
                 if let error = authViewModel.errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundColor(Color(hex: "EF4444"))
-                        .padding(.horizontal)
+                    HStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(Color(hex: "EF4444"))
+                            .frame(width: 24, alignment: .center)
+                        
+                        Text(error)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(Color(hex: "DC2626"))
+                            .lineLimit(nil)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(Color(hex: "FEE2E2"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color(hex: "FECACA"), lineWidth: 1)
+                    )
+                    .cornerRadius(10)
+                    .padding(.horizontal, 16)
+                    .padding(.top, -4)
                 }
                 
                 // Forgot Password
@@ -282,6 +320,9 @@ struct EmailLoginView: View {
         }
         .onChange(of: authViewModel.resetPasswordCompleted) { _, completed in
             if completed { showForgotPassword = false }
+        }
+        .task {
+            authViewModel.clearError()
         }
     }
 }

@@ -55,6 +55,9 @@ enum L10nKey {
     case resetPassword, resetCode, newPassword, confirmNewPassword
     case resetPasswordButton
     case passwordResetAlertTitle, resetCodeSentPrefix, verifyEmailSentPrefix
+    
+    // MARK: Auth - Change Password
+    case changePasswordTitle, changePasswordCurrent, changePasswordNew, changePasswordConfirm, changePasswordSubmit, changePasswordSuccess
 
     // MARK: Auth - Username Setup
     case usernameTitle, usernameSubtitle, usernameAvailable, usernameTaken
@@ -115,6 +118,7 @@ enum L10nKey {
 
     // MARK: Favorites
     case favTitle, favAllProducts, favNoFavorites, favNoFavoritesSubtitle, favRemove
+    case favoriteProductsTitle, favoriteRoutinesTitle
 
     // MARK: My Routines
     case myRoutinesTitle, myRoutinesEmpty, myRoutinesProductCount
@@ -240,6 +244,13 @@ enum L10nKey {
         case .passwordResetAlertTitle: return "Şifre Sıfırlandı"
         case .resetCodeSentPrefix: return "Gönderilen 6 haneli kodu gir"
         case .verifyEmailSentPrefix: return "Gönderilen 6 haneli kodu gir"
+
+        case .changePasswordTitle: return "Şifreni Değiştir"
+        case .changePasswordCurrent: return "Mevcut Şifre"
+        case .changePasswordNew: return "Yeni Şifre"
+        case .changePasswordConfirm: return "Yeni Şifre Tekrar"
+        case .changePasswordSubmit: return "Onayla"
+        case .changePasswordSuccess: return "Şifren başarıyla değiştirildi."
 
         case .usernameTitle: return "Kullanıcı Adın"
         case .usernameSubtitle: return "Topluluğa katılmak için bir kullanıcı adı seç.\nDaha sonra değiştirebilirsin."
@@ -368,6 +379,8 @@ enum L10nKey {
         case .favNoFavorites: return "Henüz favori yok"
         case .favNoFavoritesSubtitle: return "Favori ürünleriniz burada görünecek"
         case .favRemove: return "Kaldır"
+        case .favoriteProductsTitle: return "Favori Ürünlerim"
+        case .favoriteRoutinesTitle: return "Favori Rutinlerim"
 
         case .myRoutinesTitle: return "Rutinlerim"
         case .myRoutinesEmpty: return "Henüz bir rutin oluşturmadın"
@@ -391,7 +404,7 @@ enum L10nKey {
         case .historyEmpty: return "Henüz arama geçmişi yok"
         case .historyEmptySubtitle: return "Ürün aradığınızda burada görünecek"
 
-        case .socialCoreProducts: return "ÖNE ÇIKAN ÜRÜNLER"
+        case .socialCoreProducts: return "Favori Ürünlerim"
         case .socialProductsUsed: return "KULLANILAN ÜRÜNLER"
 
         case .ingredientsTitle: return "İçerik Analizi"
@@ -540,6 +553,13 @@ enum L10nKey {
         case .resetCodeSentPrefix: return "Enter the 6-digit code sent to"
         case .verifyEmailSentPrefix: return "We sent a 6-digit code to"
 
+        case .changePasswordTitle: return "Change Your Password"
+        case .changePasswordCurrent: return "Current Password"
+        case .changePasswordNew: return "New Password"
+        case .changePasswordConfirm: return "Confirm New Password"
+        case .changePasswordSubmit: return "Confirm"
+        case .changePasswordSuccess: return "Your password has been changed successfully."
+
         case .usernameTitle: return "Your Username"
         case .usernameSubtitle: return "Choose a username to join the community.\nYou can change it later."
         case .usernameAvailable: return " is available"
@@ -673,6 +693,8 @@ enum L10nKey {
         case .favNoFavorites: return "No favorites yet"
         case .favNoFavoritesSubtitle: return "Products you favorite will appear here"
         case .favRemove: return "Remove"
+        case .favoriteProductsTitle: return "My Favorite Products"
+        case .favoriteRoutinesTitle: return "My Favorite Routines"
 
         case .myRoutinesTitle: return "My Routines"
         case .myRoutinesEmpty: return "No routines yet"

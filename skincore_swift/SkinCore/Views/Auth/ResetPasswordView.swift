@@ -102,19 +102,38 @@ struct ResetPasswordView: View {
                 .padding(.horizontal, 24)
 
                 // Validation errors
-                VStack(spacing: 4) {
-                    if !passwordsMatch {
-                        Text(lang.s(.passwordsNoMatch))
-                            .font(.caption)
+                if !passwordsMatch || authViewModel.errorMessage != nil {
+                    HStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.system(size: 18))
                             .foregroundColor(Color(hex: "EF4444"))
+                            .frame(width: 24, alignment: .center)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            if !passwordsMatch {
+                                Text(lang.s(.passwordsNoMatch))
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(Color(hex: "DC2626"))
+                            }
+                            if let error = authViewModel.errorMessage {
+                                Text(error)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(Color(hex: "DC2626"))
+                            }
+                        }
+                        
+                        Spacer()
                     }
-                    if let error = authViewModel.errorMessage {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(Color(hex: "EF4444"))
-                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(Color(hex: "FEE2E2"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color(hex: "FECACA"), lineWidth: 1)
+                    )
+                    .cornerRadius(10)
+                    .padding(.horizontal, 16)
                 }
-                .padding(.horizontal)
 
                 // Reset Button
                 Button {
@@ -165,6 +184,9 @@ struct ResetPasswordView: View {
             }
         } message: {
             Text("\(lang.s(.passwordResetSuccess)) \(lang.s(.loginAgain))")
+        }
+        .task {
+            authViewModel.clearError()
         }
     }
 }

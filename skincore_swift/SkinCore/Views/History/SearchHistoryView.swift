@@ -73,14 +73,16 @@ struct SearchHistoryView: View {
                     ScrollView {
                         LazyVStack(spacing: 12) {
                             ForEach(viewModel.historyItems) { item in
-                                HistoryCard(item: item) {
-                                    Task { await viewModel.deleteItem(id: item.id) }
-                                }
-                                .onTapGesture {
+                                Button(action: {
                                     if let pid = item.productId, !pid.isEmpty {
                                         selectedProductId = pid
                                     }
+                                }) {
+                                    HistoryCard(item: item) {
+                                        Task { await viewModel.deleteItem(id: item.id) }
+                                    }
                                 }
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding(.horizontal, 16)

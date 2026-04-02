@@ -274,4 +274,10 @@ class AuthViewModel: ObservableObject {
         currentUser = nil
         isAuthenticated = false
     }
+    
+    // MARK: - Clear Error
+    
+    func clearError() {
+        errorMessage = nil
+    }
 }

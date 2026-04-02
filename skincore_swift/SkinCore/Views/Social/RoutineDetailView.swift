@@ -191,7 +191,10 @@ struct RoutineDetailView: View {
                                     .foregroundColor(Color(hex: "1A1A2E"))
 
                                 ForEach(routine.products) { product in
-                                    RoutineProductRow(product: product)
+                                    NavigationLink(destination: ProductDetailView(productId: product.productId)) {
+                                        RoutineProductRow(product: product)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
                             }
                         }

@@ -15,6 +15,8 @@ struct ProfileView: View {
     @State private var selectedTab: ProfileTab = .routines
     @State private var myRoutines: [RoutineFeedItem] = []
     @State private var favorites: [FavoriteResponse] = []
+    @State private var favoriteRoutines: [RoutineFeedItem] = []
+    @State private var favoriteType: FavoriteType = .products
     @State private var profileData: UserProfileResponse?
     @State private var isLoading = false
     @State private var showSettings = false
@@ -69,7 +71,11 @@ struct ProfileView: View {
                         } else if selectedTab == .routines {
                             RoutineGridSection(routines: myRoutines)
                         } else {
-                            FavoritesGridSection(favorites: favorites)
+                            FavoritesGridSection(
+                                favorites: favorites,
+                                favoriteRoutines: favoriteRoutines,
+                                favoriteType: $favoriteType
+                            )
                         }
                     }
                 }
@@ -112,8 +118,10 @@ struct ProfileView: View {
         async let routinesResult = APIClient.shared.getMyRoutines()
         async let favoritesResult = APIClient.shared.getFavorites()
         async let profileResult = APIClient.shared.getMyProfile()
+        async let favoriteRoutinesResult = APIClient.shared.getFavoriteRoutines()
         myRoutines = (try? await routinesResult) ?? []
         favorites = (try? await favoritesResult) ?? []
+        favoriteRoutines = (try? await favoriteRoutinesResult) ?? []
         profileData = try? await profileResult
         isLoading = false
     }
@@ -149,6 +157,8 @@ struct UserProfileView: View {
     @State private var publicProfile: PublicUserProfileResponse?
     @State private var routines: [RoutineFeedItem] = []
     @State private var favorites: [FavoriteResponse] = []
+    @State private var favoriteRoutines: [RoutineFeedItem] = []
+    @State private var favoriteType: FavoriteType = .products
     @State private var selectedTab: ProfileTab = .routines
     @State private var isLoading = false
     @State private var isFollowLoading = false
@@ -214,7 +224,11 @@ struct UserProfileView: View {
                             selectedRoutine = ProfileRoutineSelection(id: id)
                         })
                     } else {
-                        FavoritesGridSection(favorites: favorites)
+                        FavoritesGridSection(
+                            favorites: favorites,
+                            favoriteRoutines: favoriteRoutines,
+                            favoriteType: $favoriteType
+                        )
                     }
                 }
             }
@@ -244,10 +258,13 @@ struct UserProfileView: View {
         async let profileResult = APIClient.shared.getPublicProfile(username: userName)
         async let feedResult = APIClient.shared.getRoutineFeed(limit: 50)
         async let favResult = APIClient.shared.getPublicFavorites(username: userName)
+        async let favRoutinesResult = APIClient.shared.getFavoriteRoutines(limit: 50)
         publicProfile = try? await profileResult
         let all = (try? await feedResult) ?? []
         routines = all.filter { $0.userName == userName }
         favorites = (try? await favResult) ?? []
+        // Tüm favorilenen rutinler
+        favoriteRoutines = (try? await favRoutinesResult) ?? []
         isLoading = false
     }
 
@@ -370,6 +387,11 @@ private struct StatItem: View {
 // MARK: - Tab Bar
 
 enum ProfileTab { case routines, favorites }
+
+enum FavoriteType {
+    case products
+    case routines
+}
 
 private struct ProfileTabBar: View {
     @Binding var selected: ProfileTab
@@ -500,32 +522,103 @@ private struct RoutineGridCell: View {
 
 private struct FavoritesGridSection: View {
     let favorites: [FavoriteResponse]
+    let favoriteRoutines: [RoutineFeedItem]
+    @Binding var favoriteType: FavoriteType
     @EnvironmentObject var lang: LanguageManager
+    @State private var selectedRoutine: ProfileRoutineSelection?
 
     private let columns = [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)]
 
     var body: some View {
-        if favorites.isEmpty {
-            VStack(spacing: 12) {
-                Image(systemName: "heart")
-                    .font(.system(size: 40))
-                    .foregroundColor(Color(hex: "D4728C").opacity(0.3))
-                Text(lang.s(.profileNoFavorites))
-                    .font(.system(size: 15))
-                    .foregroundColor(Color(hex: "9CA3AF"))
-            }
-            .padding(.top, 50)
-        } else {
-            LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(favorites) { fav in
-                    NavigationLink(destination: ProductDetailView(productId: fav.productId)) {
-                        FavoriteGridCell(fav: fav)
-                    }
-                    .buttonStyle(.plain)
+        VStack(alignment: .leading, spacing: 0) {
+            // İki buton - tam genişlik
+            HStack(spacing: 10) {
+                Button(action: { favoriteType = .products }) {
+                    Text(lang.s(.favoriteProductsTitle))
+                        .font(.system(size: 13, weight: favoriteType == .products ? .semibold : .medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(favoriteType == .products ? Color(hex: "D4728C") : Color(hex: "F3D5DC"))
+                        .foregroundColor(favoriteType == .products ? Color.white : Color(hex: "9A4C5E"))
+                        .cornerRadius(10)
+                        .lineLimit(1)
+                }
+                
+                Button(action: { favoriteType = .routines }) {
+                    Text(lang.s(.favoriteRoutinesTitle))
+                        .font(.system(size: 13, weight: favoriteType == .routines ? .semibold : .medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(favoriteType == .routines ? Color(hex: "D4728C") : Color(hex: "F3D5DC"))
+                        .foregroundColor(favoriteType == .routines ? Color.white : Color(hex: "9A4C5E"))
+                        .cornerRadius(10)
+                        .lineLimit(1)
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.top, 12)
+            .padding(.vertical, 12)
+            
+            Divider()
+                .padding(.horizontal, 0)
+            
+            // İçerik
+            if favoriteType == .products {
+                if favorites.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "heart")
+                            .font(.system(size: 40))
+                            .foregroundColor(Color(hex: "D4728C").opacity(0.3))
+                        Text(lang.s(.profileNoFavorites))
+                            .font(.system(size: 15))
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 50)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 4) {
+                        ForEach(favorites) { fav in
+                            NavigationLink(destination: ProductDetailView(productId: fav.productId)) {
+                                FavoriteGridCell(fav: fav)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                }
+            } else {
+                if favoriteRoutines.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 40))
+                            .foregroundColor(Color(hex: "D4728C").opacity(0.3))
+                        Text(lang.s(.profileNoRoutines))
+                            .font(.system(size: 15))
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 50)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 4) {
+                        ForEach(favoriteRoutines) { routine in
+                            Button {
+                                selectedRoutine = ProfileRoutineSelection(id: routine.id)
+                            } label: {
+                                RoutineGridCell(routine: routine)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .sheet(item: $selectedRoutine) { selection in
+                        NavigationStack { RoutineDetailView(routineId: selection.id) }
+                            .presentationDetents([.large])
+                    }
+                }
+            }
         }
     }
 }
@@ -567,7 +660,7 @@ private struct SettingsSheet: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var lang: LanguageManager
     @Environment(\.dismiss) var dismiss
-    @State private var showEditBio = false
+    @State private var showChangePassword = false
 
     var body: some View {
         NavigationStack {
@@ -576,12 +669,10 @@ private struct SettingsSheet: View {
                 VStack(spacing: 0) {
                     // Other settings
                     VStack(spacing: 0) {
-                        Button { showEditBio = true } label: {
-                            SettingsRow(icon: "text.quote", title: lang.s(.profileEditBio))
+                        Button { showChangePassword = true } label: {
+                            SettingsRow(icon: "lock.fill", title: lang.s(.changePasswordTitle))
                         }
                         .buttonStyle(.plain)
-                        Divider().padding(.leading, 56)
-                        SettingsRow(icon: "person.fill", title: lang.s(.profileAccountSettings))
                         Divider().padding(.leading, 56)
                         SettingsRow(icon: "bell.fill", title: lang.s(.profileNotifications))
                         Divider().padding(.leading, 56)
@@ -620,8 +711,9 @@ private struct SettingsSheet: View {
                     }
                 }
             }
-            .sheet(isPresented: $showEditBio) {
-                EditBioSheet()
+            .sheet(isPresented: $showChangePassword) {
+                ChangePasswordView()
+                    .environmentObject(authViewModel)
                     .environmentObject(lang)
             }
         }

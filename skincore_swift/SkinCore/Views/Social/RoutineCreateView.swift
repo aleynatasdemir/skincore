@@ -259,6 +259,7 @@ struct RoutineCreateView: View {
 
                                 ForEach(viewModel.searchResults) { product in
                                     RoutineProductPickerRow(
+                                        productId: product.id,
                                         name: product.name ?? "-",
                                         brand: product.brand,
                                         imageUrl: product.firstImageUrl,
@@ -287,6 +288,7 @@ struct RoutineCreateView: View {
 
                                 ForEach(viewModel.popularProducts) { product in
                                     RoutineProductPickerRow(
+                                        productId: product.productId,
                                         name: product.productName ?? lang.s(.productDefault),
                                         brand: nil,
                                         imageUrl: product.resolvedImageUrl,
@@ -323,6 +325,7 @@ struct RoutineCreateView: View {
                             } else {
                                 ForEach(viewModel.selectedProducts, id: \.productId) { product in
                                     RoutineProductPickerRow(
+                                        productId: product.productId,
                                         name: product.name,
                                         brand: product.brand,
                                         imageUrl: product.imageUrl,
@@ -386,6 +389,7 @@ struct RoutineCreateView: View {
 }
 
 private struct RoutineProductPickerRow: View {
+    let productId: String
     let name: String
     let brand: String?
     let imageUrl: String?
@@ -395,34 +399,37 @@ private struct RoutineProductPickerRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            AsyncImage(url: URL(string: imageUrl ?? "")) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 54, height: 54)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                default:
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(hex: "F3F4F6"))
-                        .frame(width: 54, height: 54)
-                        .overlay(
-                            Image(systemName: "photo")
-                                .foregroundColor(Color(hex: "CBD5E1"))
-                        )
+            NavigationLink(destination: ProductDetailView(productId: productId)) {
+                AsyncImage(url: URL(string: imageUrl ?? "")) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 54, height: 54)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    default:
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(hex: "F3F4F6"))
+                            .frame(width: 54, height: 54)
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(Color(hex: "CBD5E1"))
+                            )
+                    }
                 }
-            }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(name)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(Color(hex: "1A1A2E"))
-                if let brand = brand, !brand.isEmpty {
-                    Text(brand)
-                        .font(.system(size: 13))
-                        .foregroundColor(Color(hex: "6B7280"))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(Color(hex: "1A1A2E"))
+                    if let brand = brand, !brand.isEmpty {
+                        Text(brand)
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(hex: "6B7280"))
+                    }
                 }
             }
+            .buttonStyle(.plain)
 
             Spacer()
 

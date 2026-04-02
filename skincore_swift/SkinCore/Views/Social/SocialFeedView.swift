@@ -389,7 +389,10 @@ private struct RoutineCard: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(products) { product in
-                                RoutineProductThumbnail(product: product)
+                                NavigationLink(destination: ProductDetailView(productId: product.productId)) {
+                                    RoutineProductThumbnail(product: product)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }

@@ -70,3 +70,8 @@ struct MessageResponse: Codable {
 struct APIError: Codable {
     let message: String?
 }
+
+struct ChangePasswordRequest: Codable {
+    let currentPassword: String
+    let newPassword: String
+}

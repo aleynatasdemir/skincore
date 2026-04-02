@@ -54,10 +54,28 @@ struct ForgotPasswordView: View {
 
                 // Error
                 if let error = authViewModel.errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundColor(Color(hex: "EF4444"))
-                        .padding(.horizontal)
+                    HStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(Color(hex: "EF4444"))
+                            .frame(width: 24, alignment: .center)
+                        
+                        Text(error)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(Color(hex: "DC2626"))
+                            .lineLimit(nil)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(Color(hex: "FEE2E2"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color(hex: "FECACA"), lineWidth: 1)
+                    )
+                    .cornerRadius(10)
+                    .padding(.horizontal, 16)
                 }
 
                 // Send Code Button
@@ -100,6 +118,9 @@ struct ForgotPasswordView: View {
         }
         .navigationDestination(isPresented: $showResetPassword) {
             ResetPasswordView()
+        }
+        .task {
+            authViewModel.clearError()
         }
     }
 }

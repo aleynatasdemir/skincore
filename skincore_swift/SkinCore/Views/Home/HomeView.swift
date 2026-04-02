@@ -46,16 +46,6 @@ class HomeViewModel: ObservableObject {
         do {
             let results = try await APIClient.shared.searchProductsByName(query: trimmed, maxResults: 10)
             searchResults = results
-            // History'ye fire-and-forget — aramayı bloklamasın
-            let first = results.first
-            Task {
-                await addToHistory(
-                    query: trimmed,
-                    productId: first?.id,
-                    productName: first?.name,
-                    category: first?.brand
-                )
-            }
         } catch {
             searchResults = []
         }
@@ -86,7 +76,7 @@ class HomeViewModel: ObservableObject {
         isLoadingHistory = false
     }
 
-    func addToHistory(query: String, productId: String?, productName: String?, category: String?) async {
+    func addToHistory(query: String, productId: String?, productName: String?, category: String?, imageUrl: String?) async {
         let req = AddSearchHistoryRequest(query: query, productId: productId, productName: productName, category: category)
         do {
             _ = try await APIClient.shared.addSearchHistory(req)
@@ -97,7 +87,7 @@ class HomeViewModel: ObservableObject {
                 productId: productId,
                 productName: productName,
                 category: category,
-                imageUrl: nil,
+                imageUrl: imageUrl,
                 searchedAt: nil,
                 imageUrls: nil
             )
@@ -135,6 +125,7 @@ struct HomeView: View {
     @EnvironmentObject var lang: LanguageManager
     @StateObject private var viewModel = HomeViewModel()
     @FocusState private var isSearchFocused: Bool
+    @State private var selectedPopularProductId: String?
 
     var body: some View {
         NavigationStack {
@@ -151,49 +142,33 @@ struct HomeView: View {
                     .padding(.horizontal)
 
                     // ── Search Bar ──
-                    HStack(spacing: 12) {
-                        HStack {
-                            Image(systemName: viewModel.isSearching ? "arrow.trianglehead.2.clockwise" : "magnifyingglass")
-                                .foregroundColor(Color(hex: "9CA3AF"))
-                                .symbolEffect(.rotate, isActive: viewModel.isSearching)
-                            TextField("", text: $viewModel.searchText,
-                                     prompt: Text(lang.s(.homeSearchPlaceholder))
-                                        .foregroundColor(Color(hex: "9CA3AF")))
-                                .foregroundColor(Color(hex: "1A1A2E"))
-                                .autocorrectionDisabled()
-                                .focused($isSearchFocused)
-                            if !viewModel.searchText.isEmpty {
-                                Button {
-                                    viewModel.searchText = ""
-                                    isSearchFocused = false
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(Color(hex: "9CA3AF"))
-                                }
+                    HStack {
+                        Image(systemName: viewModel.isSearching ? "arrow.trianglehead.2.clockwise" : "magnifyingglass")
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                            .symbolEffect(.rotate, isActive: viewModel.isSearching)
+                        TextField("", text: $viewModel.searchText,
+                                 prompt: Text(lang.s(.homeSearchPlaceholder))
+                                    .foregroundColor(Color(hex: "9CA3AF")))
+                            .foregroundColor(Color(hex: "1A1A2E"))
+                            .autocorrectionDisabled()
+                            .focused($isSearchFocused)
+                        if !viewModel.searchText.isEmpty {
+                            Button {
+                                viewModel.searchText = ""
+                                isSearchFocused = false
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(Color(hex: "9CA3AF"))
                             }
                         }
-                        .padding(12)
-                        .background(Color.white)
-                        .cornerRadius(14)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
-                        )
-
-                        // Camera button
-                        Button { } label: {
-                            Image(systemName: "viewfinder")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(hex: "D4728C"))
-                                .padding(12)
-                                .background(Color.white)
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
-                                )
-                        }
                     }
+                    .padding(12)
+                    .background(Color.white)
+                    .cornerRadius(14)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
+                    )
                     .padding(.horizontal)
 
                     // ── Arama Sonuçları ──
@@ -281,13 +256,32 @@ struct HomeView: View {
                                     GridItem(.flexible(), spacing: 10)
                                 ], spacing: 10) {
                                     ForEach(viewModel.popularProducts) { item in
-                                        NavigationLink(destination: ProductDetailView(productId: item.productId)) {
+                                        Button {
+                                            Task {
+                                                await viewModel.addToHistory(
+                                                    query: item.productName ?? "",
+                                                    productId: item.productId,
+                                                    productName: item.productName,
+                                                    category: nil,
+                                                    imageUrl: item.resolvedImageUrl
+                                                )
+                                            }
+                                            selectedPopularProductId = item.productId
+                                        } label: {
                                             PopularProductCard(item: item)
                                         }
                                         .buttonStyle(.plain)
                                     }
                                 }
                                 .padding(.horizontal)
+                            }
+                        }
+                        .navigationDestination(isPresented: Binding(
+                            get: { selectedPopularProductId != nil },
+                            set: { if !$0 { selectedPopularProductId = nil } }
+                        )) {
+                            if let productId = selectedPopularProductId {
+                                ProductDetailView(productId: productId)
                             }
                         }
 
@@ -315,9 +309,16 @@ struct HomeView: View {
 
                                 LazyVStack(spacing: 8) {
                                     ForEach(viewModel.searchHistory) { item in
-                                        HistoryRow(item: item) {
-                                            Task { await viewModel.deleteHistoryItem(id: item.id) }
+                                        Button(action: {
+                                            if let pid = item.productId, !pid.isEmpty {
+                                                selectedPopularProductId = pid
+                                            }
+                                        }) {
+                                            HistoryRow(item: item) {
+                                                Task { await viewModel.deleteHistoryItem(id: item.id) }
+                                            }
                                         }
+                                        .buttonStyle(PlainButtonStyle())
                                     }
                                 }
                                 .padding(.horizontal)
@@ -519,6 +520,7 @@ struct ProductCard: View {
 private struct SearchResultsPanel: View {
     @ObservedObject var viewModel: HomeViewModel
     @EnvironmentObject var lang: LanguageManager
+    @State private var selectedProductId: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -555,7 +557,18 @@ private struct SearchResultsPanel: View {
                 } else {
                     VStack(spacing: 10) {
                         ForEach(viewModel.searchResults) { product in
-                            NavigationLink(destination: ProductDetailView(productId: product.id)) {
+                            Button {
+                                Task {
+                                    await viewModel.addToHistory(
+                                        query: viewModel.searchText,
+                                        productId: product.id,
+                                        productName: product.name,
+                                        category: product.brand,
+                                        imageUrl: product.firstImageUrl
+                                    )
+                                }
+                                selectedProductId = product.id
+                            } label: {
                                 HomeProductRow(product: product)
                             }
                             .buttonStyle(.plain)
@@ -566,6 +579,14 @@ private struct SearchResultsPanel: View {
             }
         }
         .padding(.vertical, 4)
+        .navigationDestination(isPresented: Binding(
+            get: { selectedProductId != nil },
+            set: { if !$0 { selectedProductId = nil } }
+        )) {
+            if let productId = selectedProductId {
+                ProductDetailView(productId: productId)
+            }
+        }
     }
 }
 

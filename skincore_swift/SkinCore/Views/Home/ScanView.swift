@@ -1353,19 +1353,6 @@ struct ProductDetailView: View {
                                 Text("(\(ingredients.count))")
                                     .font(.system(size: 20, weight: .bold))
                                     .foregroundColor(Color(hex: "1A1A2E"))
-                                Spacer()
-                                Button {
-                                    // filter action
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Text(lang.s(.scanFilterButton))
-                                            .font(.system(size: 13, weight: .medium))
-                                            .foregroundColor(Color(hex: "9CA3AF"))
-                                        Image(systemName: "line.3.horizontal.decrease")
-                                            .font(.system(size: 13))
-                                            .foregroundColor(Color(hex: "9CA3AF"))
-                                    }
-                                }
                             }
                             .padding(.horizontal, 16)
                             .padding(.top, 28)

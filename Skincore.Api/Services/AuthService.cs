@@ -338,7 +338,30 @@ public class AuthService
         return (true, "Eğer bu e-posta adresi kayıtlıysa sıfırlama kodu gönderildi.");
     }
 
+    // ── Change Password ──
+    public async Task<(bool Success, string Message)> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+    {
+        var user = await _mongoDbService.UsersCollection.Find(u => u.Id == userId).FirstOrDefaultAsync();
+        if (user == null || user.AuthProvider != "email")
+            return (false, "E-posta ile açılmış kullanıcı hesabı bulunamadı.");
+
+        if (user.PasswordHash == null || !BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+            return (false, "Mevcut şifreniz yanlış.");
+
+        if (BCrypt.Net.BCrypt.Verify(newPassword, user.PasswordHash))
+            return (false, "Yeni şifre eski şifreyle aynı olamaz.");
+
+        var update = Builders<User>.Update
+            .Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(newPassword))
+            .Set(u => u.UpdatedAt, DateTime.UtcNow);
+
+        await _mongoDbService.UsersCollection.UpdateOneAsync(u => u.Id == userId, update);
+
+        return (true, "Şifreniz başarıyla güncellendi.");
+    }
+
     // ── Reset Password ──
+
     public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request)
     {
         var email = request.Email.Trim().ToLowerInvariant();

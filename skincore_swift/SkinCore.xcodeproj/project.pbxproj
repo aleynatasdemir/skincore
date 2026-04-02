@@ -13,6 +13,7 @@
 		065C5771D3A5A73A5FDD39EF /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CECC751109430888347060E /* ProfileView.swift */; };
 		094F7EBCFE60103EE04D3CE8 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2423AAE0EEACC044E9E5921 /* EditProfileView.swift */; };
 		0EAAFFD2634AA2CBD52531C5 /* MyRoutinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCF9ADA54DCF61A31174D9C /* MyRoutinesView.swift */; };
+		1D149F3532E6022F6929A8F9 /* ChangePasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3823F4FF68DD1BE2BC2848 /* ChangePasswordView.swift */; };
 		225C9D0B368B8CED6C22FC99 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 12C14E114F6837B8F3E03051 /* Assets.xcassets */; };
 		288A1089C776F0EA2837ACAE /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87282CFD0FAE9BEBA87E865 /* HomeView.swift */; };
 		2A46D5767E535E7A97CBC023 /* ResetPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36151F293CA29B87C550A49 /* ResetPasswordView.swift */; };
@@ -48,6 +49,7 @@
 		05440136167A8E166AC65876 /* RoutineCreateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineCreateView.swift; sourceTree = "<group>"; };
 		12C14E114F6837B8F3E03051 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		17E37A0C5BDD83939ADD8501 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		1C3823F4FF68DD1BE2BC2848 /* ChangePasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordView.swift; sourceTree = "<group>"; };
 		253A365FDA19779E9DD62529 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		2A0ADBA263EE56F4B03B3A4F /* VerifyEmailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyEmailView.swift; sourceTree = "<group>"; };
 		2BB2137A46F55CE40CC93AF9 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
@@ -64,7 +66,7 @@
 		8CCF9ADA54DCF61A31174D9C /* MyRoutinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyRoutinesView.swift; sourceTree = "<group>"; };
 		9624138ABF8ECD175E04F741 /* PlaceholderViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderViews.swift; sourceTree = "<group>"; };
 		97018524DED235BAAE10B78E /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
-		97B88233D9491DA5C655A66C /* SkinCore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkinCore.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		97B88233D9491DA5C655A66C /* SkinCore.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SkinCore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97E9EABBA2408FA1D0D297D1 /* SocialFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialFeedView.swift; sourceTree = "<group>"; };
 		9CECC751109430888347060E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		A36151F293CA29B87C550A49 /* ResetPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordView.swift; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 		DBA9DBC2B55C32A9B7492ADB /* Profile */ = {
 			isa = PBXGroup;
 			children = (
+				1C3823F4FF68DD1BE2BC2848 /* ChangePasswordView.swift */,
 				B2423AAE0EEACC044E9E5921 /* EditProfileView.swift */,
 				8CCF9ADA54DCF61A31174D9C /* MyRoutinesView.swift */,
 				9CECC751109430888347060E /* ProfileView.swift */,
@@ -289,6 +292,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					386F63B088D2672C278ECEEF = {
+						DevelopmentTeam = "";
+					};
+				};
 			};
 			buildConfigurationList = B57EFA8D0FFDCECF82A41C52 /* Build configuration list for PBXProject "SkinCore" */;
 			developmentRegion = en;
@@ -336,6 +344,7 @@
 				A5702E61C7BD5D764E818C0B /* APIClient.swift in Sources */,
 				885C74161F7789B9DFF0A5D7 /* AuthModels.swift in Sources */,
 				35C0DC1A9C48BC284B8368DF /* AuthViewModel.swift in Sources */,
+				1D149F3532E6022F6929A8F9 /* ChangePasswordView.swift in Sources */,
 				094F7EBCFE60103EE04D3CE8 /* EditProfileView.swift in Sources */,
 				6CB586D8E7986975A15A4042 /* FavoritesView.swift in Sources */,
 				57239CA8C23047D8792D28E5 /* ForgotPasswordView.swift in Sources */,
@@ -456,10 +465,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SkinCore/SkinCore.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 37LBF6B778;
 				INFOPLIST_FILE = SkinCore/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -467,8 +474,6 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.skincore.app;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = skincore2;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -536,10 +541,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SkinCore/SkinCore.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 37LBF6B778;
 				INFOPLIST_FILE = SkinCore/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -547,8 +550,6 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.skincore.app;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = skincore2;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

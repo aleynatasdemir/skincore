@@ -143,6 +143,31 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Mevcut şifre ile yeni şifre değiştir.
+    /// </summary>
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            return BadRequest(new MessageResponse { Message = "Mevcut şifre ve yeni şifre gereklidir." });
+
+        if (request.CurrentPassword == request.NewPassword)
+            return BadRequest(new MessageResponse { Message = "Yeni şifre, mevcut şifre ile aynı olamaz." });
+
+        var (success, message) = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message });
+
+        return Ok(new MessageResponse { Message = message });
+    }
+
+    /// <summary>
     /// Şifre sıfırlama kodunu doğrula ve yeni şifreyi kaydet.
     /// </summary>
     [HttpPost("reset-password")]
