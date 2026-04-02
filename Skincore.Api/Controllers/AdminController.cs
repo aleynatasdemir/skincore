@@ -248,10 +248,10 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> EmbedProduct([FromBody] EmbedProductRequest request)
     {
         if (!await CheckAdmin()) return Forbid();
-        if (string.IsNullOrWhiteSpace(request.ImageUrl))
-            return BadRequest(new MessageResponse { Message = "imageUrl gereklidir." });
+        if (string.IsNullOrWhiteSpace(request.ImageBase64) && string.IsNullOrWhiteSpace(request.ImageUrl))
+            return BadRequest(new MessageResponse { Message = "imageBase64 veya imageUrl gereklidir." });
 
-        var (success, message, dimensions) = await _adminService.EmbedProductAsync(request.ImageUrl, request.Barcode);
+        var (success, message, dimensions) = await _adminService.EmbedProductAsync(request.ImageBase64, request.ImageUrl, request.Barcode);
         if (!success)
             return BadRequest(new MessageResponse { Message = message ?? "Embedding başarısız." });
 

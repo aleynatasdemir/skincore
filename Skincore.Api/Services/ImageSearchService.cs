@@ -27,6 +27,11 @@ public class ImageSearchService
         _configuration = configuration;
     }
 
+    public void AddToCache(string productId, double[] embedding)
+    {
+        _embeddingCache[productId] = embedding;
+    }
+
     public async Task InitializeAsync()
     {
         // Load all products with embeddings into memory

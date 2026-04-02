@@ -12,6 +12,7 @@ GoogleService-Info.plist
 GoogleService-Info 2.plist
 AuthKey_5B3X4Y8VWS.p8
 firebase-adminsdk.json
+appsettings.json
 # User-specific files
 *.rsuser
 *.suo

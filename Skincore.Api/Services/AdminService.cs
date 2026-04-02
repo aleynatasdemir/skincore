@@ -10,14 +10,57 @@ public class AdminService
     private readonly MongoDbService _db;
     private readonly NotificationService _notificationService;
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _env;
+    private readonly ImageSearchService _imageSearchService;
     private readonly HttpClient _httpClient = new();
 
-    public AdminService(MongoDbService db, NotificationService notificationService, IConfiguration configuration)
+    // barcode → image URL (ortak_urunler.json'dan yüklenir)
+    private readonly Dictionary<string, string> _barcodeImageMap;
+
+    public AdminService(MongoDbService db, NotificationService notificationService, IConfiguration configuration, IWebHostEnvironment env, ImageSearchService imageSearchService)
     {
         _db = db;
         _notificationService = notificationService;
         _configuration = configuration;
+        _env = env;
+        _imageSearchService = imageSearchService;
+        _barcodeImageMap = LoadBarcodeImageMap(env.ContentRootPath);
     }
+
+    private static Dictionary<string, string> LoadBarcodeImageMap(string contentRoot)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var path = Path.Combine(contentRoot, "ortak_urunler.json");
+        if (!File.Exists(path)) return map;
+
+        try
+        {
+            using var stream = File.OpenRead(path);
+            var items = System.Text.Json.JsonSerializer.Deserialize<List<OrtakUrun>>(stream,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (items == null) return map;
+
+            foreach (var item in items)
+            {
+                if (string.IsNullOrWhiteSpace(item.Image) || string.IsNullOrWhiteSpace(item.Barcode))
+                    continue;
+
+                // Virgülle ayrılmış birden fazla barcode olabilir
+                foreach (var bc in item.Barcode.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (!map.ContainsKey(bc))
+                        map[bc] = item.Image;
+                }
+            }
+        }
+        catch { /* dosya okunamazsa boş map döner */ }
+
+        return map;
+    }
+
+    private record OrtakUrun(string? Barcode, string? Image);
+
 
     // ── Kullanıcı listesi ──
     public async Task<List<AdminUserResponse>> GetAllUsersAsync(int page = 1, int limit = 50, string? search = null, bool? isBanned = null)
@@ -317,6 +360,19 @@ public class AdminService
             Builders<ProductRequest>.Update.Set(r => r.Status, "added")
         );
 
+        // Fotoğraf varsa embedding'i arka planda al ve kaydet
+        if (!string.IsNullOrWhiteSpace(body.ImageUrl))
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var (_, _, _) = await EmbedProductAsync(null, body.ImageUrl.Trim(), product.Barcode);
+                }
+                catch { /* embedding hatası approve'u etkilemesin */ }
+            });
+        }
+
         return product.Id;
     }
 
@@ -327,37 +383,100 @@ public class AdminService
         return result.DeletedCount > 0;
     }
 
-    // ── Barkoddan fotoğraf linki bul (MongoDB products koleksiyonundan) ──
-    public async Task<string?> GetImageByBarcodeAsync(string barcode)
+    // ── Barkoddan fotoğraf linki bul (ortak_urunler.json'dan) ──
+    public Task<string?> GetImageByBarcodeAsync(string barcode)
     {
-        var product = await _db.ProductsCollection
-            .Find(p => p.Barcode == barcode)
-            .Project<Product>(Builders<Product>.Projection.Include(p => p.ImageUrls).Include(p => p.Barcode))
-            .FirstOrDefaultAsync();
-
-        return product?.ImageUrls?.FirstOrDefault()?.FileUrl;
+        _barcodeImageMap.TryGetValue(barcode.Trim(), out var imageUrl);
+        return Task.FromResult(imageUrl);
     }
 
-    // ── Görsel URL'sinden Gemini embedding al ve MongoDB'ye kaydet ──
-    public async Task<(bool success, string? message, int dimensions)> EmbedProductAsync(string imageUrl, string? barcode)
+    private async Task<string> DownloadImageViaProxyAsync(string imageUrl)
+    {
+        // image_proxy.py curl_cffi ile CDN bypass yaparak görseli indirir, base64 döndürür
+        var scriptPath = Path.Combine(_env.ContentRootPath, "image_proxy.py");
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "python3",
+            ArgumentList = { scriptPath, imageUrl },
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+
+        using var process = System.Diagnostics.Process.Start(psi)
+            ?? throw new Exception("image_proxy.py başlatılamadı.");
+
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+
+        var stderr = await stderrTask;
+        if (process.ExitCode != 0 || !string.IsNullOrWhiteSpace(stderr))
+            throw new Exception($"Görsel indirilemedi: {stderr.Trim()}");
+
+        var b64 = (await stdoutTask).Trim();
+        if (string.IsNullOrEmpty(b64))
+            throw new Exception("Görsel indirilemedi: boş çıktı.");
+
+        return b64;
+    }
+
+    private static void ApplyCdnHeaders(HttpRequestMessage req, string url)
+    {
+        req.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36");
+        req.Headers.TryAddWithoutValidation("Accept", "image/avif,image/webp,image/apng,image/*,*/*;q=0.8");
+        req.Headers.TryAddWithoutValidation("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7");
+
+        if (url.Contains("watsons.com.tr"))
+        {
+            req.Headers.TryAddWithoutValidation("Referer", "https://www.watsons.com.tr/");
+            req.Headers.TryAddWithoutValidation("Origin", "https://www.watsons.com.tr");
+        }
+        else if (url.Contains("sephora"))
+        {
+            req.Headers.TryAddWithoutValidation("Referer", "https://www.sephora.com.tr/");
+            req.Headers.TryAddWithoutValidation("Origin", "https://www.sephora.com.tr");
+        }
+        else if (url.Contains("gratis.com"))
+            req.Headers.TryAddWithoutValidation("Referer", "https://www.gratis.com/");
+        else if (url.Contains("goldenrose"))
+            req.Headers.TryAddWithoutValidation("Referer", "https://shop.goldenrose.com.tr/");
+        else if (url.Contains("nivea"))
+            req.Headers.TryAddWithoutValidation("Referer", "https://www.nivea.com.tr/");
+        else if (url.Contains("dermokozmetika"))
+            req.Headers.TryAddWithoutValidation("Referer", "https://www.dermokozmetika.com.tr/");
+    }
+
+    // ── Görsel (base64 veya URL) → Gemini embedding → MongoDB ──
+    public async Task<(bool success, string? message, int dimensions)> EmbedProductAsync(string? imageBase64, string? imageUrl, string? barcode)
     {
         var apiKey = _configuration["GoogleApiKey"];
         if (string.IsNullOrEmpty(apiKey))
             return (false, "GoogleApiKey yapılandırılmamış.", 0);
 
-        // Görseli indir
-        byte[] imageBytes;
-        try
+        string base64;
+
+        if (!string.IsNullOrWhiteSpace(imageBase64))
         {
-            imageBytes = await _httpClient.GetByteArrayAsync(imageUrl);
+            base64 = imageBase64;
         }
-        catch (Exception ex)
+        else if (!string.IsNullOrWhiteSpace(imageUrl))
         {
-            return (false, $"Görsel indirilemedi: {ex.Message}", 0);
+            try
+            {
+                base64 = await DownloadImageViaProxyAsync(imageUrl);
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message, 0);
+            }
+        }
+        else
+        {
+            return (false, "imageBase64 veya imageUrl gereklidir.", 0);
         }
 
         // Gemini Embedding API
-        var base64 = Convert.ToBase64String(imageBytes);
         var model = "gemini-embedding-2-preview";
         var url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:embedContent?key={apiKey}";
 
@@ -398,15 +517,36 @@ public class AdminService
             return (false, "Boş embedding döndü.", 0);
 
         // MongoDB'de ürünü bul ve embedding'i güncelle
-        var filter = string.IsNullOrWhiteSpace(barcode)
-            ? Builders<Product>.Filter.ElemMatch(p => p.ImageUrls, Builders<ImageUrlItem>.Filter.Eq(i => i.FileUrl, imageUrl))
-            : Builders<Product>.Filter.Eq(p => p.Barcode, barcode);
+        // Önce barcode ile dene, yoksa image_urls.fileUrl ile eşleştir
+        FilterDefinition<Product> filter;
+        if (!string.IsNullOrWhiteSpace(barcode))
+        {
+            filter = Builders<Product>.Filter.Eq(p => p.Barcode, barcode);
+        }
+        else if (!string.IsNullOrWhiteSpace(imageUrl))
+        {
+            filter = Builders<Product>.Filter.ElemMatch(
+                p => p.ImageUrls,
+                Builders<ImageUrlItem>.Filter.Eq(i => i.FileUrl, imageUrl));
+        }
+        else
+        {
+            return (false, "Ürünü bulmak için barcode veya imageUrl gereklidir.", vector.Length);
+        }
 
         var update = Builders<Product>.Update.Set(p => p.Embedding, vector.ToList().ConvertAll(v => (double)v));
         var result = await _db.ProductsCollection.UpdateOneAsync(filter, update);
 
         if (result.MatchedCount == 0)
             return (false, "Ürün MongoDB'de bulunamadı.", vector.Length);
+
+        // Güncel ürünü bul ve in-memory cache'e ekle — restart gerekmez
+        var updated = await _db.ProductsCollection
+            .Find(filter)
+            .Project<Product>(Builders<Product>.Projection.Include(p => p.Id))
+            .FirstOrDefaultAsync();
+        if (updated?.Id != null)
+            _imageSearchService.AddToCache(updated.Id, vector);
 
         return (true, null, vector.Length);
     }

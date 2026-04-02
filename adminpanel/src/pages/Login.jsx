@@ -18,14 +18,13 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/admin-auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: username, password }),
+        body: JSON.stringify({ identifier: username, password }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Login failed')
-      if (!data.user?.isAdmin) throw new Error('Bu hesabın admin yetkisi yok.')
       setToken(data.accessToken)
       setUser(data.user)
       navigate('/')

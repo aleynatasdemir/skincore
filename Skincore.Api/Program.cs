@@ -28,6 +28,9 @@ builder.Services.AddSingleton<SocialRoutinesService>();
 builder.Services.AddSingleton<ImageSearchService>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddSingleton<AdminService>();
+builder.Services.AddSingleton<AdminAuthService>();
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<GoogleVisionOcrService>();
 
 builder.Services.AddControllers();
 

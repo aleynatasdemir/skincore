@@ -155,6 +155,7 @@ public class AdminRoutineCommentResponse
 
 public class EmbedProductRequest
 {
-    public string ImageUrl { get; set; } = null!;
+    public string? ImageBase64 { get; set; }
+    public string? ImageUrl { get; set; }   // sunucu tarafında indirilir
     public string? Barcode { get; set; }
 }

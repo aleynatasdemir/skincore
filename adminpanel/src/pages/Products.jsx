@@ -289,9 +289,14 @@ export default function Products() {
     const barcode = form.barcode.trim() || selectedRequest?.barcode || null
     setEmbed({ loading: true, message: '' })
     try {
+      // data URL ise (kamera ile çekilmiş) base64 olarak gönder, değilse URL olarak gönder — sunucu indirir
+      const body = imageUrl.startsWith('data:')
+        ? { imageBase64: imageUrl.split(',')[1], barcode }
+        : { imageUrl, barcode }
+
       const res = await apiFetch('/admin/products/embed', {
         method: 'POST',
-        body: JSON.stringify({ imageUrl, barcode }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Embedding başarısız.')
