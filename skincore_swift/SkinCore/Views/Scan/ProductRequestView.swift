@@ -8,15 +8,17 @@ struct ProductRequestView: View {
     @State private var brandName = ""
     @State private var productName = ""
 
-    @State private var frontPickerItem: PhotosPickerItem?
     @State private var frontImage: UIImage?
-
-    @State private var ingredientsPickerItem: PhotosPickerItem?
     @State private var ingredientsImage: UIImage?
 
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showSuccess = false
+
+    @State private var showPhotoDialog = false
+    @State private var showImagePicker = false
+    @State private var isPickingFront = true
+    @State private var currentSourceType: UIImagePickerController.SourceType = .photoLibrary
 
     private var canSubmit: Bool {
         !brandName.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -71,20 +73,20 @@ struct ProductRequestView: View {
                             title: lang.s(.productRequestFrontTitle),
                             subtitle: lang.s(.productRequestFrontSubtitle),
                             icon: "photo.fill",
-                            image: frontImage,
-                            pickerItem: $frontPickerItem
-                        ) { image in
-                            frontImage = image
+                            image: frontImage
+                        ) {
+                            isPickingFront = true
+                            showPhotoDialog = true
                         }
 
                         PhotoCard(
                             title: lang.s(.productRequestIngredientsTitle),
                             subtitle: lang.s(.productRequestIngredientsSubtitle),
                             icon: "list.bullet.rectangle.fill",
-                            image: ingredientsImage,
-                            pickerItem: $ingredientsPickerItem
-                        ) { image in
-                            ingredientsImage = image
+                            image: ingredientsImage
+                        ) {
+                            isPickingFront = false
+                            showPhotoDialog = true
                         }
                     }
                     .padding(.horizontal, 24)
@@ -132,6 +134,21 @@ struct ProductRequestView: View {
                         .foregroundColor(Color(hex: "1A1A2E"))
                 }
             }
+        }
+        .confirmationDialog(lang.s(.productRequestSelectPhoto), isPresented: $showPhotoDialog, titleVisibility: .visible) {
+            Button("Kamera") {
+                currentSourceType = .camera
+                showImagePicker = true
+            }
+            Button("Galeri") {
+                currentSourceType = .photoLibrary
+                showImagePicker = true
+            }
+            Button(lang.s(.cancel), role: .cancel) { }
+        }
+        .fullScreenCover(isPresented: $showImagePicker) {
+            ProductRequestImagePicker(sourceType: currentSourceType, selectedImage: isPickingFront ? $frontImage : $ingredientsImage)
+                .ignoresSafeArea()
         }
         .alert(lang.s(.productRequestAlertTitle), isPresented: $showSuccess) {
             Button(lang.s(.ok)) { dismiss() }
@@ -199,8 +216,7 @@ private struct PhotoCard: View {
     let subtitle: String
     let icon: String
     let image: UIImage?
-    @Binding var pickerItem: PhotosPickerItem?
-    let onImageLoaded: (UIImage) -> Void
+    let onTap: () -> Void
     @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
@@ -219,7 +235,7 @@ private struct PhotoCard: View {
                 }
             }
 
-            PhotosPicker(selection: $pickerItem, matching: .images) {
+            Button(action: onTap) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14)
                         .fill(Color.white)
@@ -240,7 +256,7 @@ private struct PhotoCard: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                     } else {
                         VStack(spacing: 8) {
-                            Image(systemName: "plus.circle")
+                            Image(systemName: "camera.fill")
                                 .font(.system(size: 28))
                                 .foregroundColor(Color(hex: "D4728C").opacity(0.6))
                             Text(lang.s(.productRequestSelectPhoto))
@@ -250,14 +266,47 @@ private struct PhotoCard: View {
                     }
                 }
             }
-            .onChange(of: pickerItem) { _, newItem in
-                Task {
-                    if let data = try? await newItem?.loadTransferable(type: Data.self),
-                       let uiImage = UIImage(data: data) {
-                        onImageLoaded(uiImage)
-                    }
-                }
+            .buttonStyle(.plain)
+        }
+    }
+}
+import SwiftUI
+import UIKit
+
+struct ProductRequestImagePicker: UIViewControllerRepresentable {
+    var sourceType: UIImagePickerController.SourceType
+    @Binding var selectedImage: UIImage?
+    @Environment(\.presentationMode) private var presentationMode
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = sourceType
+        imagePicker.delegate = context.coordinator
+        return imagePicker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        var parent: ProductRequestImagePicker
+
+        init(_ parent: ProductRequestImagePicker) {
+            self.parent = parent
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.selectedImage = image
             }
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.presentationMode.wrappedValue.dismiss()
         }
     }
 }

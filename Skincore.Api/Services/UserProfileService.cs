@@ -189,7 +189,7 @@ public class UserProfileService
             Builders<User>.Update.AddToSet(u => u.Followers, currentUserId)
                 .Set(u => u.UpdatedAt, DateTime.UtcNow));
 
-        if (!string.IsNullOrEmpty(target.FcmToken))
+        if (target.NotificationsEnabled && !string.IsNullOrEmpty(target.FcmToken))
         {
             var title = target.PreferredLanguage == "en" ? "New Follower!" : "Yeni Takipçi!";
             var body = target.PreferredLanguage == "en"

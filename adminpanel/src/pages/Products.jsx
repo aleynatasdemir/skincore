@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import { apiFetch } from '../api'
 
@@ -11,6 +11,18 @@ const INITIAL_FORM = {
   imageUrl: '',
   ingredientsText: '',
   ocrText: '',
+}
+
+const INITIAL_PHOTO_STATE = {
+  stream: null,
+  captured: null,   // base64 data URL
+  loading: false,
+  open: false,
+}
+
+const INITIAL_EMBED_STATE = {
+  loading: false,
+  message: '',
 }
 
 function extractIngredientsFromOcr(text) {
@@ -68,6 +80,10 @@ export default function Products() {
     characterCount: 0,
     lastRunAt: null,
   })
+  const [photo, setPhoto] = useState(INITIAL_PHOTO_STATE)
+  const [embed, setEmbed] = useState(INITIAL_EMBED_STATE)
+  const videoRef = useRef(null)
+  const canvasRef = useRef(null)
 
   const selectedRequest = useMemo(
     () => requests.find(r => r.id === selectedId) || null,
@@ -206,6 +222,85 @@ export default function Products() {
     }
   }
 
+  async function lookupImageByBarcode() {
+    const barcode = form.barcode.trim()
+    if (!barcode) {
+      setActionMessage('Önce barcode girin.')
+      return
+    }
+    try {
+      const res = await apiFetch(`/admin/products/image-by-barcode?barcode=${encodeURIComponent(barcode)}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Fotoğraf bulunamadı.')
+      if (data.imageUrl) {
+        setForm(p => ({ ...p, imageUrl: data.imageUrl }))
+        setActionMessage('✓ Fotoğraf linki barkoddan çekildi.')
+      } else {
+        setActionMessage('Bu barkod için fotoğraf bulunamadı.')
+      }
+    } catch (err) {
+      setActionMessage(`Hata: ${err.message}`)
+    }
+  }
+
+  async function openCamera() {
+    setPhoto(p => ({ ...p, open: true, captured: null }))
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      setPhoto(p => ({ ...p, stream }))
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play()
+      }
+    } catch {
+      setPhoto(INITIAL_PHOTO_STATE)
+      setActionMessage('Kamera erişimi reddedildi.')
+    }
+  }
+
+  function stopCamera(stream) {
+    stream?.getTracks().forEach(t => t.stop())
+  }
+
+  function capturePhoto() {
+    if (!videoRef.current || !canvasRef.current) return
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d').drawImage(video, 0, 0)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+    stopCamera(photo.stream)
+    setPhoto(p => ({ ...p, open: false, stream: null, captured: dataUrl }))
+    setForm(prev => ({ ...prev, imageUrl: dataUrl }))
+  }
+
+  function cancelCamera() {
+    stopCamera(photo.stream)
+    setPhoto(INITIAL_PHOTO_STATE)
+  }
+
+  async function embedProduct() {
+    const imageUrl = form.imageUrl.trim()
+    if (!imageUrl) {
+      setEmbed({ loading: false, message: 'Önce bir fotoğraf URL\'si girin.' })
+      return
+    }
+    const barcode = form.barcode.trim() || selectedRequest?.barcode || null
+    setEmbed({ loading: true, message: '' })
+    try {
+      const res = await apiFetch('/admin/products/embed', {
+        method: 'POST',
+        body: JSON.stringify({ imageUrl, barcode }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Embedding başarısız.')
+      setEmbed({ loading: false, message: `✓ Embedding kaydedildi (${data.dimensions} boyut).` })
+    } catch (err) {
+      setEmbed({ loading: false, message: `Hata: ${err.message}` })
+    }
+  }
+
   async function rejectRequest() {
     if (!selectedRequest) return
     if (!confirm('Bu talebi silip reddetmek istediğine emin misin?')) return
@@ -227,6 +322,30 @@ export default function Products() {
 
   return (
     <Layout>
+      {/* Kamera Modal */}
+      {photo.open && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center gap-4 p-4">
+          <p className="text-white text-sm font-bold uppercase tracking-widest">Fotoğraf Çek</p>
+          <video ref={videoRef} autoPlay playsInline className="rounded-xl max-w-sm w-full" />
+          <canvas ref={canvasRef} className="hidden" />
+          <div className="flex gap-3">
+            <button
+              onClick={capturePhoto}
+              className="px-6 py-2.5 bg-primary text-white font-bold rounded-md flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined">camera</span>
+              Çek
+            </button>
+            <button
+              onClick={cancelCamera}
+              className="px-6 py-2.5 bg-surface text-on-surface font-bold rounded-md"
+            >
+              İptal
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -385,12 +504,28 @@ export default function Products() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-on-surface-variant">BARCODE (EAN/UPC)</label>
-                      <input
-                        className="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all"
-                        value={form.barcode}
-                        onChange={e => setForm(p => ({ ...p, barcode: e.target.value }))}
-                        placeholder="501234567890"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          className="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all"
+                          value={form.barcode}
+                          onChange={e => setForm(p => ({ ...p, barcode: e.target.value }))}
+                          placeholder="501234567890"
+                        />
+                        <button
+                          onClick={lookupImageByBarcode}
+                          title="Barkoddan fotoğraf linkini çek"
+                          className="bg-surface-container-high px-2.5 rounded-md hover:bg-surface-dim transition-colors flex items-center shrink-0"
+                        >
+                          <span className="material-symbols-outlined text-sm">image_search</span>
+                        </button>
+                        <button
+                          onClick={openCamera}
+                          title="Kamerayla fotoğraf çek"
+                          className="bg-surface-container-high px-2.5 rounded-md hover:bg-surface-dim transition-colors flex items-center shrink-0"
+                        >
+                          <span className="material-symbols-outlined text-sm">photo_camera</span>
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-on-surface-variant">BRAND NAME</label>
@@ -455,7 +590,21 @@ export default function Products() {
                     >
                       <span className="material-symbols-outlined">open_in_new</span>
                     </a>
+                    <button
+                      onClick={embedProduct}
+                      disabled={embed.loading || !form.imageUrl.trim()}
+                      title="Görseli Gemini ile embed et ve DB'ye kaydet"
+                      className="bg-primary/10 text-primary px-3 rounded-md hover:bg-primary/20 transition-colors flex items-center gap-1 shrink-0 disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-sm">model_training</span>
+                      <span className="text-[10px] font-bold uppercase">{embed.loading ? '...' : 'Embed'}</span>
+                    </button>
                   </div>
+                  {embed.message && (
+                    <p className={`text-xs mt-1 ${embed.message.startsWith('✓') ? 'text-green-600' : 'text-red-500'}`}>
+                      {embed.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-surface-container">

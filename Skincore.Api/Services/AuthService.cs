@@ -34,13 +34,6 @@ public class AuthService
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
-        // Security: admin emails cannot be registered as mobile users
-        var adminWithSameEmail = await _mongoDbService.AdminUsersCollection
-            .Find(a => a.Email == email)
-            .FirstOrDefaultAsync();
-        if (adminWithSameEmail != null)
-            return (false, "Bu e-posta adresi yönetici hesabı için ayrılmıştır.");
-
         // Check if user already exists
         var existingUser = await _mongoDbService.UsersCollection
             .Find(u => u.Email == email)
@@ -153,13 +146,6 @@ public class AuthService
     public async Task<(bool Success, string Message, AuthResponse? Response)> LoginAsync(LoginRequest request)
     {
         var identifier = request.Email.Trim().ToLowerInvariant();
-
-        // Security: admin users are not allowed to log in from mobile auth endpoint
-        var admin = await _mongoDbService.AdminUsersCollection
-            .Find(a => a.Email == identifier || a.Username == identifier)
-            .FirstOrDefaultAsync();
-        if (admin != null)
-            return (false, "Admin hesabı sadece admin panelinden giriş yapabilir.", null);
 
         var user = await _mongoDbService.UsersCollection
             .Find(u => (u.Email == identifier || u.Username == identifier) && u.AuthProvider == "email")

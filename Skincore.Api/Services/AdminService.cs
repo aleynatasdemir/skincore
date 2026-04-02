@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using MongoDB.Driver;
 using Skincore.Api.Models;
 
@@ -7,11 +9,14 @@ public class AdminService
 {
     private readonly MongoDbService _db;
     private readonly NotificationService _notificationService;
+    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient = new();
 
-    public AdminService(MongoDbService db, NotificationService notificationService)
+    public AdminService(MongoDbService db, NotificationService notificationService, IConfiguration configuration)
     {
         _db = db;
         _notificationService = notificationService;
+        _configuration = configuration;
     }
 
     // ── Kullanıcı listesi ──
@@ -320,6 +325,90 @@ public class AdminService
     {
         var result = await _db.ProductRequestsCollection.DeleteOneAsync(r => r.Id == requestId);
         return result.DeletedCount > 0;
+    }
+
+    // ── Barkoddan fotoğraf linki bul (MongoDB products koleksiyonundan) ──
+    public async Task<string?> GetImageByBarcodeAsync(string barcode)
+    {
+        var product = await _db.ProductsCollection
+            .Find(p => p.Barcode == barcode)
+            .Project<Product>(Builders<Product>.Projection.Include(p => p.ImageUrls).Include(p => p.Barcode))
+            .FirstOrDefaultAsync();
+
+        return product?.ImageUrls?.FirstOrDefault()?.FileUrl;
+    }
+
+    // ── Görsel URL'sinden Gemini embedding al ve MongoDB'ye kaydet ──
+    public async Task<(bool success, string? message, int dimensions)> EmbedProductAsync(string imageUrl, string? barcode)
+    {
+        var apiKey = _configuration["GoogleApiKey"];
+        if (string.IsNullOrEmpty(apiKey))
+            return (false, "GoogleApiKey yapılandırılmamış.", 0);
+
+        // Görseli indir
+        byte[] imageBytes;
+        try
+        {
+            imageBytes = await _httpClient.GetByteArrayAsync(imageUrl);
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Görsel indirilemedi: {ex.Message}", 0);
+        }
+
+        // Gemini Embedding API
+        var base64 = Convert.ToBase64String(imageBytes);
+        var model = "gemini-embedding-2-preview";
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:embedContent?key={apiKey}";
+
+        var payload = new
+        {
+            model = $"models/{model}",
+            content = new
+            {
+                parts = new[] { new { inlineData = new { mimeType = "image/jpeg", data = base64 } } }
+            }
+        };
+
+        double[]? vector;
+        try
+        {
+            var json = JsonSerializer.Serialize(payload);
+            var response = await _httpClient.PostAsync(url, new StringContent(json, Encoding.UTF8, "application/json"));
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                return (false, $"Gemini API hatası: {response.StatusCode} — {err[..Math.Min(200, err.Length)]}", 0);
+            }
+            var respJson = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(respJson);
+            vector = doc.RootElement
+                .GetProperty("embedding")
+                .GetProperty("values")
+                .EnumerateArray()
+                .Select(v => v.GetDouble())
+                .ToArray();
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Embedding alınamadı: {ex.Message}", 0);
+        }
+
+        if (vector == null || vector.Length == 0)
+            return (false, "Boş embedding döndü.", 0);
+
+        // MongoDB'de ürünü bul ve embedding'i güncelle
+        var filter = string.IsNullOrWhiteSpace(barcode)
+            ? Builders<Product>.Filter.ElemMatch(p => p.ImageUrls, Builders<ImageUrlItem>.Filter.Eq(i => i.FileUrl, imageUrl))
+            : Builders<Product>.Filter.Eq(p => p.Barcode, barcode);
+
+        var update = Builders<Product>.Update.Set(p => p.Embedding, vector.ToList().ConvertAll(v => (double)v));
+        var result = await _db.ProductsCollection.UpdateOneAsync(filter, update);
+
+        if (result.MatchedCount == 0)
+            return (false, "Ürün MongoDB'de bulunamadı.", vector.Length);
+
+        return (true, null, vector.Length);
     }
 
     // ── Admin yetkisi kontrol ──

@@ -223,4 +223,38 @@ public class AdminController : ControllerBase
         if (!success) return NotFound(new MessageResponse { Message = "Talep bulunamadı." });
         return Ok(new MessageResponse { Message = "Talep silindi." });
     }
+
+    // ───────────────────────────────────────────
+    // ÜRÜN GÖRSEL / EMBEDDING
+    // ───────────────────────────────────────────
+
+    /// <summary>GET /api/admin/products/image-by-barcode?barcode=xxx — Barkoddan fotoğraf linki</summary>
+    [HttpGet("products/image-by-barcode")]
+    public async Task<IActionResult> GetImageByBarcode([FromQuery] string barcode)
+    {
+        if (!await CheckAdmin()) return Forbid();
+        if (string.IsNullOrWhiteSpace(barcode))
+            return BadRequest(new MessageResponse { Message = "Barcode parametresi gereklidir." });
+
+        var imageUrl = await _adminService.GetImageByBarcodeAsync(barcode.Trim());
+        if (imageUrl == null)
+            return NotFound(new MessageResponse { Message = "Bu barkod için fotoğraf bulunamadı." });
+
+        return Ok(new { imageUrl });
+    }
+
+    /// <summary>POST /api/admin/products/embed — Görsel URL → Gemini embedding → MongoDB</summary>
+    [HttpPost("products/embed")]
+    public async Task<IActionResult> EmbedProduct([FromBody] EmbedProductRequest request)
+    {
+        if (!await CheckAdmin()) return Forbid();
+        if (string.IsNullOrWhiteSpace(request.ImageUrl))
+            return BadRequest(new MessageResponse { Message = "imageUrl gereklidir." });
+
+        var (success, message, dimensions) = await _adminService.EmbedProductAsync(request.ImageUrl, request.Barcode);
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message ?? "Embedding başarısız." });
+
+        return Ok(new { message = "Embedding kaydedildi.", dimensions });
+    }
 }
