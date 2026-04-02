@@ -3,14 +3,6 @@ import Vision
 import UIKit
 import AVFoundation
 
-private func setTorch(on: Bool) {
-    guard let device = AVCaptureDevice.default(for: .video),
-          device.hasTorch,
-          device.isTorchAvailable else { return }
-    try? device.lockForConfiguration()
-    device.torchMode = on ? .on : .off
-    device.unlockForConfiguration()
-}
 
 // String'i fullScreenCover(item:) için Identifiable yap
 extension String: @retroactive Identifiable {
@@ -736,11 +728,8 @@ struct SkinCoreCameraView: View {
         .onChange(of: viewModel.hasSearched) { _, searched in
             if searched { showResultSheet = true }
         }
-        .onChange(of: flashOn) { _, on in
-            setTorch(on: on)
-        }
         .onDisappear {
-            setTorch(on: false)
+            flashOn = false
         }
     }
 }
@@ -979,6 +968,7 @@ struct CameraPickerRepresentable: UIViewControllerRepresentable {
         if sourceType == .camera {
             picker.showsCameraControls = false
             picker.cameraDevice = .rear
+            picker.cameraFlashMode = flashOn ? .on : .off
             let screenH = UIScreen.main.bounds.height
             let screenW = UIScreen.main.bounds.width
             let cameraAspect: CGFloat = 4.0 / 3.0
@@ -991,6 +981,9 @@ struct CameraPickerRepresentable: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ picker: UIImagePickerController, context: Context) {
+        if sourceType == .camera {
+            picker.cameraFlashMode = flashOn ? .on : .off
+        }
         if triggerCapture && sourceType == .camera {
             DispatchQueue.main.async {
                 picker.takePicture()

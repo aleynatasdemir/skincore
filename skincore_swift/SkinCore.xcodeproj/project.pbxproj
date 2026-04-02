@@ -66,7 +66,7 @@
 		8CCF9ADA54DCF61A31174D9C /* MyRoutinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyRoutinesView.swift; sourceTree = "<group>"; };
 		9624138ABF8ECD175E04F741 /* PlaceholderViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderViews.swift; sourceTree = "<group>"; };
 		97018524DED235BAAE10B78E /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
-		97B88233D9491DA5C655A66C /* SkinCore.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SkinCore.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		97B88233D9491DA5C655A66C /* SkinCore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkinCore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97E9EABBA2408FA1D0D297D1 /* SocialFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialFeedView.swift; sourceTree = "<group>"; };
 		9CECC751109430888347060E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		A36151F293CA29B87C550A49 /* ResetPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordView.swift; sourceTree = "<group>"; };
@@ -292,11 +292,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
-				TargetAttributes = {
-					386F63B088D2672C278ECEEF = {
-						DevelopmentTeam = "";
-					};
-				};
 			};
 			buildConfigurationList = B57EFA8D0FFDCECF82A41C52 /* Build configuration list for PBXProject "SkinCore" */;
 			developmentRegion = en;
@@ -466,7 +461,7 @@
 				CODE_SIGN_ENTITLEMENTS = SkinCore/SkinCore.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 37LBF6B778;
 				INFOPLIST_FILE = SkinCore/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -542,7 +537,7 @@
 				CODE_SIGN_ENTITLEMENTS = SkinCore/SkinCore.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 37LBF6B778;
 				INFOPLIST_FILE = SkinCore/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
