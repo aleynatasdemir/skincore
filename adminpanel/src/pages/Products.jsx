@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import { apiFetch } from '../api'
 
-const STATUS_TABS = ['pending', 'reviewed', 'added']
+const STATUS_TABS = ['pending', 'reviewed', 'added', 'update']
 
 const INITIAL_FORM = {
   barcode: '',
@@ -82,6 +82,8 @@ export default function Products() {
   })
   const [photo, setPhoto] = useState(INITIAL_PHOTO_STATE)
   const [embed, setEmbed] = useState(INITIAL_EMBED_STATE)
+  const [searchBarcode, setSearchBarcode] = useState('')
+  const [searchName, setSearchName] = useState('')
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -115,11 +117,11 @@ export default function Products() {
     setActionMessage('')
     setOcr({ loading: false, error: '', confidence: null, characterCount: 0, lastRunAt: null })
     setForm({
-      barcode: '',
+      barcode: selectedRequest.barcode || '',
       brand: selectedRequest.brandName || '',
       name: selectedRequest.productName || '',
       imageUrl: selectedRequest.frontImageUrl || selectedRequest.ingredientsImageUrl || '',
-      ingredientsText: '',
+      ingredientsText: selectedRequest.ingredientsText || '',
       ocrText: '',
     })
   }, [selectedRequest?.id])
@@ -127,11 +129,38 @@ export default function Products() {
   async function loadRequests() {
     setLoading(true)
     try {
-      const res = await apiFetch(`/admin/product-requests?status=${status}&limit=50`)
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Talepler alınamadı.')
+      let res, data;
+      if (status === 'update') {
+        res = await apiFetch(`/admin/products/low-ingredients?limit=3500`)
+        data = await res.json()
+        if (!res.ok) throw new Error(data.message || 'Ürünler alınamadı.')
+      } else {
+        res = await apiFetch(`/admin/product-requests?status=${status}&limit=50`)
+        data = await res.json()
+        if (!res.ok) throw new Error(data.message || 'Talepler alınamadı.')
+      }
 
-      const items = data.data || []
+      let items = []
+      if (status === 'update') {
+        const arr = Array.isArray(data) ? data : (data.data || [])
+        items = arr.map(doc => {
+          return {
+            id: doc.id,
+            productName: doc.name || '',
+            brandName: doc.brand || '',
+            barcode: doc.barcode || '',
+            frontImageUrl: doc.image_urls?.[0]?.fileUrl || doc.image_urls?.[0]?.fileName || (typeof doc.image_urls?.[0] === 'string' ? doc.image_urls[0] : '') || doc.image_urls?.find(i=>i.fileUrl)?.fileUrl || '',
+            ingredientsImageUrl: '',
+            ingredientsText: Array.isArray(doc.product_ingredients) ? doc.product_ingredients.map(i => typeof i === 'string' ? i : i.name).filter(Boolean).join(', ') : '',
+            hasEmbedding: doc.has_embedding || false,
+            requesterName: 'System',
+            type: 'update',
+            isLowIngredients: true
+          }
+        })
+      } else {
+        items = data.data || []
+      }
       setRequests(items)
 
       if (items.length === 0) {
@@ -148,8 +177,79 @@ export default function Products() {
     }
   }
 
-  async function runOcr() {
-    if (!activeImageUrl) {
+  async function execSearch(e) {
+    if (e) e.preventDefault()
+    if (!searchBarcode.trim() && !searchName.trim()) {
+      await loadRequests()
+      return
+    }
+    setLoading(true)
+    try {
+      const q = new URLSearchParams()
+      if (searchBarcode.trim()) q.append('barcode', searchBarcode.trim())
+      if (searchName.trim()) q.append('name', searchName.trim())
+      q.append('limit', 50)
+      
+      const res = await apiFetch(`/admin/allproducts?${q.toString()}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Arama başarısız.')
+      
+      const arr = Array.isArray(data) ? data : (data.data || [])
+      const items = arr.map(doc => {
+        return {
+          id: doc.id,
+          productName: doc.name || '',
+          brandName: doc.brand || '',
+          barcode: doc.barcode || '',
+          frontImageUrl: doc.image_urls?.[0]?.fileUrl || doc.image_urls?.[0]?.fileName || (typeof doc.image_urls?.[0] === 'string' ? doc.image_urls[0] : '') || doc.image_urls?.find(i=>i.fileUrl)?.fileUrl || '',
+          ingredientsImageUrl: '',
+          ingredientsText: Array.isArray(doc.product_ingredients) ? doc.product_ingredients.map(i => typeof i === 'string' ? i : i.name).filter(Boolean).join(', ') : '',
+          hasEmbedding: doc.has_embedding || false,
+          requesterName: 'System',
+          type: 'update',
+          isLowIngredients: true
+        }
+      })
+      
+      let finalItems = items
+      if (searchName.trim() && !searchBarcode.trim()) {
+        finalItems = items.slice(0, 3)
+      }
+      
+      setRequests(finalItems)
+      if (finalItems.length === 0) {
+        setSelectedId(null)
+      } else if (searchName.trim() && !searchBarcode.trim()) {
+        setSelectedId(null)
+      } else {
+        setSelectedId(finalItems[0].id)
+      }
+    } catch (err) {
+      setRequests([])
+      setSelectedId(null)
+      setActionMessage(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result
+      setRequests(all => all.map(r => r.id === selectedId ? { ...r, ingredientsImageUrl: dataUrl } : r))
+      setSourceTab('ingredients')
+      runOcr(dataUrl)
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  async function runOcr(customUrl = null) {
+    const urlToUse = typeof customUrl === 'string' ? customUrl : activeImageUrl;
+    if (!urlToUse) {
       setOcr(p => ({ ...p, error: 'OCR için geçerli bir görsel URL bulunamadı.' }))
       return
     }
@@ -158,7 +258,7 @@ export default function Products() {
     try {
       const res = await apiFetch('/admin/ocr/extract', {
         method: 'POST',
-        body: JSON.stringify({ imageUrl: activeImageUrl }),
+        body: JSON.stringify({ imageUrl: urlToUse }),
       })
 
       const data = await res.json()
@@ -170,7 +270,7 @@ export default function Products() {
       setForm(prev => ({
         ...prev,
         ocrText: extractedText,
-        ingredientsText: prev.ingredientsText || extractedIngredients,
+        ingredientsText: prev.ingredientsText ? prev.ingredientsText + (extractedIngredients ? ', ' + extractedIngredients : '') : extractedIngredients,
       }))
 
       setOcr({
@@ -199,22 +299,54 @@ export default function Products() {
     setActionLoading(true)
     setActionMessage('')
     try {
-      const res = await apiFetch(`/admin/product-requests/${selectedRequest.id}/approve`, {
-        method: 'POST',
-        body: JSON.stringify({
-          name: form.name.trim(),
-          barcode: form.barcode.trim() || null,
-          brand: form.brand.trim() || null,
-          imageUrl: form.imageUrl.trim() || null,
-          ingredientsText: form.ingredientsText.trim() || null,
-          ocrText: form.ocrText.trim() || null,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Kaydetme işlemi başarısız.')
+      if (status === 'update') {
+        let embedStatus = ''
+        if (!selectedRequest.hasEmbedding && form.imageUrl.trim()) {
+          const body = form.imageUrl.trim().startsWith('data:')
+            ? { imageBase64: form.imageUrl.trim().split(',')[1], barcode: form.barcode.trim() || selectedRequest.barcode || null }
+            : { imageUrl: form.imageUrl.trim(), barcode: form.barcode.trim() || selectedRequest.barcode || null }
+            
+          try {
+            await apiFetch('/admin/products/embed', { method: 'POST', body: JSON.stringify(body) })
+            embedStatus = ' (Embedding kaydedildi)'
+          } catch(e) {
+            embedStatus = ' (Embedding hatası)'
+          }
+        }
 
-      setActionMessage(`✓ Veritabanına eklendi (Product ID: ${data.productId}).`)
-      await loadRequests()
+        const res = await apiFetch(`/admin/products/${selectedRequest.id}/ingredients`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: form.ingredientsText.trim() || null
+          })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.message || 'Ürün içerikleri güncellenemedi.')
+        
+        setActionMessage(`✓ Ürün içeriği güncellendi.${embedStatus}`)
+        
+        const nextRequests = requests.filter(r => r.id !== selectedRequest.id)
+        setRequests(nextRequests)
+        setSelectedId(nextRequests[0]?.id || null)
+      } else {
+        const res = await apiFetch(`/admin/product-requests/${selectedRequest.id}/approve`, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: form.name.trim(),
+            barcode: form.barcode.trim() || null,
+            brand: form.brand.trim() || null,
+            imageUrl: form.imageUrl.trim() || null,
+            ingredientsText: form.ingredientsText.trim() || null,
+            ocrText: form.ocrText.trim() || null,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.message || 'Kaydetme işlemi başarısız.')
+  
+        setActionMessage(`✓ Veritabanına eklendi (Product ID: ${data.productId}).`)
+        await loadRequests()
+      }
     } catch (err) {
       setActionMessage(`Hata: ${err.message}`)
     } finally {
@@ -280,6 +412,15 @@ export default function Products() {
     setPhoto(INITIAL_PHOTO_STATE)
   }
 
+  function skipRequest() {
+    if (requests.length <= 1) return;
+    setRequests(prev => {
+      const remaining = prev.slice(1);
+      return [...remaining, prev[0]];
+    });
+    setSelectedId(requests[1]?.id || null);
+  }
+
   async function embedProduct() {
     const imageUrl = form.imageUrl.trim()
     if (!imageUrl) {
@@ -325,6 +466,29 @@ export default function Products() {
     }
   }
 
+  async function deleteDbProduct() {
+    if (!selectedRequest) return
+    if (!confirm('Bu ürünü veritabanından TAMAMEN SİLMEK istediğinize emin misiniz? Bu işlem geri alınamaz!')) return
+
+    setActionLoading(true)
+    setActionMessage('')
+    try {
+      const res = await apiFetch(`/admin/products/${selectedRequest.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Ürün silinemedi.')
+      
+      setActionMessage('✓ Ürün başarıyla veritabanından silindi.')
+      
+      const nextRequests = requests.filter(r => r.id !== selectedRequest.id)
+      setRequests(nextRequests)
+      setSelectedId(nextRequests[0]?.id || null)
+    } catch (err) {
+      setActionMessage(`Hata: ${err.message}`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   return (
     <Layout>
       {/* Kamera Modal */}
@@ -352,45 +516,96 @@ export default function Products() {
       )}
 
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="mb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="font-headline text-4xl font-extrabold tracking-tight text-primary">Moderation Entry</h1>
+            <h1 className="font-headline text-4xl font-extrabold tracking-tight text-primary">
+              Moderation Entry <span className="text-2xl text-on-surface-variant">({requests.length})</span>
+            </h1>
             <p className="text-on-surface-variant font-medium mt-1">OCR extraction ile ürün bilgisini doğrula ve kataloğa ekle.</p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={rejectRequest}
-              disabled={!selectedRequest || actionLoading}
-              className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant text-on-surface font-semibold rounded-md hover:bg-surface-container-high transition-colors disabled:opacity-50"
-            >
-              <span className="material-symbols-outlined text-error">block</span>
-              Reject
-            </button>
+            {status === 'update' && (
+              <>
+                <button
+                  onClick={skipRequest}
+                  disabled={actionLoading || requests.length <= 1}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-surface-container-high text-on-surface font-semibold rounded-md hover:bg-surface-dim transition-colors disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined">skip_next</span>
+                  GEÇ
+                </button>
+                <button
+                  onClick={deleteDbProduct}
+                  disabled={!selectedRequest || actionLoading}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 shadow-sm transition-colors disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined">delete</span>
+                  SİL
+                </button>
+              </>
+            )}
+            {status !== 'update' && (
+              <button
+                onClick={rejectRequest}
+                disabled={!selectedRequest || actionLoading}
+                className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant text-on-surface font-semibold rounded-md hover:bg-surface-container-high transition-colors disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-error">block</span>
+                Reject
+              </button>
+            )}
             <button
               onClick={approveRequest}
               disabled={!selectedRequest || actionLoading}
               className="flex items-center gap-2 px-8 py-2.5 bg-gradient-to-r from-primary to-primary-container text-white font-semibold rounded-md shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60"
             >
               <span className="material-symbols-outlined">save</span>
-              {actionLoading ? 'Saving...' : 'Save to Database'}
+              {actionLoading ? 'Saving...' : status === 'update' ? 'İçerik Güncelle' : 'Save to Database'}
             </button>
           </div>
         </div>
 
-        <div className="mb-6 flex gap-2">
-          {STATUS_TABS.map(s => (
-            <button
-              key={s}
-              onClick={() => setStatus(s)}
-              className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest transition-colors ${
-                status === s
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
+        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex gap-2">
+            {STATUS_TABS.map(s => (
+              <button
+                key={s}
+                onClick={() => setStatus(s)}
+                className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest transition-colors ${
+                  status === s
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {status === 'update' && (
+            <form onSubmit={execSearch} className="flex flex-col sm:flex-row gap-2 max-w-2xl w-full">
+              <input
+                className="w-full bg-surface-container-lowest border border-outline-variant rounded-md focus:border-primary focus:ring-0 text-sm p-2.5 transition-all"
+                placeholder="Barcode (Exact)"
+                value={searchBarcode}
+                onChange={e => setSearchBarcode(e.target.value)}
+              />
+              <input
+                className="w-full bg-surface-container-lowest border border-outline-variant rounded-md focus:border-primary focus:ring-0 text-sm p-2.5 transition-all"
+                placeholder="Product Name (Fuzzy)"
+                value={searchName}
+                onChange={e => setSearchName(e.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-primary text-white px-4 py-2.5 rounded-md font-semibold text-sm hover:bg-primary/90 flex items-center justify-center gap-1 shrink-0 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">search</span>
+                Search
+              </button>
+            </form>
+          )}
         </div>
 
         <div className="mb-8 bg-surface-container-lowest rounded-xl border border-outline-variant/15 p-4">
@@ -399,12 +614,12 @@ export default function Products() {
           ) : requests.length === 0 ? (
             <p className="text-sm text-on-surface-variant">Bu statüde talep bulunmuyor.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-              {requests.map(r => (
+            <div className={`${status === 'update' ? 'flex overflow-x-auto pb-4 snap-x snap-mandatory gap-3' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3'}`}>
+                {requests.map(r => (
                 <button
                   key={r.id}
                   onClick={() => setSelectedId(r.id)}
-                  className={`text-left p-3 rounded-lg border transition-all ${
+                  className={`text-left p-3 rounded-lg border transition-all ${status === 'update' ? 'min-w-[300px] snap-center shrink-0' : ''} ${
                     selectedId === r.id
                       ? 'border-primary bg-primary/5'
                       : 'border-outline-variant/20 hover:border-outline-variant/50 bg-surface'
@@ -412,7 +627,7 @@ export default function Products() {
                 >
                   <p className="font-semibold text-sm truncate">{r.productName || 'Unnamed Product'}</p>
                   <p className="text-xs text-on-surface-variant truncate">{r.brandName || 'Unknown Brand'}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">{new Date(r.createdAt).toLocaleString()}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">{r.type === 'update' ? 'DB Record' : new Date(r.createdAt).toLocaleString()}</p>
                 </button>
               ))}
             </div>
@@ -427,7 +642,7 @@ export default function Products() {
 
         {!selectedRequest ? (
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/15 p-10 text-center text-on-surface-variant">
-            Moderasyon için bir ürün talebi seç.
+            {status === "update" ? "Düzenlemek için arama sonuçlarından bir ürün seçin." : "Moderasyon için bir ürün talebi seç."}
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -447,14 +662,25 @@ export default function Products() {
                     >
                       Front
                     </button>
-                    <button
-                      onClick={() => setSourceTab('ingredients')}
-                      className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                        sourceTab === 'ingredients' ? 'bg-slate-900 text-white' : 'bg-surface-container text-on-surface-variant'
-                      }`}
-                    >
-                      Ingredients
-                    </button>
+                    {status === 'update' ? (
+                      <label
+                        className={`px-2 py-1 rounded text-[10px] font-bold uppercase cursor-pointer ${
+                          sourceTab === 'ingredients' ? 'bg-slate-900 text-white' : 'bg-surface-container text-on-surface-variant'
+                        }`}
+                      >
+                        ADD PHOTO
+                        <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+                      </label>
+                    ) : (
+                      <button
+                        onClick={() => setSourceTab('ingredients')}
+                        className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                          sourceTab === 'ingredients' ? 'bg-slate-900 text-white' : 'bg-surface-container text-on-surface-variant'
+                        }`}
+                      >
+                        Ingredients
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="relative aspect-square md:aspect-[4/3] bg-slate-100 flex items-center justify-center p-8">
@@ -511,9 +737,10 @@ export default function Products() {
                       <label className="text-xs font-bold text-on-surface-variant">BARCODE (EAN/UPC)</label>
                       <div className="flex gap-2">
                         <input
-                          className="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all"
+                          className={`w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all ${status === 'update' ? 'opacity-60 cursor-not-allowed' : ''}`}
                           value={form.barcode}
                           onChange={e => setForm(p => ({ ...p, barcode: e.target.value }))}
+                          readOnly={status === 'update'}
                           placeholder="501234567890"
                         />
                         <button
@@ -535,9 +762,10 @@ export default function Products() {
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-on-surface-variant">BRAND NAME</label>
                       <input
-                        className="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all"
+                        className={`w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all ${status === 'update' ? 'opacity-60 cursor-not-allowed' : ''}`}
                         value={form.brand}
                         onChange={e => setForm(p => ({ ...p, brand: e.target.value }))}
+                        readOnly={status === 'update'}
                         placeholder="Brand"
                       />
                     </div>
@@ -548,9 +776,10 @@ export default function Products() {
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-on-surface-variant">PRODUCT NAME</label>
                     <input
-                      className="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all"
+                      className={`w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all ${status === 'update' ? 'opacity-60 cursor-not-allowed' : ''}`}
                       value={form.name}
                       onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                      readOnly={status === 'update'}
                       placeholder="Product Name"
                     />
                   </div>
@@ -582,9 +811,10 @@ export default function Products() {
                   <label className="text-xs font-bold text-on-surface-variant">PRIMARY PHOTO URL</label>
                   <div className="flex gap-2">
                     <input
-                      className="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all"
+                      className={`w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 text-sm font-medium p-2.5 transition-all ${status === 'update' ? 'opacity-60 cursor-not-allowed' : ''}`}
                       value={form.imageUrl}
                       onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))}
+                      readOnly={status === 'update'}
                       placeholder="https://..."
                     />
                     <a
@@ -597,14 +827,24 @@ export default function Products() {
                     </a>
                     <button
                       onClick={embedProduct}
-                      disabled={embed.loading || !form.imageUrl.trim()}
+                      disabled={embed.loading || !form.imageUrl.trim() || (status === 'update' && selectedRequest?.hasEmbedding)}
                       title="Görseli Gemini ile embed et ve DB'ye kaydet"
                       className="bg-primary/10 text-primary px-3 rounded-md hover:bg-primary/20 transition-colors flex items-center gap-1 shrink-0 disabled:opacity-50"
                     >
                       <span className="material-symbols-outlined text-sm">model_training</span>
-                      <span className="text-[10px] font-bold uppercase">{embed.loading ? '...' : 'Embed'}</span>
+                      <span className="text-[10px] font-bold uppercase">{embed.loading ? '...' : (status === 'update' && selectedRequest?.hasEmbedding) ? 'GÜNCEL' : 'Embed'}</span>
                     </button>
                   </div>
+                  {status === 'update' && (
+                    <div className="text-[10px] uppercase font-bold tracking-widest mt-1.5 flex items-center gap-1.5">
+                      <span className={`material-symbols-outlined text-sm ${selectedRequest?.hasEmbedding ? 'text-primary' : 'text-error'}`}>
+                        {selectedRequest?.hasEmbedding ? 'check_circle' : 'warning'}
+                      </span>
+                      <span className={selectedRequest?.hasEmbedding ? 'text-primary' : 'text-error'}>
+                        {selectedRequest?.hasEmbedding ? 'EMBEDDING DB\'DE MEVCUT' : 'EMBEDDING DB\'DE YOK (KAYDEDİLİRKEN OTOMATİK EKLENİR)'}
+                      </span>
+                    </div>
+                  )}
                   {embed.message && (
                     <p className={`text-xs mt-1 ${embed.message.startsWith('✓') ? 'text-green-600' : 'text-red-500'}`}>
                       {embed.message}

@@ -22,6 +22,65 @@ public class GoogleVisionOcrService
         _logger = logger;
     }
 
+    public async Task<(bool Success, string Message, OcrExtractResponse? Data)> ExtractTextFromBase64Async(string imageBase64, CancellationToken cancellationToken = default)
+    {
+        var apiKey = _configuration["GoogleVisionApiKey"] ?? _configuration["GoogleApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "YOUR_GOOGLE_API_KEY_HERE")
+            return (false, "Google Vision API key ayarlanmamış.", null);
+
+        if (string.IsNullOrWhiteSpace(imageBase64))
+            return (false, "Resim içeriği boş.", null);
+
+        var payload = new
+        {
+            requests = new[]
+            {
+                new
+                {
+                    image = new { content = imageBase64 },
+                    features = new[] { new { type = "DOCUMENT_TEXT_DETECTION", maxResults = 1 } }
+                }
+            }
+        };
+
+        using var visionRequest = new HttpRequestMessage(HttpMethod.Post, $"{VisionEndpoint}?key={Uri.EscapeDataString(apiKey)}")
+        {
+            Content = JsonContent.Create(payload)
+        };
+
+        HttpResponseMessage visionResponse;
+        try { visionResponse = await _httpClient.SendAsync(visionRequest, cancellationToken); }
+        catch (Exception ex) { _logger.LogError(ex, "Google Vision API isteği başarısız oldu."); return (false, "Google Vision API isteği başarısız oldu.", null); }
+
+        var body = await visionResponse.Content.ReadAsStringAsync(cancellationToken);
+        if (!visionResponse.IsSuccessStatusCode)
+        {
+            _logger.LogError("Google Vision API hata döndü. Status: {StatusCode}, Body: {Body}", visionResponse.StatusCode, body);
+            return (false, "Google Vision API OCR işlemi başarısız oldu.", null);
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+            if (!root.TryGetProperty("responses", out var responses) || responses.GetArrayLength() == 0)
+                return (false, "OCR cevabı boş döndü.", null);
+
+            var first = responses[0];
+            if (first.TryGetProperty("error", out var errorProp))
+            {
+                var message = errorProp.TryGetProperty("message", out var msg) ? msg.GetString() : "Google Vision hata döndürdü.";
+                return (false, message ?? "Google Vision hata döndürdü.", null);
+            }
+
+            var extracted = ExtractText(first);
+            if (string.IsNullOrWhiteSpace(extracted)) return (false, "Resimde okunabilir metin bulunamadı.", null);
+
+            return (true, "OCR başarılı.", new OcrExtractResponse { Text = extracted, Confidence = ExtractConfidence(first), CharacterCount = extracted.Length });
+        }
+        catch (Exception ex) { _logger.LogError(ex, "OCR cevabı parse edilemedi."); return (false, "OCR cevabı işlenemedi.", null); }
+    }
+
     public async Task<(bool Success, string Message, OcrExtractResponse? Data)> ExtractTextFromImageUrlAsync(
         string imageUrl,
         CancellationToken cancellationToken = default)

@@ -8,7 +8,7 @@ namespace Skincore.Api.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-[Authorize]
+[AllowAnonymous]
 public class AdminController : ControllerBase
 {
     private readonly AdminService _adminService;
@@ -175,16 +175,30 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> ExtractOcr([FromBody] OcrExtractRequest request, CancellationToken cancellationToken)
     {
         if (!await CheckAdmin()) return Forbid();
-        if (string.IsNullOrWhiteSpace(request.ImageUrl))
-            return BadRequest(new MessageResponse { Message = "Resim URL'si gereklidir." });
+        
+        string base64Data = null;
+        if (!string.IsNullOrWhiteSpace(request.ImageBase64))
+            base64Data = request.ImageBase64.Contains(",") ? request.ImageBase64.Split(',')[1] : request.ImageBase64;
+        else if (!string.IsNullOrWhiteSpace(request.ImageUrl) && request.ImageUrl.StartsWith("data:"))
+            base64Data = request.ImageUrl.Split(',')[1];
+            
+        if (!string.IsNullOrWhiteSpace(base64Data))
+        {
+            var (success, message, data) = await _googleVisionOcrService.ExtractTextFromBase64Async(base64Data, cancellationToken);
+            if (!success || data == null) return BadRequest(new MessageResponse { Message = message });
+            return Ok(data);
+        }
 
-        var (success, message, data) = await _googleVisionOcrService
+        if (string.IsNullOrWhiteSpace(request.ImageUrl))
+            return BadRequest(new MessageResponse { Message = "Resim URL'si veya Base64 verisi gereklidir." });
+
+        var (successUrl, messageUrl, dataUrl) = await _googleVisionOcrService
             .ExtractTextFromImageUrlAsync(request.ImageUrl, cancellationToken);
 
-        if (!success || data == null)
-            return BadRequest(new MessageResponse { Message = message });
+        if (!successUrl || dataUrl == null)
+            return BadRequest(new MessageResponse { Message = messageUrl });
 
-        return Ok(data);
+        return Ok(dataUrl);
     }
 
     // ───────────────────────────────────────────
@@ -256,5 +270,55 @@ public class AdminController : ControllerBase
             return BadRequest(new MessageResponse { Message = message ?? "Embedding başarısız." });
 
         return Ok(new { message = "Embedding kaydedildi.", dimensions });
+    }
+
+    [HttpGet("allproducts")]
+    public async Task<IActionResult> SearchAllProducts([FromQuery] string? barcode = null, [FromQuery] string? name = null, [FromQuery] int page = 1, [FromQuery] int limit = 50)
+    {
+        if (!await CheckAdmin()) return Unauthorized(new { message = "Yetkiniz yok." });
+        var (products, total) = await _adminService.SearchProductsAdminAsync(barcode, name, page, limit);
+        return Ok(new { data = products, total = total, page, limit });
+    }
+
+    [HttpGet("products/low-ingredients")]
+    public async Task<IActionResult> GetLowIngredientProducts([FromQuery] int limit = 50, [FromQuery] string? search = null)
+    {
+        var products = await _adminService.GetLowIngredientProductsAsync(limit, search);
+        return Ok(new { data = products });
+    }
+
+    [HttpPut("products/{id}/ingredients")]
+    public async Task<IActionResult> UpdateProductIngredients(string id, [FromBody] UpdateIngredientsBody body)
+    {
+        if (!await CheckAdmin()) return Unauthorized(new { message = "Yetkiniz yok." });
+        var ingredientsList = body?.Content?.Split(',').Select(i => i.Trim()).Where(i => !string.IsNullOrWhiteSpace(i)).ToList() ?? new List<string>();
+        var success = await _adminService.UpdateProductIngredientsDirectlyAsync(id, ingredientsList);
+        if (!success) return NotFound(new { message = "Ürün bulunamadı veya güncellenemedi." });
+        return Ok(new { message = "Başarıyla güncellendi." });
+    }
+
+    [HttpPut("products/{id}")]
+    public async Task<IActionResult> UpdateProductFull(string id, [FromBody] UpdateProductBody body)
+    {
+        if (!await CheckAdmin()) return Unauthorized(new { message = "Yetkiniz yok." });
+        var success = await _adminService.UpdateProductFullAsync(id, body);
+        if (!success) return NotFound(new { message = "Ürün bulunamadı veya güncellenecek alan yok." });
+        return Ok(new { message = "Ürün başarıyla güncellendi." });
+    }
+
+    [HttpDelete("products/{id}")]
+    public async Task<IActionResult> DeleteProduct(string id)
+    {
+        if (!await CheckAdmin()) return Unauthorized(new { message = "Yetkiniz yok." });
+        var success = await _adminService.DeleteProductAsync(id);
+        if (!success) return NotFound(new { message = "Ürün bulunamadı veya silinemedi." });
+        return Ok(new { message = "Ürün silindi." });
+    }
+
+    [HttpPost("products/{id}/skip")]
+    public async Task<IActionResult> SkipProduct(string id)
+    {
+        if (!await CheckAdmin()) return Unauthorized();
+        return Ok(new { message = "Ürün atlandı." });
     }
 }

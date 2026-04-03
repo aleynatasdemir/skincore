@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Products from './pages/Products'
+import AllProducts from './pages/AllProducts'
 import Notifications from './pages/Notifications'
 import Routines from './pages/Routines'
 
@@ -66,6 +67,7 @@ export default function App() {
         <Route path="/" element={<PrivateRoute authStatus={authStatus}><Dashboard /></PrivateRoute>} />
         <Route path="/users" element={<PrivateRoute authStatus={authStatus}><Users /></PrivateRoute>} />
         <Route path="/products" element={<PrivateRoute authStatus={authStatus}><Products /></PrivateRoute>} />
+        <Route path="/allproducts" element={<PrivateRoute authStatus={authStatus}><AllProducts /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute authStatus={authStatus}><Notifications /></PrivateRoute>} />
         <Route path="/routines" element={<PrivateRoute authStatus={authStatus}><Routines /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />

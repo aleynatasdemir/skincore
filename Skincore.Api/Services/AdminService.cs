@@ -306,6 +306,103 @@ public class AdminService
     }
 
     // ── Product request listesi ──
+    public async Task<(List<Product> items, long total)> SearchProductsAdminAsync(string? barcode, string? name, int page = 1, int limit = 50)
+    {
+        var builder = Builders<Product>.Filter;
+        var filter = builder.Empty;
+
+        if (!string.IsNullOrWhiteSpace(barcode))
+            filter = builder.Eq(p => p.Barcode, barcode.Trim());
+        else if (!string.IsNullOrWhiteSpace(name))
+            filter = builder.Regex(p => p.Name, new MongoDB.Bson.BsonRegularExpression(name.Trim(), "i"));
+
+        // Toplam eşleşen sayısını ve sayfanın datasını al
+        var total = await _db.ProductsCollection.CountDocumentsAsync(filter);
+        var items = await _db.ProductsCollection.Find(filter)
+            .SortByDescending(p => p.Id)
+            .Skip((page - 1) * limit)
+            .Limit(limit)
+            .ToListAsync();
+            
+        return (items, total);
+    }
+
+    public async Task<List<Product>> GetLowIngredientProductsAsync(int limit = 50, string? search = null)
+    {
+        var builder = Builders<Product>.Filter;
+        
+        var missingIngredientsFilter = builder.Or(
+            builder.SizeLt(p => p.ProductIngredients, 10),
+            builder.Exists(p => p.ProductIngredients, false)
+        );
+        
+        var missingEmbeddingFilter = builder.Or(
+            builder.Exists(p => p.Embedding, false),
+            builder.Size(p => p.Embedding, 0)
+        );
+        
+        var notCheckedFilter = builder.Ne(p => p.IsIngredientChecked, true);
+        
+        var filter = builder.And(
+            notCheckedFilter, 
+            builder.Or(missingIngredientsFilter, missingEmbeddingFilter)
+        );
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            var searchFilter = builder.Or(
+                builder.Regex(p => p.Name, new MongoDB.Bson.BsonRegularExpression(search, "i")),
+                builder.Regex(p => p.Barcode, new MongoDB.Bson.BsonRegularExpression(search, "i"))
+            );
+            filter = builder.And(filter, searchFilter);
+        }
+
+        return await _db.ProductsCollection.Find(filter).Limit(limit).ToListAsync();
+    }
+
+    public async Task<bool> UpdateProductIngredientsDirectlyAsync(string productId, List<string> ingredients)
+    {
+        var update = Builders<Product>.Update
+            .Set(p => p.ProductIngredients, ingredients)
+            .Set(p => p.IsIngredientChecked, true);
+        
+        var res = await _db.ProductsCollection.UpdateOneAsync(p => p.Id == productId, update);
+        return res.ModifiedCount > 0 || res.MatchedCount > 0;
+    }
+
+    public async Task<bool> UpdateProductFullAsync(string productId, UpdateProductBody body)
+    {
+        var updateDef = Builders<Product>.Update;
+        var updates = new List<UpdateDefinition<Product>>();
+
+        if (body.Name != null) updates.Add(updateDef.Set(p => p.Name, body.Name.Trim()));
+        if (body.Barcode != null) updates.Add(updateDef.Set(p => p.Barcode, body.Barcode.Trim()));
+        if (body.Brand != null) updates.Add(updateDef.Set(p => p.Brand, body.Brand.Trim()));
+        
+        if (body.ProductIngredients != null)
+        {
+            var ingList = body.ProductIngredients.Split(',')
+                .Select(i => i.Trim()).Where(i => !string.IsNullOrWhiteSpace(i)).ToList();
+            updates.Add(updateDef.Set(p => p.ProductIngredients, ingList));
+        }
+        
+        if (body.ImageUrls != null)
+        {
+            var imgList = body.ImageUrls.Split(',')
+                .Select(i => new ImageUrlItem { FileUrl = i.Trim() })
+                .Where(i => !string.IsNullOrWhiteSpace(i.FileUrl)).ToList();
+            updates.Add(updateDef.Set(p => p.ImageUrls, imgList));
+        }
+
+        updates.Add(updateDef.Set(p => p.IsIngredientChecked, true));
+        
+        if (updates.Count == 0) return false;
+        
+        var update = updateDef.Combine(updates);
+        var res = await _db.ProductsCollection.UpdateOneAsync(p => p.Id == productId, update);
+        return res.ModifiedCount > 0 || res.MatchedCount > 0;
+    }
+
     public async Task<List<AdminProductRequestResponse>> GetProductRequestsAsync(string? status = null, int page = 1, int limit = 50)
     {
         var filter = string.IsNullOrWhiteSpace(status)
@@ -380,6 +477,12 @@ public class AdminService
     public async Task<bool> DeleteProductRequestAsync(string requestId)
     {
         var result = await _db.ProductRequestsCollection.DeleteOneAsync(r => r.Id == requestId);
+        return result.DeletedCount > 0;
+    }
+
+    public async Task<bool> DeleteProductAsync(string productId)
+    {
+        var result = await _db.ProductsCollection.DeleteOneAsync(p => p.Id == productId);
         return result.DeletedCount > 0;
     }
 

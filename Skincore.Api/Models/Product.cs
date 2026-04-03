@@ -143,4 +143,12 @@ public class Product
     [BsonIgnoreIfNull]
     [JsonIgnore]
     public List<double>? Embedding { get; set; }
+
+    [BsonIgnore]
+    [JsonPropertyName("has_embedding")]
+    public bool HasEmbedding => Embedding != null && Embedding.Count > 0;
+
+    [BsonElement("is_ingredient_checked")]
+    [JsonPropertyName("is_ingredient_checked")]
+    public bool IsIngredientChecked { get; set; }
 }

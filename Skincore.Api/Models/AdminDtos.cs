@@ -74,7 +74,13 @@ public class SendNotificationRequest
 
 public class OcrExtractRequest
 {
-    public string ImageUrl { get; set; } = null!;
+    public string? ImageUrl { get; set; }
+    public string? ImageBase64 { get; set; }
+}
+
+public class UpdateIngredientsBody
+{
+    public string? Content { get; set; }
 }
 
 public class OcrExtractResponse

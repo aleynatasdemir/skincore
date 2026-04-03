@@ -5,6 +5,7 @@ const navItems = [
   { to: '/',              label: 'Dashboard',     icon: 'dashboard' },
   { to: '/users',         label: 'Users',         icon: 'group' },
   { to: '/products',      label: 'Products',      icon: 'inventory_2' },
+  { to: '/allproducts',   label: 'All Products',  icon: 'view_list' },
   { to: '/notifications', label: 'Notifications', icon: 'notifications' },
   { to: '/routines',      label: 'Routines',      icon: 'settings_backup_restore' },
 ]
@@ -41,6 +42,7 @@ export default function Layout({ children }) {
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                 }`
               }
+              style={item.label === 'All Products' ? { paddingLeft: '1.5rem', fontSize: '0.85rem' } : {}}
             >
               <span className="material-symbols-outlined text-xl">{item.icon}</span>
               <span className="font-headline text-sm tracking-tight">{item.label}</span>
