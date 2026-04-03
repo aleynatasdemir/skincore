@@ -273,10 +273,10 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("allproducts")]
-    public async Task<IActionResult> SearchAllProducts([FromQuery] string? barcode = null, [FromQuery] string? name = null, [FromQuery] int page = 1, [FromQuery] int limit = 50)
+    public async Task<IActionResult> SearchAllProducts([FromQuery] string? barcode = null, [FromQuery] string? name = null, [FromQuery] int page = 1, [FromQuery] int limit = 50, [FromQuery] bool noEmbedding = false)
     {
         if (!await CheckAdmin()) return Unauthorized(new { message = "Yetkiniz yok." });
-        var (products, total) = await _adminService.SearchProductsAdminAsync(barcode, name, page, limit);
+        var (products, total) = await _adminService.SearchProductsAdminAsync(barcode, name, page, limit, noEmbedding);
         return Ok(new { data = products, total = total, page, limit });
     }
 

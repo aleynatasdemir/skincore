@@ -143,7 +143,7 @@ export default function Products() {
       let items = []
       if (status === 'update') {
         const arr = Array.isArray(data) ? data : (data.data || [])
-        items = arr.map(doc => {
+        items = arr.filter(doc => !doc.is_ingredient_checked).map(doc => {
           return {
             id: doc.id,
             productName: doc.name || '',

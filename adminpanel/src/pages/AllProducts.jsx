@@ -10,20 +10,22 @@ export default function AllProducts() {
   const [page, setPage] = useState(1)
   const [searchBarcode, setSearchBarcode] = useState('')
   const [searchName, setSearchName] = useState('')
+  const [noEmbedding, setNoEmbedding] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
+
   const limit = 30
 
   const totalPages = useMemo(() => Math.ceil(total / limit), [total, limit])
 
-  const fetchProducts = async (currentPage = 1, currentBarcode = searchBarcode, currentName = searchName) => {
+  const fetchProducts = async (currentPage = 1, currentBarcode = searchBarcode, currentName = searchName, currentNoEmbedding = noEmbedding) => {
     setLoading(true)
     setError('')
     try {
       const q = new URLSearchParams()
       if (currentBarcode.trim()) q.append('barcode', currentBarcode.trim())
       if (currentName.trim()) q.append('name', currentName.trim())
+      if (currentNoEmbedding) q.append('noEmbedding', 'true')
       q.append('page', currentPage)
       q.append('limit', limit)
 
@@ -44,12 +46,12 @@ export default function AllProducts() {
   useEffect(() => {
     fetchProducts(page)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page])
+  }, [page, noEmbedding])
 
   const handleSearch = (e) => {
     if (e) e.preventDefault()
     if (page === 1) {
-      fetchProducts(1, searchBarcode, searchName)
+      fetchProducts(1, searchBarcode, searchName, noEmbedding)
     } else {
       setPage(1)
     }
@@ -59,7 +61,7 @@ export default function AllProducts() {
     setSearchBarcode('')
     setSearchName('')
     if (page === 1) {
-      fetchProducts(1, '', '')
+      fetchProducts(1, '', '', noEmbedding)
     } else {
       setPage(1)
     }
@@ -114,6 +116,17 @@ export default function AllProducts() {
             </button>
           )}
         </form>
+
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => { setPage(1); setNoEmbedding(v => !v) }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border transition-colors ${noEmbedding ? 'bg-primary text-white border-primary' : 'bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high'}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">model_training</span>
+            No Embedding
+          </button>
+        </div>
       </div>
 
       {error && (

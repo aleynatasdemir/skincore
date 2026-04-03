@@ -306,7 +306,7 @@ public class AdminService
     }
 
     // ── Product request listesi ──
-    public async Task<(List<Product> items, long total)> SearchProductsAdminAsync(string? barcode, string? name, int page = 1, int limit = 50)
+    public async Task<(List<Product> items, long total)> SearchProductsAdminAsync(string? barcode, string? name, int page = 1, int limit = 50, bool noEmbedding = false)
     {
         var builder = Builders<Product>.Filter;
         var filter = builder.Empty;
@@ -316,14 +316,22 @@ public class AdminService
         else if (!string.IsNullOrWhiteSpace(name))
             filter = builder.Regex(p => p.Name, new MongoDB.Bson.BsonRegularExpression(name.Trim(), "i"));
 
-        // Toplam eşleşen sayısını ve sayfanın datasını al
+        if (noEmbedding)
+        {
+            var noEmbedFilter = builder.Or(
+                builder.Exists(p => p.Embedding, false),
+                builder.Size(p => p.Embedding, 0)
+            );
+            filter = builder.And(filter, noEmbedFilter);
+        }
+
         var total = await _db.ProductsCollection.CountDocumentsAsync(filter);
         var items = await _db.ProductsCollection.Find(filter)
             .SortByDescending(p => p.Id)
             .Skip((page - 1) * limit)
             .Limit(limit)
             .ToListAsync();
-            
+
         return (items, total);
     }
 
@@ -335,17 +343,12 @@ public class AdminService
             builder.SizeLt(p => p.ProductIngredients, 10),
             builder.Exists(p => p.ProductIngredients, false)
         );
-        
-        var missingEmbeddingFilter = builder.Or(
-            builder.Exists(p => p.Embedding, false),
-            builder.Size(p => p.Embedding, 0)
-        );
-        
+
         var notCheckedFilter = builder.Ne(p => p.IsIngredientChecked, true);
-        
+
         var filter = builder.And(
-            notCheckedFilter, 
-            builder.Or(missingIngredientsFilter, missingEmbeddingFilter)
+            notCheckedFilter,
+            missingIngredientsFilter
         );
 
         if (!string.IsNullOrEmpty(search))
@@ -620,7 +623,6 @@ public class AdminService
             return (false, "Boş embedding döndü.", 0);
 
         // MongoDB'de ürünü bul ve embedding'i güncelle
-        // Önce barcode ile dene, yoksa image_urls.fileUrl ile eşleştir
         FilterDefinition<Product> filter;
         if (!string.IsNullOrWhiteSpace(barcode))
         {
@@ -628,9 +630,9 @@ public class AdminService
         }
         else if (!string.IsNullOrWhiteSpace(imageUrl))
         {
-            filter = Builders<Product>.Filter.ElemMatch(
-                p => p.ImageUrls,
-                Builders<ImageUrlItem>.Filter.Eq(i => i.FileUrl, imageUrl));
+            // custom serializer ile ElemMatch çalışmıyor — raw BSON query kullan
+            filter = new MongoDB.Driver.BsonDocumentFilterDefinition<Product>(
+                new MongoDB.Bson.BsonDocument("image_urls.fileUrl", imageUrl));
         }
         else
         {
