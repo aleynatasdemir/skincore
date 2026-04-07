@@ -15,25 +15,37 @@ import sys
 import os
 import json
 import time
-import base64
 import subprocess
 import requests
 from pymongo import MongoClient
-from bson import ObjectId
+from pathlib import Path
+
+# .env yükle
+_env_path = Path(__file__).parent / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Ayarlar ──────────────────────────────────────────────────────────────────
-MONGO_URI      = "mongodb://localhost:27017/"
-DB_NAME        = "kozmetik"
-GOOGLE_API_KEY = "AIzaSyBoFPW5SV4fTsThzia704j9_JGW3HK1wSs"
-GEMINI_MODEL   = "gemini-embedding-2-preview"
-PROXY_SCRIPT   = os.path.join(os.path.dirname(__file__), "image_proxy.py")
-BARCODE_MAP_PATH = os.path.join(os.path.dirname(__file__), "ortak_urunler.json")
-RATE_LIMIT_SLEEP = 1.0   # saniye — Gemini rate limit için istekler arası bekleme
+MONGO_URI        = "mongodb://localhost:27017/"
+DB_NAME          = "kozmetik"
+GOOGLE_API_KEY   = os.environ.get("GOOGLE_API_KEY", "")
+GEMINI_MODEL     = "gemini-embedding-2-preview"
+PROXY_SCRIPT     = str(Path(__file__).parent / "image_proxy.py")
+BARCODE_MAP_PATH = str(Path(__file__).parent / "ortak_urunler.json")
+RATE_LIMIT_SLEEP = 1.0
 # ─────────────────────────────────────────────────────────────────────────────
 
-dry_run       = "--dry-run"          in sys.argv
-skip_img_upd  = "--skip-image-update" in sys.argv
-skip_embed    = "--skip-embed"       in sys.argv
+if not GOOGLE_API_KEY:
+    print("HATA: GOOGLE_API_KEY .env dosyasında tanımlı değil.")
+    sys.exit(1)
+
+dry_run      = "--dry-run"           in sys.argv
+skip_img_upd = "--skip-image-update" in sys.argv
+skip_embed   = "--skip-embed"        in sys.argv
 
 client = MongoClient(MONGO_URI)
 col    = client[DB_NAME]["products"]
@@ -63,9 +75,8 @@ if not skip_img_upd:
         {"$or": [
             {"image_urls": {"$exists": False}},
             {"image_urls": {"$size": 0}},
-            {"image_urls": {"$elemMatch": {"fileUrl": {"$in": ["", None]}}}}
         ]},
-        {"_id": 1, "barcode": 1, "name": 1, "image_urls": 1}
+        {"_id": 1, "barcode": 1, "name": 1}
     )
 
     updated = 0
@@ -88,7 +99,7 @@ if not skip_img_upd:
     print(f"  Güncellenen: {updated}, eşleşme bulunamayan: {skipped}")
 
 # ── Helper: image_proxy.py ile base64 al ─────────────────────────────────────
-def fetch_image_base64(url: str) -> str | None:
+def fetch_image_base64(url: str):
     try:
         result = subprocess.run(
             ["python3", PROXY_SCRIPT, url],
@@ -103,7 +114,7 @@ def fetch_image_base64(url: str) -> str | None:
         return None
 
 # ── Helper: Gemini embedding ─────────────────────────────────────────────────
-def gemini_embed(image_base64: str) -> list[float] | None:
+def gemini_embed(image_base64: str):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:embedContent?key={GOOGLE_API_KEY}"
     payload = {
         "model": f"models/{GEMINI_MODEL}",
@@ -126,30 +137,26 @@ def gemini_embed(image_base64: str) -> list[float] | None:
 if not skip_embed:
     print("\n[ADIM 2] Embedding'i olmayan ürünler taranıyor...")
 
-    no_embed_cursor = col.find(
-        {"$or": [
-            {"embedding": {"$exists": False}},
-            {"embedding": {"$size": 0}}
-        ]},
-        {"_id": 1, "barcode": 1, "name": 1, "image_urls": 1}
-    )
-
-    total = col.count_documents({"$or": [
+    no_embed_filter = {"$or": [
         {"embedding": {"$exists": False}},
         {"embedding": {"$size": 0}}
-    ]})
+    ]}
+
+    total = col.count_documents(no_embed_filter)
     print(f"  Toplam embedding'siz ürün: {total}")
+
+    no_embed_cursor = col.find(no_embed_filter, {"_id": 1, "barcode": 1, "name": 1, "image_urls": 1})
 
     done = 0
     failed = 0
 
     for doc in no_embed_cursor:
-        product_id = str(doc["_id"])
-        barcode    = str(doc.get("barcode", "")).strip()
-        name       = doc.get("name", "?")[:50]
+        barcode  = str(doc.get("barcode", "")).strip()
+        name     = doc.get("name", "?")[:50]
+        idx      = done + failed + 1
 
         # image_url bul
-        img_urls = doc.get("image_urls", [])
+        img_urls  = doc.get("image_urls", [])
         image_url = ""
         if isinstance(img_urls, list) and img_urls:
             first = img_urls[0]
@@ -158,22 +165,20 @@ if not skip_embed:
             elif isinstance(first, str):
                 image_url = first
 
-        # URL yoksa barcode_map'ten dene
         if not image_url and barcode:
             image_url = barcode_map.get(barcode, "")
 
         if not image_url:
-            print(f"  [{done+failed+1}/{total}] SKIP (fotoğraf yok): {barcode} — {name}")
+            print(f"  [{idx}/{total}] SKIP (fotoğraf yok): {barcode} — {name}")
             failed += 1
             continue
 
-        print(f"  [{done+failed+1}/{total}] İşleniyor: {barcode} — {name}")
+        print(f"  [{idx}/{total}] İşleniyor: {barcode} — {name}")
 
         if dry_run:
             done += 1
             continue
 
-        # Fotoğraf indir
         b64 = fetch_image_base64(image_url)
         if not b64:
             print(f"    SKIP: fotoğraf indirilemedi")
@@ -181,7 +186,6 @@ if not skip_embed:
             time.sleep(0.2)
             continue
 
-        # Gemini embedding
         embedding = gemini_embed(b64)
         if not embedding:
             print(f"    SKIP: embedding alınamadı")
@@ -189,7 +193,6 @@ if not skip_embed:
             time.sleep(1)
             continue
 
-        # MongoDB kaydet
         col.update_one(
             {"_id": doc["_id"]},
             {"$set": {"embedding": embedding, "has_embedding": True}}
