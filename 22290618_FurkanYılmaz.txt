@@ -14,6 +14,9 @@
   - OnSkin ve benzeri platformlardan eksik ürün verilerinin hedeflenerek paralel çekilmesi ve veri havuzunun genişletilmesi.
   - Yapay zeka dil modelleri aracılığıyla düzensiz ürün içeriklerinin uluslararası INCI standartlarında normalize edilmesi.
   - Ürün eşleştirme algoritmalarında kullanılmak üzere ürün görsellerinden vektörel temsillerin (embeddings) çıkarılması.
+- 3. Hafta — Ürün Arama Algoritması
+  - Arama sisteminin amacının belirlenmesi ve altyapısının kurulması.
+  - Uygulama içi arama deneyimi için farklı Arama Türleri algoritmalarının tasarlanması.
 
 -----------------------------------------
  2. Şimdiye Kadar Neler Yapıldı?
@@ -32,5 +35,11 @@
    - `clean_product_ingredients_gemini.py` betiği ile Gemini 3.1 Flash modeli kullanıldı. Karışık ürün içerikleri bölüm başlıklarından ve anlamsız metinlerden arındırılarak uluslararası INCI standardına göre düzenlendi ve MongoDB'ye toplu olarak güncellendi.
 2. Hafta - Görsel Vektörizasyon (Image Embedding):
    - `embedding` klasöründeki `embed_images.py` betiği kullanılarak yerel diske indirilmiş ürün görselleri Google Gemini Embedding API'ye gönderilip görsel vektörlere dönüştürüldü. İleride görsel veya vektörel aramalarında kullanılmak üzere MongoDB'de doğrudan `embedding` alanı olarak kaydedildi.
+3. Hafta - Ürün Arama Algoritması Çekirdeği:
+   - Arama sisteminin amacı gereği kullanıcıların ürünleri kolay bulabilmesi için arama loglama ve geçmiş özelliklerinin temel altyapısı atıldı.
+   - `ProductsController.cs` içerisinde farklı Arama Türleri için 3 temel algoritma kodlandı:
+     - İsme göre arama: `ProductSearchService` ile isim üzerinden "Fuzzy Matching" (Bulanık) eşleştirme.
+     - Barkoda göre arama: Kesin barkod eşleşmesi döndüren sorgu yapısı (`SearchByBarcodeExact`).
+     - Görsel ile (Hybrid) arama: `ImageSearchService` üzerinden, daha önceden oluşturulan görsel vektörlerini kullanarak %60 Embedding ağırlığı ve %40 OCR içeriği ağırlığı ile çalışan Gelişmiş Hybrid Arama (`SearchByImage`) algoritması geliştirildi.
 
 

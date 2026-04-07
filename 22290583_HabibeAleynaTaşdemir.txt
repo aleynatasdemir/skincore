@@ -11,6 +11,9 @@
 - 2. Hafta - Veri Eşleştirme, Zenginleştirme ve Yönetim Araçları
   - Çoklu kaynaklardan (EWG vb.) elde edilen büyük veri setlerinin temizlenmesi ve Fuzzy Matching algoritmaları ile mevcut sistemle birleştirilmesi.
   - MongoDB veritabanındaki işlenmemiş ürün listelerinin hızlı veri girişine, görsel yüklemeye ve OCR destekli doğrulamaya imkan veren React & .NET tabanlı özel bir web arayüzünün (Ingredient Tool) geliştirilmesi ve sunucuya deploy edilmesi.
+- 3. Hafta - Sistem Mimarisi
+  - Genel Sistem Mimarisi ve Katmanlı Mimari Yapı'nın tasarlanması ve uygulanması.
+  - Frontend – Backend İletişimi süreçlerinin optimize edilmesi.
 
 -----------------------------------------
  2. Şimdiye Kadar Neler Yapıldı?
@@ -31,3 +34,7 @@
    - Eksik veya onaysız ürün verilerinin toplu (batch) işlenebilmesi için full-stack bir yönetim ve denetim aracı ("SilkProductManager") geliştirildi. 
    - Frontend (React/Vite): Sonsuz kaydırma (infinite scroll) özelliği ile yüzlerce ürünün hızlıca ekranda belirdiği, "Kaydet/Atla" seçenekleriyle hızlı denetim yapılan ve mobil cihazlardan OCR okuması için görsel yüklenebilen dinamik bir kullanıcı arayüzü kodlandı.
    - Backend (.NET C#): React arayüzünün MongoDB ve altyapıdaki Python scriptleri (`ocr_script.py`) ile kesintisiz haberleşmesi için REST API logiği kurgulandı ve uygulamanın tüm gereksinimleri paketlenerek uzaktaki canlı sunucuya başarıyla deploy edildi.
+3. Hafta - Backend Mimarisi ve İletişim:
+   - Genel Sistem Mimarisi belirlenerek uygulamanın uzun vadeli sürdürülebilirliği için Katmanlı Mimari Yapı (`Skincore.Api` içerisinde `Controllers`, `Services`, `Models` izole yapısı ile) entegre edildi.
+   - `ProductsController.cs`, `AuthController.cs`, `UserProfileController.cs` vb. endpoint'ler üzerinden ana REST API ağı kuruldu.
+   - iOS mobil istemcisi (özellikle `skincore_swift/.../APIClient.swift` modülü) ile sunucu arasındaki Frontend – Backend İletişimi güvenli ve modüler bir şekilde kodlandı.
