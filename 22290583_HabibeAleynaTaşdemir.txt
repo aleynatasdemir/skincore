@@ -1,5 +1,6 @@
 1. Hafta Video Linki: https://drive.google.com/drive/folders/1qbefQPeL55cTfJeT5uPsiIo-x3iHWXvc?usp=sharing
 2. Hafta Video Linki: https://drive.google.com/file/d/1PJogE7lDBsOnOwqH8210mnAmbQbOzlBg/view?usp=drive_link
+3. Hafta Video Linki: https://drive.google.com/file/d/1wFykEFFqN1oHtgtePtWkG-BcihBAdFKD/view?usp=drive_link
 -----------------------------------------
  1. Üstlenilen Görevler 
 -----------------------------------------
@@ -14,6 +15,10 @@
 - 3. Hafta - Sistem Mimarisi
   - Genel Sistem Mimarisi ve Katmanlı Mimari Yapı'nın tasarlanması ve uygulanması.
   - Frontend – Backend İletişimi süreçlerinin optimize edilmesi.
+- 3. Hafta - Kimlik Doğrulama ve Resend OTP Sistemi
+  - Kullanıcı kayıt, giriş ve e-posta doğrulama akışlarının geliştirilmesi.
+  - "Yeniden gönder" (Resend OTP) mantığının rate-limit, brute-force koruması ve otomatik kilit sıfırlama ile hayata geçirilmesi.
+  - Şifre sıfırlama OTP akışının email enumeration önlemi ile geliştirilmesi.
 
 -----------------------------------------
  2. Şimdiye Kadar Neler Yapıldı?
@@ -38,3 +43,9 @@
    - Genel Sistem Mimarisi belirlenerek uygulamanın uzun vadeli sürdürülebilirliği için Katmanlı Mimari Yapı (`Skincore.Api` içerisinde `Controllers`, `Services`, `Models` izole yapısı ile) entegre edildi.
    - `ProductsController.cs`, `AuthController.cs`, `UserProfileController.cs` vb. endpoint'ler üzerinden ana REST API ağı kuruldu.
    - iOS mobil istemcisi (özellikle `skincore_swift/.../APIClient.swift` modülü) ile sunucu arasındaki Frontend – Backend İletişimi güvenli ve modüler bir şekilde kodlandı.
+3. Hafta - Kimlik Doğrulama ve Resend OTP Sistemi:
+   - `AuthService.cs` + `AuthController.cs` + `EmailService.cs` üçlülüyle tam kimlik doğrulama akışı hayata geçirildi; kayıt, e-posta doğrulama (OTP), giriş ve şifre sıfırlama endpoint'leri oluşturuldu.
+   - Resend OTP (Yeniden Gönderme) Mantığı: Kullanıcı OTP'yi alamadığında veya kodu süresi dolduğunda "/api/auth/resend-verification" endpoint'i üzerinden yeni bir 6 haneli kod üretilir, MongoDB güncellenir ve EmailService aracılığıyla e-posta yeniden gönderilir. Spam önlemi için rate-limit (60 sn bekleme) uygulandı.
+   - Brute-force Koruması: 5 yanlış OTP deneme ardından hesap kilitlenir; resend ile kilit sıfırlanır ve yeni kod güvenli biçimde verilir.
+   - Email Enumeration Önlemi: Şifre sıfırlama akışında kullanıcı var/yok bilgisi dışarıya sızdırılmaz; her koşulda aynı başarı mesajı döndürülür.
+   - OTP güvenliği: Kodlar `RandomNumberGenerator` (kriptografik) ile 100000–999999 aralığında üretilir; 10 dakika geçerlilik süresi ve MongoDB zerinde `VerificationCode`, `VerificationCodeExpiry`, `VerificationAttempts` alanlarıyla yönetilir.
