@@ -254,6 +254,62 @@ class APIClient {
         return try JSONDecoder().decode(MessageResponse.self, from: data)
     }
 
+    // MARK: - Moderation Endpoints
+
+    func submitModerationRequest(
+        productId: String,
+        note: String?,
+        frontImageData: Data?,
+        backImageData: Data?
+    ) async throws -> MessageResponse {
+        guard let url = URL(string: "\(baseURL)/moderation/products/\(productId)") else {
+            throw APIClientError.invalidURL
+        }
+
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        if let token = KeychainService.shared.getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        var body = Data()
+
+        func appendField(_ name: String, _ value: String) {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+            body.append(value.data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+
+        func appendImage(_ name: String, _ data: Data) {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(name).jpg\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+            body.append(data)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+
+        if let note, !note.isEmpty { appendField("note", note) }
+        if let frontImageData { appendImage("frontImage", frontImageData) }
+        if let backImageData { appendImage("backImage", backImageData) }
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else { throw APIClientError.invalidResponse }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorResponse = try? JSONDecoder().decode(MessageResponse.self, from: data) {
+                throw APIClientError.serverError(errorResponse.message)
+            }
+            throw APIClientError.httpError(httpResponse.statusCode)
+        }
+        return try JSONDecoder().decode(MessageResponse.self, from: data)
+    }
+
     // MARK: - Popular Endpoints
 
     func getPopularProducts(limit: Int = 10) async throws -> [PopularProductResponse] {
@@ -457,6 +513,16 @@ class APIClient {
     func searchUsers(query: String) async throws -> [PublicUserProfileResponse] {
         let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
         return try await request(endpoint: "/userprofile/search?query=\(encoded)&limit=15", authenticated: true)
+    }
+
+    func getPublicFollowers(username: String) async throws -> [PublicUserProfileResponse] {
+        let encoded = username.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? username
+        return try await request(endpoint: "/userprofile/public/\(encoded)/followers", authenticated: true)
+    }
+
+    func getPublicFollowing(username: String) async throws -> [PublicUserProfileResponse] {
+        let encoded = username.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? username
+        return try await request(endpoint: "/userprofile/public/\(encoded)/following", authenticated: true)
     }
 
     func getPublicFavorites(username: String) async throws -> [FavoriteResponse] {

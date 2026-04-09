@@ -241,6 +241,24 @@ public class UserProfileService
         return following.Select(f => MapToPublicProfileResponse(f, true)).ToList();
     }
 
+    public async Task<List<PublicUserProfileResponse>?> GetPublicFollowers(string username, string currentUserId)
+    {
+        var user = await _users.Find(u => u.Username != null && u.Username.ToLower() == username.ToLower()).FirstOrDefaultAsync();
+        if (user == null) return null;
+
+        var followers = await _users.Find(u => user.Followers.Contains(u.Id)).ToListAsync();
+        return followers.Select(f => MapToPublicProfileResponse(f, f.Followers.Contains(currentUserId))).ToList();
+    }
+
+    public async Task<List<PublicUserProfileResponse>?> GetPublicFollowing(string username, string currentUserId)
+    {
+        var user = await _users.Find(u => u.Username != null && u.Username.ToLower() == username.ToLower()).FirstOrDefaultAsync();
+        if (user == null) return null;
+
+        var following = await _users.Find(u => user.Following.Contains(u.Id)).ToListAsync();
+        return following.Select(f => MapToPublicProfileResponse(f, f.Followers.Contains(currentUserId))).ToList();
+    }
+
     public async Task<List<PublicUserProfileResponse>> SearchUsers(string query, string currentUserId, int limit = 20)
     {
         if (string.IsNullOrWhiteSpace(query)) return new();

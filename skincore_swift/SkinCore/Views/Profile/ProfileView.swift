@@ -181,7 +181,8 @@ struct UserProfileView: View {
                         routineCount: routines.count,
                         followerCount: publicProfile?.followerCount ?? 0,
                         followingCount: publicProfile?.followingCount ?? 0,
-                        isOwnProfile: false
+                        isOwnProfile: false,
+                        publicUsername: publicProfile?.username ?? userName
                     )
 
                     // Follow / Unfollow button
@@ -296,6 +297,7 @@ private struct ProfileHeaderSection: View {
     let followerCount: Int
     let followingCount: Int
     let isOwnProfile: Bool
+    var publicUsername: String? = nil
     @EnvironmentObject var lang: LanguageManager
 
     private var initials: String {
@@ -347,22 +349,34 @@ private struct ProfileHeaderSection: View {
             }
 
             // Stats
-            HStack(spacing: 32) {
+            HStack(spacing: 0) {
                 StatItem(value: "\(routineCount)", label: lang.s(.profileRoutines))
+                    .frame(maxWidth: .infinity)
                 if isOwnProfile {
                     NavigationLink(destination: ConnectionsView(mode: .followers)) {
                         StatItem(value: "\(followerCount)", label: lang.s(.profileFollowers))
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.plain)
                     NavigationLink(destination: ConnectionsView(mode: .following)) {
                         StatItem(value: "\(followingCount)", label: lang.s(.profileFollowing))
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.plain)
                 } else {
-                    StatItem(value: "\(followerCount)", label: lang.s(.profileFollowers))
-                    StatItem(value: "\(followingCount)", label: lang.s(.profileFollowing))
+                    NavigationLink(destination: ConnectionsView(mode: .followers, username: publicUsername)) {
+                        StatItem(value: "\(followerCount)", label: lang.s(.profileFollowers))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.plain)
+                    NavigationLink(destination: ConnectionsView(mode: .following, username: publicUsername)) {
+                        StatItem(value: "\(followingCount)", label: lang.s(.profileFollowing))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
+            .padding(.horizontal, 32)
             .padding(.top, 20)
             .padding(.bottom, 20)
         }
@@ -384,6 +398,8 @@ private struct StatItem: View {
                 .tracking(1.2)
                 .foregroundColor(Color(hex: "9CA3AF"))
         }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -861,15 +877,22 @@ private struct SettingsRow: View {
 
 enum ConnectionsMode {
     case followers, following
-    func fetch() async throws -> [PublicUserProfileResponse] {
-        self == .followers
-            ? try await APIClient.shared.getFollowers()
-            : try await APIClient.shared.getFollowing()
+    func fetch(username: String?) async throws -> [PublicUserProfileResponse] {
+        if let username {
+            return self == .followers
+                ? try await APIClient.shared.getPublicFollowers(username: username)
+                : try await APIClient.shared.getPublicFollowing(username: username)
+        } else {
+            return self == .followers
+                ? try await APIClient.shared.getFollowers()
+                : try await APIClient.shared.getFollowing()
+        }
     }
 }
 
 struct ConnectionsView: View {
     let mode: ConnectionsMode
+    var username: String? = nil
     @EnvironmentObject var lang: LanguageManager
     @State private var users: [PublicUserProfileResponse] = []
     @State private var isLoading = false
@@ -959,7 +982,7 @@ struct ConnectionsView: View {
 
     private func loadUsers() async {
         isLoading = true
-        users = (try? await mode.fetch()) ?? []
+        users = (try? await mode.fetch(username: username)) ?? []
         isLoading = false
     }
 

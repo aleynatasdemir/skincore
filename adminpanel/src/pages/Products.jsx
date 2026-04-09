@@ -134,6 +134,10 @@ export default function Products() {
         res = await apiFetch(`/admin/products/low-ingredients?limit=3500`)
         data = await res.json()
         if (!res.ok) throw new Error(data.message || 'Ürünler alınamadı.')
+      } else if (status === 'reviewed') {
+        res = await apiFetch(`/moderation/admin?status=pending&limit=50`)
+        data = await res.json()
+        if (!res.ok) throw new Error(data.message || 'Moderasyon talepleri alınamadı.')
       } else {
         res = await apiFetch(`/admin/product-requests?status=${status}&limit=50`)
         data = await res.json()
@@ -158,6 +162,22 @@ export default function Products() {
             isLowIngredients: true
           }
         })
+      } else if (status === 'reviewed') {
+        items = (data.data || []).map(r => ({
+          id: r.id,
+          productName: r.productName || 'Unnamed Product',
+          brandName: r.productBrand || '',
+          productId: r.productId,
+          userId: r.userId,
+          userName: r.userName,
+          note: r.note,
+          frontImageUrl: r.frontImageUrl,
+          backImageUrl: r.backImageUrl,
+          adminNote: r.adminNote || '',
+          moderationStatus: r.status,
+          createdAt: r.createdAt,
+          type: 'moderation',
+        }))
       } else {
         items = data.data || []
       }
@@ -644,6 +664,44 @@ export default function Products() {
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/15 p-10 text-center text-on-surface-variant">
             {status === "update" ? "Düzenlemek için arama sonuçlarından bir ürün seçin." : "Moderasyon için bir ürün talebi seç."}
           </div>
+        ) : status === 'reviewed' ? (
+          <ModerationDetail
+            request={selectedRequest}
+            onResolve={async (adminNote, newStatus) => {
+              setActionLoading(true)
+              setActionMessage('')
+              try {
+                const res = await apiFetch(`/moderation/admin/${selectedRequest.id}`, {
+                  method: 'PUT',
+                  body: JSON.stringify({ status: newStatus, adminNote }),
+                })
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.message || 'Güncellenemedi.')
+                setActionMessage(`✓ Talep "${newStatus}" olarak güncellendi.`)
+                await loadRequests()
+              } catch (err) {
+                setActionMessage(`Hata: ${err.message}`)
+              } finally {
+                setActionLoading(false)
+              }
+            }}
+            onDelete={async () => {
+              if (!confirm('Bu moderasyon talebini silmek istediğine emin misin?')) return
+              setActionLoading(true)
+              try {
+                const res = await apiFetch(`/moderation/admin/${selectedRequest.id}`, { method: 'DELETE' })
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.message || 'Silinemedi.')
+                setActionMessage('✓ Talep silindi.')
+                await loadRequests()
+              } catch (err) {
+                setActionMessage(`Hata: ${err.message}`)
+              } finally {
+                setActionLoading(false)
+              }
+            }}
+            actionLoading={actionLoading}
+          />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <div className="space-y-6 lg:sticky lg:top-24">
@@ -901,6 +959,145 @@ export default function Products() {
         </div>
       </div>
     </Layout>
+  )
+}
+
+// ─── Moderation Detail Panel ───────────────────────────────────────────────
+
+function ModerationDetail({ request, onResolve, onDelete, actionLoading }) {
+  const [adminNote, setAdminNote] = useState(request.adminNote || '')
+  const [lightbox, setLightbox] = useState(null) // 'front' | 'back'
+
+  // request değişince note'u sıfırla
+  useEffect(() => { setAdminNote(request.adminNote || '') }, [request.id])
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      {/* Sol: görseller */}
+      <div className="space-y-4 lg:sticky lg:top-24">
+        {[
+          { key: 'front', label: 'Ön Yüz', url: request.frontImageUrl },
+          { key: 'back',  label: 'Arka Yüz / İçerik', url: request.backImageUrl },
+        ].map(({ key, label, url }) => (
+          <div key={key} className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+            <div className="p-3 border-b border-surface-container flex items-center justify-between bg-surface-container-low/50">
+              <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{label}</span>
+              {url && (
+                <button onClick={() => setLightbox(key)} className="text-xs text-primary underline">
+                  Büyüt
+                </button>
+              )}
+            </div>
+            <div className="relative aspect-[4/3] bg-slate-100 flex items-center justify-center">
+              {url ? (
+                <img
+                  src={url}
+                  className="w-full h-full object-contain cursor-zoom-in"
+                  alt={label}
+                  onClick={() => setLightbox(key)}
+                />
+              ) : (
+                <span className="text-slate-400 text-sm">Fotoğraf eklenmemiş</span>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Lightbox */}
+        {lightbox && (
+          <div
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setLightbox(null)}
+          >
+            <img
+              src={lightbox === 'front' ? request.frontImageUrl : request.backImageUrl}
+              className="max-w-full max-h-full object-contain rounded-xl"
+              alt="Büyük görsel"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Sağ: detaylar + aksiyonlar */}
+      <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-surface-container bg-surface-container-low/50">
+          <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+            <span className="material-symbols-outlined text-sm">rate_review</span>
+            Moderasyon Talebi
+          </span>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Ürün bilgisi */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Ürün</p>
+              <p className="font-semibold">{request.productName}</p>
+              {request.brandName && <p className="text-on-surface-variant text-xs">{request.brandName}</p>}
+            </div>
+            <div>
+              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Kullanıcı</p>
+              <p className="font-semibold">{request.userName || request.userId}</p>
+              <p className="text-on-surface-variant text-xs">{new Date(request.createdAt).toLocaleString('tr-TR')}</p>
+            </div>
+          </div>
+
+          {/* Kullanıcı notu */}
+          <div>
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Kullanıcı Notu</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-900 min-h-[48px]">
+              {request.note || <span className="italic text-amber-400">Not girilmemiş</span>}
+            </div>
+          </div>
+
+          {/* Ürün sayfasına git */}
+          <div>
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Product ID</p>
+            <code className="text-xs bg-surface-container-low px-2 py-1 rounded font-mono">{request.productId}</code>
+          </div>
+
+          {/* Admin notu */}
+          <div>
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Admin Notu</p>
+            <textarea
+              className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 text-sm resize-none focus:border-primary focus:ring-0 outline-none"
+              rows={3}
+              placeholder="Düzenleme notu veya açıklama..."
+              value={adminNote}
+              onChange={e => setAdminNote(e.target.value)}
+            />
+          </div>
+
+          {/* Aksiyonlar */}
+          <div className="flex flex-col gap-2 pt-2">
+            <button
+              onClick={() => onResolve(adminNote, 'reviewed')}
+              disabled={actionLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">check_circle</span>
+              İncelendi olarak işaretle
+            </button>
+            <button
+              onClick={() => onResolve(adminNote, 'resolved')}
+              disabled={actionLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">task_alt</span>
+              Çözüldü olarak kapat
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={actionLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-red-300 text-red-600 font-semibold rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">delete</span>
+              Talebi Sil
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 

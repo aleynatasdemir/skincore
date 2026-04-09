@@ -165,3 +165,26 @@ public class EmbedProductRequest
     public string? ImageUrl { get; set; }   // sunucu tarafında indirilir
     public string? Barcode { get; set; }
 }
+
+public class AdminModerationRequestResponse
+{
+    public string Id { get; set; } = null!;
+    public string ProductId { get; set; } = null!;
+    public string? ProductName { get; set; }
+    public string? ProductBrand { get; set; }
+    public string UserId { get; set; } = null!;
+    public string? UserName { get; set; }
+    public string? Note { get; set; }
+    public string? FrontImageUrl { get; set; }
+    public string? BackImageUrl { get; set; }
+    public string Status { get; set; } = null!;
+    public string? AdminNote { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class AdminUpdateModerationRequest
+{
+    public string? Status { get; set; }   // reviewed | resolved
+    public string? AdminNote { get; set; }
+}

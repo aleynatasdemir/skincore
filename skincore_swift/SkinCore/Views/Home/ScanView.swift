@@ -6,7 +6,7 @@ import Kingfisher
 
 
 // String'i fullScreenCover(item:) için Identifiable yap
-extension String: @retroactive Identifiable {
+extension String: Identifiable {
     public var id: String { self }
 }
 
@@ -142,7 +142,16 @@ struct ScanView: View {
             }
             .navigationTitle(lang.s(.scanTitle))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbarBackground(
+                {
+                    if #available(iOS 26.0, *) {
+                        return AnyShapeStyle(.ultraThinMaterial)
+                    } else {
+                        return AnyShapeStyle(.regularMaterial)
+                    }
+                }(),
+                for: .navigationBar
+            )
             .toolbar {
                 if viewModel.capturedImage != nil {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -1106,6 +1115,7 @@ struct ProductDetailView: View {
     @State private var isFavorite: Bool = false
     @State private var isFavoriteLoading: Bool = false
     @State private var selectedIngredient: MatchedIngredient? = nil
+    @State private var showModerationSheet = false
     @EnvironmentObject var lang: LanguageManager
 
     enum SafetyFilter: String, CaseIterable {
@@ -1405,30 +1415,43 @@ struct ProductDetailView: View {
             }
             .presentationDetents([.medium, .large])
         }
+        .sheet(isPresented: $showModerationSheet) {
+            ModerationRequestView(productId: productId, productName: product?.name)
+                .presentationDetents([.fraction(1.0)])
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    guard !isFavoriteLoading, let product = product else { return }
-                    isFavoriteLoading = true
-                    Task {
-                        do {
-                            let req = AddFavoriteRequest(
-                                productId: productId,
-                                productName: product.name ?? "",
-                                productBrand: product.brand,
-                                productImageURL: product.firstImageUrl
-                            )
-                            let response = try await APIClient.shared.toggleFavorite(req)
-                            isFavorite = response.isFavorite
-                        } catch {
-                            print("Toggle favorite error: \(error)")
-                        }
-                        isFavoriteLoading = false
+                HStack(spacing: 4) {
+                    Button {
+                        showModerationSheet = true
+                    } label: {
+                        Image(systemName: "exclamationmark.bubble")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(Color(hex: "6B7280"))
                     }
-                } label: {
-                    Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(isFavorite ? Color(hex: "D4728C") : Color(hex: "6B7280"))
+                    Button {
+                        guard !isFavoriteLoading, let product = product else { return }
+                        isFavoriteLoading = true
+                        Task {
+                            do {
+                                let req = AddFavoriteRequest(
+                                    productId: productId,
+                                    productName: product.name ?? "",
+                                    productBrand: product.brand,
+                                    productImageURL: product.firstImageUrl
+                                )
+                                let response = try await APIClient.shared.toggleFavorite(req)
+                                isFavorite = response.isFavorite
+                            } catch {
+                                print("Toggle favorite error: \(error)")
+                            }
+                            isFavoriteLoading = false
+                        }
+                    } label: {
+                        Image(systemName: isFavorite ? "heart.fill" : "heart")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(isFavorite ? Color(hex: "D4728C") : Color(hex: "6B7280"))
+                    }
                 }
             }
         }
@@ -1645,6 +1668,228 @@ extension UIImage {
         let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
         return renderer.image { _ in
             draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+    }
+}
+
+// MARK: - ModerationRequestView
+
+struct ModerationRequestView: View {
+    let productId: String
+    let productName: String?
+
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var lang: LanguageManager
+
+    @State private var note = ""
+    @State private var frontImage: UIImage?
+    @State private var backImage: UIImage?
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    @State private var showSuccess = false
+    @State private var showPhotoDialog = false
+    @State private var showImagePicker = false
+    @State private var isPickingFront = true
+    @State private var currentSourceType: UIImagePickerController.SourceType = .photoLibrary
+
+    private var canSubmit: Bool {
+        !isLoading && (frontImage != nil || backImage != nil || !note.trimmingCharacters(in: .whitespaces).isEmpty)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(hex: "FFF0F0").ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        Spacer().frame(height: 8)
+
+                        VStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.bubble.fill")
+                                .font(.system(size: 36))
+                                .foregroundColor(Color(hex: "D4728C"))
+
+                            Text("Moderasyon Talebi")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(Color(hex: "1A1A2E"))
+
+                            if let name = productName {
+                                Text(name)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(Color(hex: "D4728C"))
+                            }
+
+                            Text("Ürün bilgisinin eksik veya hatalı olduğunu düşünüyorsanız açıklama yazıp fotoğraf ekleyebilirsiniz.")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color(hex: "6B7280"))
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(3)
+                                .padding(.top, 2)
+                        }
+                        .padding(.horizontal, 24)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Açıklama (isteğe bağlı)")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(Color(hex: "6B7280"))
+                                .padding(.horizontal, 24)
+
+                            ZStack(alignment: .topLeading) {
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.white)
+                                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: "F3D5DC"), lineWidth: 1))
+
+                                if note.isEmpty {
+                                    Text("Eksik ingredientler, yanlış bilgi vb.")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(Color(hex: "C0A0A8"))
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 12)
+                                }
+
+                                TextEditor(text: $note)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(hex: "1A1A2E"))
+                                    .scrollContentBackground(.hidden)
+                                    .frame(minHeight: 90, maxHeight: 120)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                            }
+                            .padding(.horizontal, 24)
+                        }
+
+                        VStack(spacing: 12) {
+                            Text("Fotoğraf Ekle (isteğe bağlı)")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(Color(hex: "6B7280"))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 24)
+
+                            HStack(spacing: 12) {
+                                ModerationPhotoCard(title: "Ön Yüz", image: frontImage) {
+                                    isPickingFront = true; showPhotoDialog = true
+                                }
+                                ModerationPhotoCard(title: "Arka Yüz / İçerik", image: backImage) {
+                                    isPickingFront = false; showPhotoDialog = true
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                        }
+
+                        if let error = errorMessage {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "EF4444"))
+                                .padding(.horizontal, 24)
+                        }
+
+                        Button {
+                            Task { await submit() }
+                        } label: {
+                            HStack {
+                                if isLoading {
+                                    ProgressView().tint(.white)
+                                } else {
+                                    Image(systemName: "paperplane.fill").font(.system(size: 15))
+                                    Text("Talebi Gönder").font(.system(size: 17, weight: .semibold))
+                                }
+                            }
+                            .frame(maxWidth: .infinity).frame(height: 56)
+                            .background(canSubmit ? Color(hex: "D4728C") : Color(hex: "E5E7EB"))
+                            .foregroundColor(canSubmit ? .white : Color(hex: "9CA3AF"))
+                            .cornerRadius(28)
+                        }
+                        .disabled(!canSubmit)
+                        .padding(.horizontal, 24)
+
+                        Spacer().frame(height: 32)
+                    }
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark").foregroundColor(Color(hex: "1A1A2E"))
+                    }
+                }
+            }
+            .confirmationDialog("Fotoğraf Ekle", isPresented: $showPhotoDialog, titleVisibility: .visible) {
+                Button("Kamera") { currentSourceType = .camera; showImagePicker = true }
+                Button("Galeri") { currentSourceType = .photoLibrary; showImagePicker = true }
+                Button("İptal", role: .cancel) { }
+            }
+            .fullScreenCover(isPresented: $showImagePicker) {
+                ProductRequestImagePicker(
+                    sourceType: currentSourceType,
+                    selectedImage: isPickingFront ? $frontImage : $backImage
+                )
+                .ignoresSafeArea()
+            }
+            .alert("Talebiniz Alındı", isPresented: $showSuccess) {
+                Button("Tamam") { dismiss() }
+            } message: {
+                Text("Moderasyon talebiniz iletildi. En kısa sürede inceleyeceğiz.")
+            }
+        }
+    }
+
+    private func submit() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            _ = try await APIClient.shared.submitModerationRequest(
+                productId: productId,
+                note: note.isEmpty ? nil : note.trimmingCharacters(in: .whitespaces),
+                frontImageData: frontImage?.jpegData(compressionQuality: 0.8),
+                backImageData: backImage?.jpegData(compressionQuality: 0.8)
+            )
+            showSuccess = true
+        } catch let error as APIClientError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+}
+
+private struct ModerationPhotoCard: View {
+    let title: String
+    let image: UIImage?
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(image != nil ? Color(hex: "D4728C") : Color(hex: "F3D5DC"),
+                                    lineWidth: image != nil ? 1.5 : 1)
+                    )
+
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                } else {
+                    VStack(spacing: 8) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(Color(hex: "D4728C").opacity(0.5))
+                        Text(title)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(12)
+                }
+            }
+            .frame(maxWidth: .infinity).frame(height: 120)
         }
     }
 }

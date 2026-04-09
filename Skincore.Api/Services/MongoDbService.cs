@@ -39,6 +39,9 @@ public class MongoDbService
     public IMongoCollection<NotificationLog> NotificationLogsCollection =>
         _database.GetCollection<NotificationLog>("notification_logs");
 
+    public IMongoCollection<ModerationRequest> ModerationRequestsCollection =>
+        _database.GetCollection<ModerationRequest>("moderation_requests");
+
     public async Task CreateIndexesAsync()
     {
         // Drop old problematic index if it exists

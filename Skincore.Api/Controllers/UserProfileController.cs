@@ -161,6 +161,32 @@ public class UserProfileController : ControllerBase
     }
 
     /// <summary>
+    /// GET /api/userprofile/public/{username}/followers - Kullanıcının takipçilerini getir
+    /// </summary>
+    [HttpGet("public/{username}/followers")]
+    public async Task<IActionResult> GetPublicFollowers(string username)
+    {
+        var currentUserId = GetUserId();
+        var followers = await _profileService.GetPublicFollowers(username, currentUserId);
+        if (followers == null)
+            return NotFound(new MessageResponse { Message = "Kullanıcı bulunamadı." });
+        return Ok(followers);
+    }
+
+    /// <summary>
+    /// GET /api/userprofile/public/{username}/following - Kullanıcının takip ettiklerini getir
+    /// </summary>
+    [HttpGet("public/{username}/following")]
+    public async Task<IActionResult> GetPublicFollowing(string username)
+    {
+        var currentUserId = GetUserId();
+        var following = await _profileService.GetPublicFollowing(username, currentUserId);
+        if (following == null)
+            return NotFound(new MessageResponse { Message = "Kullanıcı bulunamadı." });
+        return Ok(following);
+    }
+
+    /// <summary>
     /// GET /api/userprofile/public/{username}/favorites - Kullanıcının favorilerini getir
     /// </summary>
     [HttpGet("public/{username}/favorites")]
