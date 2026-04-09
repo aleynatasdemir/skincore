@@ -38,9 +38,10 @@ public class SocialRoutinesService
 
         var userIds = routines.Select(r => r.UserId).Distinct().ToList();
         var users = await _users.Find(u => userIds.Contains(u.Id)).ToListAsync();
-        var userMap = users.ToDictionary(u => u.Id, u => u.ProfileImageUrl);
+        var userImageMap = users.ToDictionary(u => u.Id, u => u.ProfileImageUrl);
+        var userUsernameMap = users.ToDictionary(u => u.Id, u => u.Username);
 
-        return routines.Select(r => MapToFeed(r, userId, userMap.GetValueOrDefault(r.UserId))).ToList();
+        return routines.Select(r => MapToFeed(r, userId, userImageMap.GetValueOrDefault(r.UserId), userUsernameMap.GetValueOrDefault(r.UserId))).ToList();
     }
     public async Task<RoutineDetailResponse?> GetById(string routineId, string userId)
     {
@@ -52,11 +53,12 @@ public class SocialRoutinesService
         var commentUserIds = routine.Comments.Select(c => c.UserId).Distinct().ToList();
         var commentUsers = await _users.Find(u => commentUserIds.Contains(u.Id)).ToListAsync();
         var commentUserMap = commentUsers.ToDictionary(u => u.Id, u => u.ProfileImageUrl);
+        var commentUsernameMap = commentUsers.ToDictionary(u => u.Id, u => u.Username);
 
-        return MapToDetail(routine, userId, owner?.ProfileImageUrl, commentUserMap);
+        return MapToDetail(routine, userId, owner?.ProfileImageUrl, commentUserMap, commentUsernameMap, owner?.Username);
     }
 
-    public async Task<List<RoutineFeedItemResponse>> GetRoutinesByUserId(string userId)
+    public async Task<List<RoutineFeedItemResponse>> GetRoutinesByUserId(string userId, string? currentUserId = null)
     {
         var routines = await _routines
             .Find(r => r.UserId == userId)
@@ -65,8 +67,25 @@ public class SocialRoutinesService
 
         var user = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
         var profileImageUrl = user?.ProfileImageUrl;
+        var username = user?.Username;
+        var viewerId = currentUserId ?? userId;
 
-        return routines.Select(r => MapToFeed(r, userId, profileImageUrl)).ToList();
+        return routines.Select(r => MapToFeed(r, viewerId, profileImageUrl, username)).ToList();
+    }
+
+    public async Task<List<RoutineFeedItemResponse>> GetLikedRoutines(string userId, string currentUserId)
+    {
+        var filter = Builders<Routine>.Filter.AnyEq(r => r.Likes, userId);
+        var routines = await _routines.Find(filter)
+            .SortByDescending(r => r.CreatedAt)
+            .ToListAsync();
+
+        var ownerIds = routines.Select(r => r.UserId).Distinct().ToList();
+        var owners = await _users.Find(u => ownerIds.Contains(u.Id)).ToListAsync();
+        var imageMap = owners.ToDictionary(u => u.Id, u => u.ProfileImageUrl);
+        var usernameMap = owners.ToDictionary(u => u.Id, u => u.Username);
+
+        return routines.Select(r => MapToFeed(r, currentUserId, imageMap.GetValueOrDefault(r.UserId), usernameMap.GetValueOrDefault(r.UserId))).ToList();
     }
 
     public async Task<RoutineDetailResponse> CreateRoutine(string userId, CreateRoutineRequest request)
@@ -111,7 +130,7 @@ public class SocialRoutinesService
         };
 
         await _routines.InsertOneAsync(routine);
-        return MapToDetail(routine, userId, user?.ProfileImageUrl, new Dictionary<string, string?>());
+        return MapToDetail(routine, userId, user?.ProfileImageUrl, new Dictionary<string, string?>(), new Dictionary<string, string?>(), user?.Username);
     }
 
     public async Task<RoutineCommentResponse?> AddComment(string userId, string routineId, string text)
@@ -152,6 +171,12 @@ public class SocialRoutinesService
         }
 
         return MapToComment(comment, user?.ProfileImageUrl);
+    }
+
+    public async Task<bool> DeleteRoutine(string routineId, string userId)
+    {
+        var result = await _routines.DeleteOneAsync(r => r.Id == routineId && r.UserId == userId);
+        return result.DeletedCount > 0;
     }
 
     public async Task<ToggleLikeResponse?> ToggleLike(string userId, string routineId)
@@ -195,10 +220,12 @@ public class SocialRoutinesService
         };
     }
 
-    private static RoutineFeedItemResponse MapToFeed(Routine routine, string userId, string? profileImageUrl) => new()
+    private static RoutineFeedItemResponse MapToFeed(Routine routine, string userId, string? profileImageUrl, string? userUsername = null) => new()
     {
         Id = routine.Id,
+        UserId = routine.UserId,
         UserName = routine.UserName,
+        UserUsername = userUsername,
         UserProfileImageUrl = profileImageUrl,
         SkinType = routine.SkinType,
         Focus = routine.Focus,
@@ -213,10 +240,12 @@ public class SocialRoutinesService
         CreatedAt = routine.CreatedAt
     };
 
-    private static RoutineDetailResponse MapToDetail(Routine routine, string userId, string? ownerProfileImageUrl, Dictionary<string, string?> commentUserImages) => new()
+    private static RoutineDetailResponse MapToDetail(Routine routine, string userId, string? ownerProfileImageUrl, Dictionary<string, string?> commentUserImages, Dictionary<string, string?> commentUserUsernames, string? ownerUsername = null) => new()
     {
         Id = routine.Id,
+        UserId = routine.UserId,
         UserName = routine.UserName,
+        UserUsername = ownerUsername,
         UserProfileImageUrl = ownerProfileImageUrl,
         SkinType = routine.SkinType,
         Focus = routine.Focus,
@@ -230,7 +259,7 @@ public class SocialRoutinesService
         HasLiked = routine.Likes?.Contains(userId) ?? false,
         CreatedAt = routine.CreatedAt,
         Products = routine.Products?.Select(MapToProduct).ToList() ?? new List<RoutineProductResponse>(),
-        Comments = routine.Comments?.Select(c => MapToComment(c, commentUserImages.GetValueOrDefault(c.UserId))).ToList() ?? new List<RoutineCommentResponse>()
+        Comments = routine.Comments?.Select(c => MapToComment(c, commentUserImages.GetValueOrDefault(c.UserId), commentUserUsernames.GetValueOrDefault(c.UserId))).ToList() ?? new List<RoutineCommentResponse>()
     };
 
     private static RoutineProductResponse MapToProduct(RoutineProduct p) => new()
@@ -241,10 +270,12 @@ public class SocialRoutinesService
         ImageUrl = p.ImageUrl
     };
 
-    private static RoutineCommentResponse MapToComment(RoutineComment c, string? profileImageUrl) => new()
+    private static RoutineCommentResponse MapToComment(RoutineComment c, string? profileImageUrl, string? username = null) => new()
     {
         Id = c.Id,
+        UserId = c.UserId,
         UserName = c.UserName,
+        UserUsername = username,
         UserProfileImageUrl = profileImageUrl,
         Text = c.Text,
         CreatedAt = c.CreatedAt

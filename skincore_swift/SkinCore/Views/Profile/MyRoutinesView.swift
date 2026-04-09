@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import Kingfisher
 
 struct MyRoutinesView: View {
     @State private var routines: [RoutineFeedItem] = []
@@ -31,6 +32,13 @@ struct MyRoutinesView: View {
                             RoutineCardSmall(routine: routine) {
                                 selectedRoutineId = routine.id
                             }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    Task { await deleteRoutine(routine) }
+                                } label: {
+                                    Label("Sil", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                     .padding()
@@ -45,12 +53,20 @@ struct MyRoutinesView: View {
         )) { ident in
             NavigationStack {
                 RoutineDetailView(routineId: ident.id) { _ in
-                    Task { await fetchMyRoutines() }
+                } onDelete: { id in
+                    withAnimation { routines.removeAll { $0.id == id } }
                 }
             }
         }
-        .task {
-            await fetchMyRoutines()
+        .task { await fetchMyRoutines() }
+    }
+
+    private func deleteRoutine(_ routine: RoutineFeedItem) async {
+        do {
+            _ = try await APIClient.shared.deleteRoutine(routineId: routine.id)
+            withAnimation { routines.removeAll { $0.id == routine.id } }
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -74,29 +90,15 @@ private struct RoutineCardSmall: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 if let coverUrl = routine.coverImageUrl, !coverUrl.isEmpty {
-                    AsyncImage(url: URL(string: coverUrl)) { phase in
-                        if let image = phase.image {
-                            image.resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 60, height: 60)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                        } else {
-                            placeholder
-                        }
-                    }
+                    CachedImageView(url: URL(string: coverUrl))
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 } else if let firstProduct = routine.products?.first {
-                    AsyncImage(url: URL(string: firstProduct.imageUrl ?? "")) { phase in
-                        if let image = phase.image {
-                            image.resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 60, height: 60)
-                                .padding(4)
-                                .background(Color.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                        } else {
-                            placeholder
-                        }
-                    }
+                    CachedImageView(url: URL(string: firstProduct.imageUrl ?? ""), contentMode: .fit)
+                    .frame(width: 60, height: 60)
+                    .padding(4)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 } else {
                     placeholder
                 }

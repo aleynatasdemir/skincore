@@ -2,6 +2,7 @@ import SwiftUI
 import Vision
 import UIKit
 import AVFoundation
+import Kingfisher
 
 
 // String'i fullScreenCover(item:) için Identifiable yap
@@ -1051,19 +1052,7 @@ struct ScanResultCard: View {
     var body: some View {
         HStack(spacing: 14) {
             // Ürün fotoğrafı
-            AsyncImage(url: URL(string: product.firstImageUrl ?? "")) { phase in
-                switch phase {
-                case .success(let img):
-                    img.resizable().aspectRatio(contentMode: .fill)
-                default:
-                    ZStack {
-                        Color(hex: "F3F4F6")
-                        Image(systemName: "photo")
-                            .font(.system(size: 24))
-                            .foregroundColor(Color(hex: "CBD5E1"))
-                    }
-                }
-            }
+            CachedImageView(url: URL(string: product.firstImageUrl ?? ""))
             .frame(width: 90, height: 90)
             .clipShape(RoundedRectangle(cornerRadius: 14))
 
@@ -1116,6 +1105,7 @@ struct ProductDetailView: View {
     @State private var selectedFilter: SafetyFilter = .all
     @State private var isFavorite: Bool = false
     @State private var isFavoriteLoading: Bool = false
+    @State private var selectedIngredient: MatchedIngredient? = nil
     @EnvironmentObject var lang: LanguageManager
 
     enum SafetyFilter: String, CaseIterable {
@@ -1218,16 +1208,7 @@ struct ProductDetailView: View {
                         ZStack {
                             Color.white
                             if let urlStr = product.firstImageUrl, let url = URL(string: urlStr) {
-                                AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .success(let img):
-                                        img.resizable().aspectRatio(contentMode: .fit)
-                                    default:
-                                        Image(systemName: "photo")
-                                            .font(.system(size: 52))
-                                            .foregroundColor(Color(hex: "CBD5E1"))
-                                    }
-                                }
+                                CachedImageView(url: url, contentMode: .fit, placeholderIconSize: 52)
                             } else {
                                 Image(systemName: "photo")
                                     .font(.system(size: 52))
@@ -1401,6 +1382,11 @@ struct ProductDetailView: View {
                                 } else {
                                     ForEach(filtered) { item in
                                         IngredientDetailCard(item: item)
+                                            .onTapGesture {
+                                                if let matched = item.matchedIngredient {
+                                                    selectedIngredient = matched
+                                                }
+                                            }
                                     }
                                 }
                             }
@@ -1413,6 +1399,12 @@ struct ProductDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $selectedIngredient) { ingredient in
+            IngredientDetailSheet(ingredient: ingredient) {
+                selectedIngredient = nil
+            }
+            .presentationDetents([.medium, .large])
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {

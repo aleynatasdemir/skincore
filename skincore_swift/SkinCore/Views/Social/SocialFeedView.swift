@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 private let mockRoutineImages = [
     "applying_serum_mock",
@@ -51,6 +52,12 @@ class SocialFeedViewModel: ObservableObject {
             routines[index].likeCount = detail.likeCount
             routines[index].commentCount = detail.commentCount
             routines[index].hasLiked = detail.hasLiked
+        }
+    }
+
+    func removeRoutine(id: String) {
+        withAnimation {
+            routines.removeAll { $0.id == id }
         }
     }
 
@@ -218,6 +225,8 @@ struct SocialFeedView: View {
                 NavigationStack {
                     RoutineDetailView(routineId: selection.id) { updated in
                         viewModel.updateRoutine(updated)
+                    } onDelete: { id in
+                        viewModel.removeRoutine(id: id)
                     }
                 }
             }
@@ -350,24 +359,10 @@ private struct RoutineCard: View {
                     .frame(height: 190)
 
                 if let coverImageUrl = routine.coverImageUrl, !coverImageUrl.isEmpty {
-                    AsyncImage(url: URL(string: coverImageUrl)) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: UIScreen.main.bounds.width - 60, height: 190) // 16*2 padding + 14*2 inner card padding approx
-                                .clipped()
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
-                        default:
-                            Image(mockImg)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: UIScreen.main.bounds.width - 60, height: 190)
-                                .clipped()
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
-                        }
-                    }
+                    CachedImageView(url: URL(string: coverImageUrl))
+                        .frame(width: UIScreen.main.bounds.width - 60, height: 190)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                 } else {
                     Image(mockImg)
                         .resizable()
@@ -456,18 +451,9 @@ private struct RoutineProductThumbnail: View {
                             .stroke(Color(hex: "F3D5DC").opacity(0.5), lineWidth: 1)
                     )
 
-                AsyncImage(url: URL(string: product.imageUrl ?? "")) { phase in
-                    if let image = phase.image {
-                        image.resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 60, height: 60)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    } else {
-                        Image(systemName: "heart.text.square")
-                            .font(.system(size: 24))
-                            .foregroundColor(Color(hex: "CBD5E1"))
-                    }
-                }
+                CachedImageView(url: URL(string: product.imageUrl ?? ""), contentMode: .fit, placeholderIcon: "heart.text.square")
+                .frame(width: 60, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
             Text(product.name)

@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import Kingfisher
 
 // MARK: - HomeViewModel
 
@@ -353,24 +354,9 @@ private struct PopularProductCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Ürün görseli
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(hex: "F3F4F6"))
-                    .aspectRatio(1, contentMode: .fit)
-
-                AsyncImage(url: URL(string: item.resolvedImageUrl ?? "")) { phase in
-                    if case .success(let img) = phase {
-                        img.resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    } else {
-                        Image(systemName: "drop.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(Color(hex: "D4728C").opacity(0.4))
-                    }
-                }
-            }
-            .clipped()
+            CachedImageView(url: URL(string: item.resolvedImageUrl ?? ""), placeholderIcon: "drop.fill")
+                .aspectRatio(1, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
 
             Text(item.productName ?? lang.s(.productDefault))
                 .font(.system(size: 11, weight: .semibold))
@@ -397,19 +383,9 @@ private struct HistoryRow: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color(hex: "F3F4F6"))
                     .frame(width: 48, height: 48)
-                AsyncImage(url: URL(string: item.resolvedImageUrl ?? "")) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 48, height: 48)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    default:
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 18))
-                            .foregroundColor(Color(hex: "9CA3AF"))
-                    }
-                }
+                CachedImageView(url: URL(string: item.resolvedImageUrl ?? ""), placeholderIcon: "magnifyingglass", placeholderIconSize: 18)
+                    .frame(width: 48, height: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
             }
 
             VStack(alignment: .leading, spacing: 3) {
@@ -599,16 +575,7 @@ private struct HomeProductRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            AsyncImage(url: URL(string: product.firstImageUrl ?? "")) { phase in
-                switch phase {
-                case .success(let img):
-                    img.resizable().aspectRatio(contentMode: .fill)
-                default:
-                    Image(systemName: "photo")
-                        .font(.system(size: 22))
-                        .foregroundColor(Color(hex: "9CA3AF"))
-                }
-            }
+            CachedImageView(url: URL(string: product.firstImageUrl ?? ""), placeholderIconSize: 22)
             .frame(width: 60, height: 60)
             .background(Color(hex: "F3F4F6"))
             .clipShape(RoundedRectangle(cornerRadius: 12))

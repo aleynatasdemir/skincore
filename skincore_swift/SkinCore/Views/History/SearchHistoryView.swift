@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 // MARK: - ViewModel
 
@@ -181,24 +182,9 @@ private struct HistoryCard: View {
             .padding(.vertical, 18)
 
             // Ürün görseli
-            AsyncImage(url: URL(string: item.resolvedImageUrl ?? "")) { phase in
-                switch phase {
-                case .success(let img):
-                    img.resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 90, height: 90)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                default:
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(hex: "F3F4F6"))
-                        .frame(width: 90, height: 90)
-                        .overlay(
-                            Image(systemName: "photo")
-                                .font(.system(size: 24))
-                                .foregroundColor(Color(hex: "CBD5E1"))
-                        )
-                }
-            }
+            CachedImageView(url: URL(string: item.resolvedImageUrl ?? ""))
+            .frame(width: 90, height: 90)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.trailing, 8)
 
             // Silme butonu

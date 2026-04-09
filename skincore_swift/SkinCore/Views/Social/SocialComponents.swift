@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import Kingfisher
 
 struct AvatarView: View {
     let name: String
@@ -22,18 +23,13 @@ struct AvatarView: View {
     var body: some View {
         Group {
             if let resolvedPath = APIClient.resolveImageUrl(imageUrl), let url = URL(string: resolvedPath) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: size, height: size)
-                            .clipShape(Circle())
-                    default:
-                        placeholder
-                    }
-                }
+                KFImage(url)
+                    .resizable()
+                    .placeholder { placeholder }
+                    .fade(duration: 0.2)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: size, height: size)
+                    .clipShape(Circle())
             } else {
                 placeholder
             }

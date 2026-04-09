@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import Kingfisher
 
 @MainActor
 class RoutineCreateViewModel: ObservableObject {
@@ -400,23 +401,9 @@ private struct RoutineProductPickerRow: View {
     var body: some View {
         HStack(spacing: 12) {
             NavigationLink(destination: ProductDetailView(productId: productId)) {
-                AsyncImage(url: URL(string: imageUrl ?? "")) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 54, height: 54)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    default:
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(hex: "F3F4F6"))
-                            .frame(width: 54, height: 54)
-                            .overlay(
-                                Image(systemName: "photo")
-                                    .foregroundColor(Color(hex: "CBD5E1"))
-                            )
-                    }
-                }
+                CachedImageView(url: URL(string: imageUrl ?? ""))
+                .frame(width: 54, height: 54)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(name)

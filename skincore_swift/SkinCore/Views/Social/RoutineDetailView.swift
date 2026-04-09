@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 @MainActor
 class RoutineDetailViewModel: ObservableObject {
@@ -42,7 +43,9 @@ class RoutineDetailViewModel: ObservableObject {
             let response = try await APIClient.shared.addRoutineComment(routineId: routineId, text: trimmed)
             let comment = RoutineComment(
                 id: response.id,
+                userId: response.userId,
                 userName: response.userName,
+                userUsername: response.userUsername,
                 userProfileImageUrl: response.userProfileImageUrl,
                 text: response.text,
                 createdAt: response.createdAt
@@ -59,15 +62,18 @@ class RoutineDetailViewModel: ObservableObject {
 struct RoutineDetailView: View {
     let routineId: String
     let onUpdate: (RoutineDetail) -> Void
+    let onDelete: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var lang: LanguageManager
+    @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var viewModel: RoutineDetailViewModel
     @State private var commentText: String = ""
 
-    init(routineId: String, onUpdate: @escaping (RoutineDetail) -> Void = { _ in }) {
+    init(routineId: String, onUpdate: @escaping (RoutineDetail) -> Void = { _ in }, onDelete: @escaping (String) -> Void = { _ in }) {
         self.routineId = routineId
         self.onUpdate = onUpdate
+        self.onDelete = onDelete
         _viewModel = StateObject(wrappedValue: RoutineDetailViewModel(routineId: routineId))
     }
 
@@ -93,21 +99,10 @@ struct RoutineDetailView: View {
                                 .frame(height: 230)
 
                             if let imageUrl = routine.coverImageUrl, let url = URL(string: imageUrl) {
-                                AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: UIScreen.main.bounds.width - 32, height: 230) // Explicitly constrain width to parent's padded width
-                                            .clipped()
-                                            .clipShape(RoundedRectangle(cornerRadius: 20))
-                                    default:
-                                        Image(systemName: "photo")
-                                            .font(.system(size: 32))
-                                            .foregroundColor(Color(hex: "CBD5E1"))
-                                    }
-                                }
+                                CachedImageView(url: url, placeholderIconSize: 32)
+                                    .frame(width: UIScreen.main.bounds.width - 32, height: 230)
+                                    .clipped()
+                                    .clipShape(RoundedRectangle(cornerRadius: 20))
                             } else {
                                 Image(systemName: "photo")
                                     .font(.system(size: 32))
@@ -118,14 +113,30 @@ struct RoutineDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 20))
 
                         HStack(spacing: 12) {
-                            AvatarView(name: routine.userName, imageUrl: routine.userProfileImageUrl)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(routine.userName)
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(Color(hex: "1A1A2E"))
-                                Text(timeAgo(routine.createdAt))
-                                    .font(.system(size: 12))
-                                    .foregroundColor(Color(hex: "9CA3AF"))
+                            if let username = routine.userUsername {
+                                NavigationLink(destination: UserProfileView(userName: username).environmentObject(lang)) {
+                                    AvatarView(name: routine.userName, imageUrl: routine.userProfileImageUrl)
+                                }
+                                NavigationLink(destination: UserProfileView(userName: username).environmentObject(lang)) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(routine.userName)
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundColor(Color(hex: "1A1A2E"))
+                                        Text(timeAgo(routine.createdAt))
+                                            .font(.system(size: 12))
+                                            .foregroundColor(Color(hex: "9CA3AF"))
+                                    }
+                                }
+                            } else {
+                                AvatarView(name: routine.userName, imageUrl: routine.userProfileImageUrl)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(routine.userName)
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(Color(hex: "1A1A2E"))
+                                    Text(timeAgo(routine.createdAt))
+                                        .font(.system(size: 12))
+                                        .foregroundColor(Color(hex: "9CA3AF"))
+                                }
                             }
                             Spacer()
                             if let skinType = routine.skinType, !skinType.isEmpty {
@@ -233,11 +244,27 @@ struct RoutineDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
+                Button { dismiss() } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(Color(hex: "1A1A2E"))
+                }
+            }
+            if let routine = viewModel.routine, routine.userId == authViewModel.currentUser?.id {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button(role: .destructive) {
+                            Task {
+                                _ = try? await APIClient.shared.deleteRoutine(routineId: routine.id)
+                                onDelete(routine.id)
+                                dismiss()
+                            }
+                        } label: {
+                            Label("Rutini Sil", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .foregroundColor(Color(hex: "1A1A2E"))
+                    }
                 }
             }
         }
@@ -261,23 +288,9 @@ private struct RoutineProductRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            AsyncImage(url: URL(string: product.imageUrl ?? "")) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 54, height: 54)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                default:
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(hex: "F3F4F6"))
-                        .frame(width: 54, height: 54)
-                        .overlay(
-                            Image(systemName: "photo")
-                                .foregroundColor(Color(hex: "CBD5E1"))
-                        )
-                }
-            }
+            CachedImageView(url: URL(string: product.imageUrl ?? ""))
+            .frame(width: 54, height: 54)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(product.name)
@@ -304,12 +317,20 @@ private struct CommentRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            AvatarView(name: comment.userName, imageUrl: comment.userProfileImageUrl)
+            NavigationLink(destination: UserProfileView(userName: comment.userUsername ?? comment.userName)) {
+                AvatarView(name: comment.userName, imageUrl: comment.userProfileImageUrl)
+            }
+            .buttonStyle(.plain)
+
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(comment.userName)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Color(hex: "1A1A2E"))
+                    NavigationLink(destination: UserProfileView(userName: comment.userUsername ?? comment.userName)) {
+                        Text(comment.userName)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(Color(hex: "1A1A2E"))
+                    }
+                    .buttonStyle(.plain)
+
                     Text(timeAgo(comment.createdAt))
                         .font(.system(size: 11))
                         .foregroundColor(Color(hex: "9CA3AF"))

@@ -45,6 +45,39 @@ public class RoutinesController : ControllerBase
     }
 
     /// <summary>
+    /// GET /api/routines/favorites - kendi beğenilen rutinler
+    /// </summary>
+    [HttpGet("favorites")]
+    public async Task<IActionResult> GetFavoriteRoutines()
+    {
+        var userId = GetUserId();
+        var routines = await _routinesService.GetLikedRoutines(userId, userId);
+        return Ok(routines);
+    }
+
+    /// <summary>
+    /// GET /api/routines/user/{userId}/favorites - başkasının beğenilen rutinleri
+    /// </summary>
+    [HttpGet("user/{userId}/favorites")]
+    public async Task<IActionResult> GetUserFavoriteRoutines(string userId)
+    {
+        var currentUserId = GetUserId();
+        var routines = await _routinesService.GetLikedRoutines(userId, currentUserId);
+        return Ok(routines);
+    }
+
+    /// <summary>
+    /// GET /api/routines/user/{userId}
+    /// </summary>
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetByUserId(string userId)
+    {
+        var currentUserId = GetUserId();
+        var routines = await _routinesService.GetRoutinesByUserId(userId, currentUserId);
+        return Ok(routines);
+    }
+
+    /// <summary>
     /// GET /api/routines/{id}
     /// </summary>
     [HttpGet("{id}")]
@@ -71,6 +104,19 @@ public class RoutinesController : ControllerBase
         var userId = GetUserId();
         var routine = await _routinesService.CreateRoutine(userId, request);
         return Ok(routine);
+    }
+
+    /// <summary>
+    /// DELETE /api/routines/{id}
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteRoutine(string id)
+    {
+        var userId = GetUserId();
+        var success = await _routinesService.DeleteRoutine(id, userId);
+        if (!success)
+            return NotFound(new MessageResponse { Message = "Rutin bulunamadı veya silme yetkiniz yok." });
+        return Ok(new MessageResponse { Message = "Rutin silindi." });
     }
 
     /// <summary>

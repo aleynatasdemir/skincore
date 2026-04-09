@@ -814,7 +814,9 @@ struct RoutineProduct: Codable, Identifiable {
 
 struct RoutineComment: Codable, Identifiable {
     let id: String
+    let userId: String
     let userName: String
+    let userUsername: String?
     let userProfileImageUrl: String?
     let text: String
     let createdAt: String?
@@ -822,7 +824,9 @@ struct RoutineComment: Codable, Identifiable {
 
 struct RoutineFeedItem: Codable, Identifiable {
     let id: String
+    let userId: String
     let userName: String
+    let userUsername: String?
     let userProfileImageUrl: String?
     let skinType: String?
     let focus: String?
@@ -843,7 +847,9 @@ struct RoutineFeedItem: Codable, Identifiable {
 
 struct RoutineDetail: Codable, Identifiable {
     let id: String
+    let userId: String
     let userName: String
+    let userUsername: String?
     let userProfileImageUrl: String?
     let skinType: String?
     let focus: String?
@@ -888,7 +894,9 @@ struct AddRoutineCommentRequest: Codable {
 
 struct RoutineCommentResponse: Codable {
     let id: String
+    let userId: String
     let userName: String
+    let userUsername: String?
     let userProfileImageUrl: String?
     let text: String
     let createdAt: String?

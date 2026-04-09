@@ -130,8 +130,8 @@ class APIClient {
     }
 
     func updateNotifications(enabled: Bool) async throws -> MessageResponse {
-        struct UpdateNotificationsReq: Encodable { let notificationsEnabled: Bool }
-        return try await request(endpoint: "/auth/notifications", method: "PUT", body: UpdateNotificationsReq(notificationsEnabled: enabled), authenticated: true)
+        struct UpdateNotificationsReq: Encodable { let enabled: Bool }
+        return try await request(endpoint: "/auth/notifications", method: "PUT", body: UpdateNotificationsReq(enabled: enabled), authenticated: true)
     }
 
     // MARK: - Product Endpoints
@@ -319,12 +319,24 @@ class APIClient {
         return try await request(endpoint: "/routines/favorites?limit=\(limit)", authenticated: true)
     }
 
+    func getRoutinesByUserId(userId: String) async throws -> [RoutineFeedItem] {
+        return try await request(endpoint: "/routines/user/\(userId)", authenticated: true)
+    }
+
+    func getLikedRoutinesByUserId(userId: String) async throws -> [RoutineFeedItem] {
+        return try await request(endpoint: "/routines/user/\(userId)/favorites", authenticated: true)
+    }
+
     func getRoutineDetail(id: String) async throws -> RoutineDetail {
         return try await request(endpoint: "/routines/\(id)", authenticated: true)
     }
 
     func createRoutine(_ req: CreateRoutineRequest) async throws -> RoutineFeedItem {
         return try await request(endpoint: "/routines", method: "POST", body: req, authenticated: true)
+    }
+
+    func deleteRoutine(routineId: String) async throws -> MessageResponse {
+        return try await request(endpoint: "/routines/\(routineId)", method: "DELETE", authenticated: true)
     }
 
     func addRoutineComment(routineId: String, text: String) async throws -> RoutineCommentResponse {

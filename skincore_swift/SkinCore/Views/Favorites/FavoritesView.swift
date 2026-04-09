@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 // MARK: - ViewModel
 
@@ -191,20 +192,7 @@ private struct FavoriteCard: View {
             // Sağ taraf: Ürün fotoğrafı
                 let imageStr = favorite.resolvedImageUrl
                 if let imageStr = imageStr, let url = URL(string: imageStr) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        productPlaceholder
-                    case .empty:
-                        ProgressView()
-                            .tint(Color(hex: "D4728C"))
-                    @unknown default:
-                        productPlaceholder
-                    }
-                }
+                CachedImageView(url: url)
                 .frame(width: 130, height: 150)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .padding(.trailing, 14)

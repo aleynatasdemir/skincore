@@ -1,5 +1,7 @@
 import SwiftUI
 import PhotosUI
+import Kingfisher
+import UserNotifications
 
 // MARK: - ProfileView (kendi profili)
 
@@ -85,9 +87,9 @@ struct ProfileView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button { showEditProfile = true } label: {
-                        Image(systemName: "pencil.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(Color(hex: "D4728C"))
+                        Image(systemName: "pencil")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(Color(hex: "7B5455"))
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -210,7 +212,7 @@ struct UserProfileView: View {
                         .padding(.bottom, 8)
                     }
 
-                    ProfileTabBar(selected: $selectedTab)
+                    ProfileTabBar(selected: $selectedTab, isOwnProfile: false)
                         .padding(.top, 8)
 
                     Divider().padding(.horizontal, 20)
@@ -255,16 +257,17 @@ struct UserProfileView: View {
 
     private func loadData() async {
         isLoading = true
-        async let profileResult = APIClient.shared.getPublicProfile(username: userName)
-        async let feedResult = APIClient.shared.getRoutineFeed(limit: 50)
-        async let favResult = APIClient.shared.getPublicFavorites(username: userName)
-        async let favRoutinesResult = APIClient.shared.getFavoriteRoutines(limit: 50)
-        publicProfile = try? await profileResult
-        let all = (try? await feedResult) ?? []
-        routines = all.filter { $0.userName == userName }
-        favorites = (try? await favResult) ?? []
-        // Tüm favorilenen rutinler
-        favoriteRoutines = (try? await favRoutinesResult) ?? []
+        let profile = try? await APIClient.shared.getPublicProfile(username: userName)
+        publicProfile = profile
+
+        if let userId = profile?.id {
+            async let routinesResult = APIClient.shared.getRoutinesByUserId(userId: userId)
+            async let favResult = APIClient.shared.getPublicFavorites(username: userName)
+            async let likedRoutinesResult = APIClient.shared.getLikedRoutinesByUserId(userId: userId)
+            routines = (try? await routinesResult) ?? []
+            favorites = (try? await favResult) ?? []
+            favoriteRoutines = (try? await likedRoutinesResult) ?? []
+        }
         isLoading = false
     }
 
@@ -395,11 +398,12 @@ enum FavoriteType {
 
 private struct ProfileTabBar: View {
     @Binding var selected: ProfileTab
+    var isOwnProfile: Bool = true
     @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         HStack(spacing: 0) {
-            TabButton(title: lang.s(.profileMyRoutines), isSelected: selected == .routines) {
+            TabButton(title: isOwnProfile ? lang.s(.profileMyRoutines) : lang.s(.profileRoutines), isSelected: selected == .routines) {
                 selected = .routines
             }
             TabButton(title: lang.s(.profileFavorites), isSelected: selected == .favorites) {
@@ -495,13 +499,11 @@ private struct RoutineGridCell: View {
                 // Görsel
                 Group {
                     if let url = routine.coverImageUrl, let imageUrl = URL(string: url) {
-                        AsyncImage(url: imageUrl) { phase in
-                            if case .success(let img) = phase {
-                                img.resizable().scaledToFill()
-                            } else {
-                                Image(mockImage).resizable().scaledToFill()
-                            }
-                        }
+                        KFImage(imageUrl)
+                            .resizable()
+                            .placeholder { Image(mockImage).resizable().scaledToFill() }
+                            .fade(duration: 0.2)
+                            .scaledToFill()
                     } else {
                         Image(mockImage).resizable().scaledToFill()
                     }
@@ -631,13 +633,11 @@ private struct FavoriteGridCell: View {
             ZStack(alignment: .bottomLeading) {
                 Group {
                     if let url = fav.productImageURL, let imageUrl = URL(string: url) {
-                        AsyncImage(url: imageUrl) { phase in
-                            if case .success(let img) = phase {
-                                img.resizable().scaledToFill()
-                            } else {
-                                Color(hex: "F3E8E8")
-                            }
-                        }
+                        KFImage(imageUrl)
+                            .resizable()
+                            .placeholder { Color(hex: "F3E8E8") }
+                            .fade(duration: 0.2)
+                            .scaledToFill()
                     } else {
                         Color(hex: "F3E8E8")
                     }
@@ -731,14 +731,19 @@ private struct SettingsSheet: View {
                     }
                 }
             }
-            .onAppear {
-                notificationsEnabled = authViewModel.currentUser?.notificationsEnabled ?? true
-            }
+            .onAppear { Task { await refreshNotificationState() } }
             .sheet(isPresented: $showChangePassword) {
                 ChangePasswordView()
                     .environmentObject(authViewModel)
                     .environmentObject(lang)
             }
+        }
+    }
+
+    private func refreshNotificationState() async {
+        let backendEnabled = authViewModel.currentUser?.notificationsEnabled ?? true
+        await MainActor.run {
+            notificationsEnabled = backendEnabled
         }
     }
 }
