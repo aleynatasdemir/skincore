@@ -70,7 +70,7 @@ class HomeViewModel: ObservableObject {
     func fetchHistory() async {
         isLoadingHistory = true
         do {
-            searchHistory = try await APIClient.shared.getSearchHistory(limit: 20)
+            searchHistory = try await APIClient.shared.getSearchHistory(limit: 5)
         } catch {
             print("History fetch error: \(error)")
         }
@@ -127,6 +127,8 @@ struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @FocusState private var isSearchFocused: Bool
     @State private var selectedPopularProductId: String?
+    @State private var showQuiz = false
+    @State private var showSocial = false
 
     var body: some View {
         NavigationStack {
@@ -251,30 +253,29 @@ struct HomeView: View {
                                     .foregroundColor(Color(hex: "9CA3AF"))
                                     .padding(.horizontal)
                             } else {
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible(), spacing: 10),
-                                    GridItem(.flexible(), spacing: 10),
-                                    GridItem(.flexible(), spacing: 10)
-                                ], spacing: 10) {
-                                    ForEach(viewModel.popularProducts) { item in
-                                        Button {
-                                            Task {
-                                                await viewModel.addToHistory(
-                                                    query: item.productName ?? "",
-                                                    productId: item.productId,
-                                                    productName: item.productName,
-                                                    category: nil,
-                                                    imageUrl: item.resolvedImageUrl
-                                                )
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 12) {
+                                        ForEach(viewModel.popularProducts) { item in
+                                            Button {
+                                                Task {
+                                                    await viewModel.addToHistory(
+                                                        query: item.productName ?? "",
+                                                        productId: item.productId,
+                                                        productName: item.productName,
+                                                        category: nil,
+                                                        imageUrl: item.resolvedImageUrl
+                                                    )
+                                                }
+                                                selectedPopularProductId = item.productId
+                                            } label: {
+                                                PopularProductCard(item: item)
                                             }
-                                            selectedPopularProductId = item.productId
-                                        } label: {
-                                            PopularProductCard(item: item)
+                                            .buttonStyle(.plain)
                                         }
-                                        .buttonStyle(.plain)
                                     }
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 4)
                                 }
-                                .padding(.horizontal)
                             }
                         }
                         .navigationDestination(isPresented: Binding(
@@ -285,6 +286,38 @@ struct HomeView: View {
                                 ProductDetailView(productId: productId)
                             }
                         }
+
+                        // ── Quick Action Cards ──
+                        Text(lang.s(.homeDiscoverTitle))
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(hex: "1A1A2E"))
+                            .padding(.horizontal)
+
+                        HStack(spacing: 12) {
+                            Button { showQuiz = true } label: {
+                                QuickActionCard(
+                                    backgroundImage: "quiz_card_background",
+                                    title: lang.s(.quizDiscoverButton),
+                                    subtitle: lang.s(.homeQuizCardSubtitle)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .sheet(isPresented: $showQuiz) {
+                                SkinTypeQuizView()
+                                    .environmentObject(authViewModel)
+                                    .environmentObject(lang)
+                            }
+
+                            NavigationLink(destination: EmptyView()) {
+                                QuickActionCard(
+                                    backgroundImage: "routine_card_background",
+                                    title: lang.s(.homeRoutineCardTitle),
+                                    subtitle: lang.s(.homeRoutineCardSubtitle)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal)
 
                         // ── Search History ──
                         if !viewModel.searchHistory.isEmpty || viewModel.isLoadingHistory {
@@ -345,6 +378,48 @@ struct HomeView: View {
     }
 }
 
+// MARK: - Quick Action Card
+
+private struct QuickActionCard: View {
+    let backgroundImage: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            Image(backgroundImage)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity)
+                .frame(height: 160)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(LinearGradient(
+                            colors: [Color.black.opacity(0.6), Color.clear],
+                            startPoint: .bottom,
+                            endPoint: .top
+                        ))
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(2)
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.85))
+                    .lineLimit(2)
+            }
+            .padding(12)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 160)
+    }
+}
+
 // MARK: - Popular Product Card
 
 private struct PopularProductCard: View {
@@ -353,17 +428,18 @@ private struct PopularProductCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Ürün görseli
             CachedImageView(url: URL(string: item.resolvedImageUrl ?? ""), placeholderIcon: "drop.fill")
-                .aspectRatio(1, contentMode: .fit)
+                .frame(width: 90, height: 90)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
 
             Text(item.productName ?? lang.s(.productDefault))
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(Color(hex: "1A1A2E"))
                 .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(12)
+        .frame(width: 110)
+        .padding(10)
         .background(Color.white)
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.04), radius: 8, y: 2)

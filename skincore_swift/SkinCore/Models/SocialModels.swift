@@ -208,6 +208,9 @@ enum L10nKey {
     case quizQ6A1, quizQ6A2, quizQ6A3, quizQ6A4
     case quizQ7A1, quizQ7A2, quizQ7A3, quizQ7A4
     case quizDiscoverButton
+    case homeDiscoverTitle
+    case homeQuizCardSubtitle
+    case homeRoutineCardTitle, homeRoutineCardSubtitle
 
     // MARK: Paywall
     case paywallSubtitle
@@ -370,7 +373,7 @@ enum L10nKey {
         case .routineDescPlaceholder: return "Kısa bir açıklama yaz"
         case .routinePhotoOptional: return "FOTOĞRAF (OPSİYONEL)"
         case .routineAddPhoto: return "Rutinine bir fotoğraf ekle"
-        case .routineShareJourney: return "Cildinin değişimini paylaş"
+        case .routineShareJourney: return "Rutinlerini Paylaş"
         case .routineSearchProduct: return "Ürün ara..."
         case .routineSearching: return "Aranıyor..."
         case .routineSearchResults: return "Arama Sonuçları"
@@ -579,6 +582,10 @@ enum L10nKey {
         case .quizSave: return "Profilime Kaydet"
         case .quizRetake: return "Testi Yeniden Yap"
         case .quizDiscoverButton: return "Cilt Tipini Keşfet"
+        case .homeDiscoverTitle: return "Skincore'u Keşfet"
+        case .homeQuizCardSubtitle: return "Cilt tipinizi öğrenmek için testimize katılın"
+        case .homeRoutineCardTitle: return "Rutininizi Paylaşın"
+        case .homeRoutineCardSubtitle: return "Cilt bakım rutininizi toplulukla paylaşın"
         case .quizQ1: return "Temizledikten birkaç saat sonra cildiniz nasıl görünüyor?"
         case .quizQ2: return "Gün içinde cildiniz nasıl bir his veriyor?"
         case .quizQ3: return "T-bölgeniz (alın, burun, çene) nasıl görünüyor?"
@@ -785,7 +792,7 @@ enum L10nKey {
         case .routineDescPlaceholder: return "Write a brief description"
         case .routinePhotoOptional: return "PHOTO (OPTIONAL)"
         case .routineAddPhoto: return "Add a photo to your routine"
-        case .routineShareJourney: return "Share your skin journey"
+        case .routineShareJourney: return "Share Your Routines"
         case .routineSearchProduct: return "Search product..."
         case .routineSearching: return "Searching..."
         case .routineSearchResults: return "Search Results"
@@ -1000,6 +1007,10 @@ enum L10nKey {
         case .quizSave: return "Save to My Profile"
         case .quizRetake: return "Retake the Quiz"
         case .quizDiscoverButton: return "Discover Your Skin Type"
+        case .homeDiscoverTitle: return "Explore Skincore"
+        case .homeQuizCardSubtitle: return "Take our quiz to discover your skin type"
+        case .homeRoutineCardTitle: return "Share Your Routine"
+        case .homeRoutineCardSubtitle: return "Share your skincare routine with the community"
         case .quizQ1: return "How does your skin look a few hours after cleansing?"
         case .quizQ2: return "How does your skin feel throughout the day?"
         case .quizQ3: return "How does your T-zone (forehead, nose, chin) look?"
