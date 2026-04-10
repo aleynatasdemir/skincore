@@ -15,7 +15,9 @@ extension String: Identifiable {
 struct ScanView: View {
     @StateObject private var viewModel = ScanViewModel()
     @EnvironmentObject var lang: LanguageManager
+    @EnvironmentObject var subscriptionService: SubscriptionService
     @State private var showResults = false
+    @State private var showPaywall = false
 
     var body: some View {
         NavigationStack {
@@ -111,7 +113,13 @@ struct ScanView: View {
                     VStack(spacing: 0) {
                         Spacer()
                         VStack(spacing: 20) {
-                            Button { viewModel.openCamera() } label: {
+                            Button {
+                                if subscriptionService.canScan() {
+                                    viewModel.openCamera()
+                                } else {
+                                    showPaywall = true
+                                }
+                            } label: {
                                 ZStack {
                                     Circle()
                                         .fill(Color(hex: "D4728C").opacity(0.06))
@@ -135,6 +143,26 @@ struct ScanView: View {
                                     .font(.system(size: 14))
                                     .foregroundColor(Color(hex: "9CA3AF"))
                             }
+
+                            if !subscriptionService.isPremium {
+                                Button { showPaywall = true } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "sparkles")
+                                        let remaining = subscriptionService.getRemainingScans()
+                                        if remaining > 0 {
+                                            Text(String(format: lang.s(.paywallScansLeft), remaining))
+                                        } else {
+                                            Text(lang.s(.paywallLimitReached))
+                                        }
+                                    }
+                                    .font(.caption.weight(.medium))
+                                    .foregroundColor(Color(hex: "D4728C"))
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 7)
+                                    .background(Color(hex: "D4728C").opacity(0.1))
+                                    .cornerRadius(20)
+                                }
+                            }
                         }
                         Spacer()
                     }
@@ -142,6 +170,11 @@ struct ScanView: View {
             }
             .navigationTitle(lang.s(.scanTitle))
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showPaywall) {
+                PaywallView()
+                    .environmentObject(subscriptionService)
+                    .environmentObject(lang)
+            }
             .toolbarBackground(
                 {
                     if #available(iOS 26.0, *) {
@@ -182,6 +215,7 @@ struct ScanView: View {
                     viewModel: viewModel,
                     onCapture: { image in
                         viewModel.showCamera = false
+                        subscriptionService.incrementScanCount()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                             viewModel.processImage(image)
                         }
@@ -1116,7 +1150,11 @@ struct ProductDetailView: View {
     @State private var isFavoriteLoading: Bool = false
     @State private var selectedIngredient: MatchedIngredient? = nil
     @State private var showModerationSheet = false
+    @State private var showSkinCompatSheet = false
+    @State private var showPaywall = false
     @EnvironmentObject var lang: LanguageManager
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var subscriptionService: SubscriptionService
 
     enum SafetyFilter: String, CaseIterable {
         case all, safe, moderate, avoid
@@ -1327,6 +1365,48 @@ struct ProductDetailView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 20)
 
+                        // ── Cilt Tipi Uyumluluk Butonu ────────────────
+                        if let skinType = authViewModel.currentUser?.skinType {
+                            Button {
+                                if subscriptionService.isPremium {
+                                    showSkinCompatSheet = true
+                                } else {
+                                    showPaywall = true
+                                }
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: subscriptionService.isPremium ? "staroflife.fill" : "lock.fill")
+                                        .font(.system(size: 14))
+                                    Text(subscriptionService.isPremium
+                                         ? lang.s(.skinCompatButton)
+                                         : lang.s(.skinCompatButtonLocked))
+                                        .font(.system(size: 15, weight: .semibold))
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(Color(hex: "D4728C").opacity(0.6))
+                                }
+                                .foregroundColor(Color(hex: "D4728C"))
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 16)
+                                .background(Color(hex: "FFF0F5"))
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color(hex: "D4728C").opacity(0.25), lineWidth: 1)
+                                )
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                            .sheet(isPresented: $showSkinCompatSheet) {
+                                SkinCompatibilitySheet(
+                                    ingredients: ingredients,
+                                    skinType: skinType
+                                )
+                                .environmentObject(lang)
+                            }
+                        }
+
                         // ── İçerikler Başlık + Filtre ────────────────
                         VStack(alignment: .leading, spacing: 0) {
                             // Section header
@@ -1391,7 +1471,10 @@ struct ProductDetailView: View {
                                     .padding(.vertical, 32)
                                 } else {
                                     ForEach(filtered) { item in
-                                        IngredientDetailCard(item: item)
+                                        IngredientDetailCard(
+                                            item: item,
+                                            userSkinType: subscriptionService.isPremium ? authViewModel.currentUser?.skinType : nil
+                                        )
                                             .onTapGesture {
                                                 if let matched = item.matchedIngredient {
                                                     selectedIngredient = matched
@@ -1418,6 +1501,11 @@ struct ProductDetailView: View {
         .sheet(isPresented: $showModerationSheet) {
             ModerationRequestView(productId: productId, productName: product?.name)
                 .presentationDetents([.fraction(1.0)])
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+                .environmentObject(subscriptionService)
+                .environmentObject(lang)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -1497,6 +1585,7 @@ private struct SafetyStatBadge: View {
 
 struct IngredientDetailCard: View {
     let item: IngredientMatchResult
+    var userSkinType: String? = nil
     @EnvironmentObject var lang: LanguageManager
 
     private var safetyLevel: Int { item.matchedIngredient?.resolvedSafetyLevel ?? 0 }
@@ -1594,6 +1683,34 @@ struct IngredientDetailCard: View {
                 .padding(.top, 6)
             }
 
+            // Cilt Uyumluluğu (Premium)
+            if let skinType = userSkinType,
+               let ingredient = item.matchedIngredient {
+                let goodFor = ingredient.goodFor ?? []
+                let badFor = ingredient.badFor ?? []
+                // DB'de Türkçe saklanır, EN modunda EN karşılığını da kontrol et
+                let skinTypeEn = SkinTypeTranslation.toEn(skinType)
+                let isGood = goodFor.contains(skinType) || goodFor.contains(skinTypeEn)
+                let isBad = badFor.contains(skinType) || badFor.contains(skinTypeEn)
+
+                if isGood || isBad {
+                    HStack(spacing: 6) {
+                        Image(systemName: isGood ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundColor(isGood ? Color(hex: "22C55E") : Color(hex: "F59E0B"))
+                        Text(isGood ? lang.s(.skinTypeCompatible) : lang.s(.skinTypeIncompatible))
+                            .font(.caption2.bold())
+                            .foregroundColor(isGood ? Color(hex: "22C55E") : Color(hex: "F59E0B"))
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(isGood ? Color(hex: "F0FDF4") : Color(hex: "FFFBEB"))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.horizontal, 14)
+                    .padding(.top, 6)
+                }
+            }
+
             // EU/US limited warning box
             let isLimitedEu = item.matchedIngredient?.limitedEu ?? false
             let isLimitedUs = item.matchedIngredient?.limitedUs ?? false
@@ -1629,6 +1746,444 @@ struct IngredientDetailCard: View {
                 .stroke(accentColor.opacity(isMatched ? 0.18 : 0.08), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
+    }
+}
+
+// MARK: - Skin Compatibility Sheet
+
+struct SkinCompatibilitySheet: View {
+    let ingredients: [IngredientMatchResult]
+    let skinType: String
+    @EnvironmentObject var lang: LanguageManager
+    @Environment(\.dismiss) var dismiss
+
+    private var skinTypeEn: String { SkinTypeTranslation.toEn(skinType) }
+
+    private var goodIngredients: [IngredientMatchResult] {
+        ingredients.filter {
+            let gf = $0.matchedIngredient?.goodFor ?? []
+            return gf.contains(skinType) || gf.contains(skinTypeEn)
+        }
+    }
+
+    private var badIngredients: [IngredientMatchResult] {
+        ingredients.filter {
+            let bf = $0.matchedIngredient?.badFor ?? []
+            return bf.contains(skinType) || bf.contains(skinTypeEn)
+        }
+    }
+
+    private var dataCount: Int {
+        ingredients.filter { $0.matchedIngredient?.goodFor != nil || $0.matchedIngredient?.badFor != nil }.count
+    }
+
+    // MARK: - Skor Hesaplama
+
+    private struct SkinScoreResult {
+        let final: Int          // 0–100
+        let compatibility: Int  // 0–100
+        let ewgSafety: Int      // 0–100
+        let hasData: Bool
+    }
+
+    private func computeSkinScore() -> SkinScoreResult {
+        guard dataCount >= 3 else {
+            return SkinScoreResult(final: 0, compatibility: 0, ewgSafety: 0, hasData: false)
+        }
+
+        let matched = ingredients.compactMap { $0.matchedIngredient }
+        let total = Double(dataCount)
+
+        // ── 1. Cilt Uyumluluk Skoru (0–100) ──────────────────
+        let goodCount = Double(goodIngredients.count)
+        let badCount  = Double(badIngredients.count)
+
+        // Bad ingredientlere 1.5x ağırlık ver
+        let rawCompat = (goodCount - badCount * 1.5) / total * 100
+        let compatScore = max(0.0, min(100.0, rawCompat + 50)) // 50 offset: nötr = 50
+
+        // ── 2. EWG Güvenlik Skoru (0–100) ────────────────────
+        var ewgWeightedSum = 0.0
+        var ewgMaxSum      = 0.0
+
+        for ing in matched {
+            // EWG skoru "1", "1-2", "3-6" gibi gelebilir — ilk sayıyı al
+            guard let ewgStr = ing.ewgScore,
+                  let ewgVal = Double(ewgStr.components(separatedBy: "-").first ?? ewgStr)
+            else { continue }
+
+            let clampedEwg = max(1.0, min(10.0, ewgVal))
+            let normalized = (10.0 - clampedEwg) / 9.0 * 100  // EWG 1→100, EWG 10→0
+            ewgWeightedSum += normalized
+            ewgMaxSum      += 100
+        }
+
+        let ewgScore: Double
+        if ewgMaxSum > 0 {
+            ewgScore = ewgWeightedSum / ewgMaxSum * 100
+        } else {
+            ewgScore = 60.0 // veri yoksa nötr varsay
+        }
+
+        // ── 3. Kritik EWG Cezası ─────────────────────────────
+        var penalty = 0.0
+        for item in ingredients {
+            guard let ing = item.matchedIngredient,
+                  let ewgStr = ing.ewgScore,
+                  let ewgVal = Double(ewgStr.components(separatedBy: "-").first ?? ewgStr)
+            else { continue }
+
+            if ewgVal >= 8 {
+                // Cilde iyi gelse bile EWG≥8 ise ek ceza
+                penalty += 5.0
+            }
+        }
+        penalty = min(penalty, 25.0) // max 25 puan ceza
+
+        // ── 4. Final Skor ─────────────────────────────────────
+        // EWG kötüyse cilt uyumu ne kadar iyi olursa olsun skoru sınırla
+        let rawFinal = min(compatScore, ewgScore) - penalty
+        let finalScore = max(0.0, min(100.0, rawFinal))
+
+        return SkinScoreResult(
+            final: Int(finalScore.rounded()),
+            compatibility: Int(compatScore.rounded()),
+            ewgSafety: Int(ewgScore.rounded()),
+            hasData: true
+        )
+    }
+
+    private var scoreResult: SkinScoreResult { computeSkinScore() }
+
+    private var score: Int { scoreResult.hasData ? scoreResult.final : -999 }
+
+    private var scoreLabel: String {
+        if score == -999 { return lang.s(.skinCompatInsufficientData) }
+        if score >= 80 { return lang.s(.skinCompatVeryGood) }
+        if score >= 65 { return lang.s(.skinCompatGood) }
+        if score >= 50 { return lang.s(.skinCompatNeutral) }
+        if score >= 35 { return lang.s(.skinCompatCaution) }
+        return lang.s(.skinCompatBad)
+    }
+
+    private var scoreColor: Color {
+        if score == -999 { return Color(hex: "94A3B8") }
+        if score >= 80 { return Color(hex: "22C55E") }
+        if score >= 65 { return Color(hex: "86EFAC") }
+        if score >= 50 { return Color(hex: "94A3B8") }
+        if score >= 35 { return Color(hex: "F59E0B") }
+        return Color(hex: "EF4444")
+    }
+
+    // 0..1 aralığına çevir ring için (0–100 skala)
+    private var scoreProgress: CGFloat {
+        guard score != -999 else { return 0 }
+        return CGFloat(score) / 100.0
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+
+                    // ── Score Card (overall safety ile aynı stil) ──
+                    VStack(spacing: 16) {
+                        Text(lang.s(.skinCompatScore))
+                            .font(.system(size: 11, weight: .bold))
+                            .tracking(1.4)
+                            .foregroundColor(Color(hex: "94A3B8"))
+
+                        ZStack {
+                            Circle()
+                                .stroke(Color(hex: "F1F5F9"), lineWidth: 14)
+                            Circle()
+                                .trim(from: 0, to: scoreProgress)
+                                .stroke(
+                                    AngularGradient(
+                                        colors: [scoreColor.opacity(0.6), scoreColor],
+                                        center: .center
+                                    ),
+                                    style: StrokeStyle(lineWidth: 14, lineCap: .round)
+                                )
+                                .rotationEffect(.degrees(-90))
+                                .animation(.easeOut(duration: 1.2), value: scoreProgress)
+
+                            VStack(spacing: 2) {
+                                if score == -999 {
+                                    Image(systemName: "questionmark")
+                                        .font(.system(size: 36, weight: .black))
+                                        .foregroundColor(Color(hex: "94A3B8"))
+                                } else {
+                                    Text("\(score)")
+                                        .font(.system(size: 52, weight: .black, design: .rounded))
+                                        .foregroundColor(Color(hex: "1A1A2E"))
+                                    Text(lang.s(.scanScoreOutOf))
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(Color(hex: "94A3B8"))
+                                }
+                            }
+                        }
+                        .frame(width: 160, height: 160)
+                        .padding(.vertical, 8)
+
+                        VStack(spacing: 8) {
+                            Text(scoreLabel)
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(Color(hex: "1A1A2E"))
+
+                            Text(SkinTypeTranslation.localized(skinType, lang: lang))
+                                .font(.caption.bold())
+                                .foregroundColor(Color(hex: "D4728C"))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 5)
+                                .background(Color(hex: "FFF0F5"))
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 28)
+                    .padding(.horizontal, 16)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .shadow(color: .black.opacity(0.06), radius: 16, x: 0, y: 4)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 20)
+
+                    // ── Ingredient Listeleri ──
+                    if dataCount < 3 {
+                        Text(lang.s(.skinCompatNoData))
+                            .font(.subheadline)
+                            .foregroundColor(Color(hex: "6B7280"))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                            .padding(.top, 32)
+                    } else {
+                        VStack(spacing: 0) {
+                            if !goodIngredients.isEmpty {
+                                SkinCompatSection(
+                                    title: lang.s(.skinCompatGoodSection),
+                                    items: goodIngredients,
+                                    isGood: true
+                                )
+                            }
+                            if !badIngredients.isEmpty {
+                                SkinCompatSection(
+                                    title: lang.s(.skinCompatBadSection),
+                                    items: badIngredients,
+                                    isGood: false
+                                )
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
+
+                    Spacer(minLength: 40)
+                }
+            }
+            .background(Color(hex: "F8F9FA").ignoresSafeArea())
+            .navigationTitle(lang.s(.skinCompatTitle))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(lang.s(.paywallClose)) { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+}
+
+// MARK: - Stat Badge
+
+private struct StatBadge: View {
+    let count: Int
+    let label: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text("\(count)")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundColor(color)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(Color(hex: "94A3B8"))
+        }
+    }
+}
+
+// MARK: - Skin Compat Section
+
+private struct SkinCompatSection: View {
+    let title: String
+    let items: [IngredientMatchResult]
+    let isGood: Bool
+    @EnvironmentObject var lang: LanguageManager
+
+    private var accentColor: Color {
+        isGood ? Color(hex: "22C55E") : Color(hex: "F59E0B")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Section header — IngredientDetailCard listesindekiyle aynı stil
+            HStack {
+                Text(title)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(Color(hex: "1A1A2E"))
+                Text("(\(items.count))")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(Color(hex: "1A1A2E"))
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 28)
+            .padding(.bottom, 12)
+
+            // Ingredient kartları — IngredientDetailCard ile aynı
+            VStack(spacing: 10) {
+                ForEach(items) { item in
+                    SkinCompatIngredientCard(item: item, isGood: isGood)
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+}
+
+// MARK: - Skin Compat Ingredient Card
+
+private struct SkinCompatIngredientCard: View {
+    let item: IngredientMatchResult
+    let isGood: Bool
+    @EnvironmentObject var lang: LanguageManager
+
+    private var ingredient: MatchedIngredient? { item.matchedIngredient }
+    private var safetyLevel: Int { ingredient?.resolvedSafetyLevel ?? 0 }
+
+    private var safetyColor: Color {
+        switch safetyLevel {
+        case 1: return Color(hex: "22C55E")
+        case 2: return Color(hex: "F59E0B")
+        case 3: return Color(hex: "EF4444")
+        default: return Color(hex: "94A3B8")
+        }
+    }
+
+    private var compatIcon: String {
+        isGood ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+    }
+
+    private var compatColor: Color {
+        isGood ? Color(hex: "22C55E") : Color(hex: "F59E0B")
+    }
+
+    private var displayName: String {
+        ingredient?.displayName ?? item.originalString?.capitalized ?? "-"
+    }
+
+    private var badgeText: String {
+        switch safetyLevel {
+        case 1: return lang.s(.ingredientBadgeSafe)
+        case 2: return lang.s(.ingredientBadgeModerate)
+        case 3: return lang.s(.ingredientBadgeAvoid)
+        default: return lang.s(.ingredientBadgeUnknown)
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header row
+            HStack(spacing: 10) {
+                Image(systemName: compatIcon)
+                    .font(.system(size: 22))
+                    .foregroundColor(compatColor)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(Color(hex: "1A1A2E"))
+                        .lineLimit(2)
+                    if let inci = ingredient?.inciName, !inci.isEmpty,
+                       inci.lowercased() != displayName.lowercased() {
+                        Text(inci)
+                            .font(.system(size: 11))
+                            .foregroundColor(Color(hex: "94A3B8"))
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer()
+
+                // Güvenlik badge
+                Text(badgeText)
+                    .font(.caption2.bold())
+                    .foregroundColor(safetyColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(safetyColor.opacity(0.1))
+                    .clipShape(Capsule())
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 14)
+            .padding(.bottom, ingredient?.localizedDescription != nil ? 8 : 14)
+
+            // Açıklama
+            if let desc = ingredient?.localizedDescription, !desc.isEmpty {
+                Text(desc)
+                    .font(.caption)
+                    .foregroundColor(Color(hex: "6B7280"))
+                    .lineLimit(3)
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 8)
+            }
+
+            // EWG skoru
+            if let ewg = ingredient?.ewgScore, !ewg.isEmpty {
+                HStack(spacing: 6) {
+                    Text(lang.s(.ewgScoreLabel))
+                        .font(.caption2.bold())
+                        .foregroundColor(Color(hex: "94A3B8"))
+                    Text(ewg)
+                        .font(.caption2.bold())
+                        .foregroundColor(safetyColor)
+                }
+                .padding(.horizontal, 14)
+                .padding(.bottom, 12)
+            }
+        }
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(compatColor.opacity(0.18), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
+    }
+}
+
+// MARK: - Skin Type TR ↔ EN Map
+
+enum SkinTypeTranslation {
+    static let trToEn: [String: String] = [
+        "Normal": "Normal",
+        "Kuru": "Dry",
+        "Yağlı": "Oily",
+        "Karma": "Combination",
+        "Hassas": "Sensitive",
+        "Akneye Meyilli": "Acne-Prone",
+        "Olgun": "Mature"
+    ]
+
+    static func toEn(_ tr: String) -> String {
+        trToEn[tr] ?? tr
+    }
+
+    static func localized(_ tr: String, lang: LanguageManager) -> String {
+        if lang.language == .en {
+            return toEn(tr)
+        }
+        return tr
     }
 }
 
@@ -1710,7 +2265,7 @@ struct ModerationRequestView: View {
                                 .font(.system(size: 36))
                                 .foregroundColor(Color(hex: "D4728C"))
 
-                            Text("Moderasyon Talebi")
+                            Text(lang.s(.moderationTitle))
                                 .font(.system(size: 22, weight: .bold))
                                 .foregroundColor(Color(hex: "1A1A2E"))
 
@@ -1720,7 +2275,7 @@ struct ModerationRequestView: View {
                                     .foregroundColor(Color(hex: "D4728C"))
                             }
 
-                            Text("Ürün bilgisinin eksik veya hatalı olduğunu düşünüyorsanız açıklama yazıp fotoğraf ekleyebilirsiniz.")
+                            Text(lang.s(.moderationSubtitle))
                                 .font(.system(size: 13))
                                 .foregroundColor(Color(hex: "6B7280"))
                                 .multilineTextAlignment(.center)
@@ -1730,7 +2285,7 @@ struct ModerationRequestView: View {
                         .padding(.horizontal, 24)
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Açıklama (isteğe bağlı)")
+                            Text(lang.s(.moderationNoteLabel))
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(Color(hex: "6B7280"))
                                 .padding(.horizontal, 24)
@@ -1741,7 +2296,7 @@ struct ModerationRequestView: View {
                                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: "F3D5DC"), lineWidth: 1))
 
                                 if note.isEmpty {
-                                    Text("Eksik ingredientler, yanlış bilgi vb.")
+                                    Text(lang.s(.moderationNotePlaceholder))
                                         .font(.system(size: 14))
                                         .foregroundColor(Color(hex: "C0A0A8"))
                                         .padding(.horizontal, 14)
@@ -1760,17 +2315,17 @@ struct ModerationRequestView: View {
                         }
 
                         VStack(spacing: 12) {
-                            Text("Fotoğraf Ekle (isteğe bağlı)")
+                            Text(lang.s(.moderationPhotoLabel))
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(Color(hex: "6B7280"))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 24)
 
                             HStack(spacing: 12) {
-                                ModerationPhotoCard(title: "Ön Yüz", image: frontImage) {
+                                ModerationPhotoCard(title: lang.s(.moderationFrontPhoto), image: frontImage) {
                                     isPickingFront = true; showPhotoDialog = true
                                 }
-                                ModerationPhotoCard(title: "Arka Yüz / İçerik", image: backImage) {
+                                ModerationPhotoCard(title: lang.s(.moderationBackPhoto), image: backImage) {
                                     isPickingFront = false; showPhotoDialog = true
                                 }
                             }
@@ -1792,7 +2347,7 @@ struct ModerationRequestView: View {
                                     ProgressView().tint(.white)
                                 } else {
                                     Image(systemName: "paperplane.fill").font(.system(size: 15))
-                                    Text("Talebi Gönder").font(.system(size: 17, weight: .semibold))
+                                    Text(lang.s(.moderationSubmit)).font(.system(size: 17, weight: .semibold))
                                 }
                             }
                             .frame(maxWidth: .infinity).frame(height: 56)
@@ -1815,10 +2370,10 @@ struct ModerationRequestView: View {
                     }
                 }
             }
-            .confirmationDialog("Fotoğraf Ekle", isPresented: $showPhotoDialog, titleVisibility: .visible) {
-                Button("Kamera") { currentSourceType = .camera; showImagePicker = true }
-                Button("Galeri") { currentSourceType = .photoLibrary; showImagePicker = true }
-                Button("İptal", role: .cancel) { }
+            .confirmationDialog(lang.s(.moderationPhotoDialog), isPresented: $showPhotoDialog, titleVisibility: .visible) {
+                Button(lang.s(.moderationCamera)) { currentSourceType = .camera; showImagePicker = true }
+                Button(lang.s(.moderationGallery)) { currentSourceType = .photoLibrary; showImagePicker = true }
+                Button(lang.s(.cancel), role: .cancel) { }
             }
             .fullScreenCover(isPresented: $showImagePicker) {
                 ProductRequestImagePicker(
@@ -1827,10 +2382,10 @@ struct ModerationRequestView: View {
                 )
                 .ignoresSafeArea()
             }
-            .alert("Talebiniz Alındı", isPresented: $showSuccess) {
-                Button("Tamam") { dismiss() }
+            .alert(lang.s(.moderationSuccessTitle), isPresented: $showSuccess) {
+                Button(lang.s(.ok)) { dismiss() }
             } message: {
-                Text("Moderasyon talebiniz iletildi. En kısa sürede inceleyeceğiz.")
+                Text(lang.s(.moderationSuccessMsg))
             }
         }
     }

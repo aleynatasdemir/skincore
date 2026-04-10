@@ -81,6 +81,7 @@ public class UserResponse
     public bool IsEmailVerified { get; set; }
     public bool NotificationsEnabled { get; set; }
     public bool IsAdmin { get; set; }
+    public string? SkinType { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public static UserResponse FromUser(User user) => new()
@@ -94,6 +95,7 @@ public class UserResponse
         IsEmailVerified = user.IsEmailVerified,
         NotificationsEnabled = user.NotificationsEnabled,
         IsAdmin = user.IsAdmin,
+        SkinType = user.SkinType,
         CreatedAt = user.CreatedAt
     };
 }

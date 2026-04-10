@@ -1,0 +1,84 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "718501ED",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6761394676",
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_developerTeamID" : "37LBF6B778",
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 797538638.94033396,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "22025892",
+      "localizations" : [
+
+      ],
+      "name" : "SkinCore Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "3.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6762016389",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Sınırsız ürün taraması ve tüm özelliklere tam erişim",
+              "displayName" : "SkinCore Premium",
+              "locale" : "tr"
+            },
+            {
+              "description" : "Unlimited product scans and full access to all features",
+              "displayName" : "SkinCore Premium",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.skincore.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Skincore Premium",
+          "subscriptionGroupID" : "22025892",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

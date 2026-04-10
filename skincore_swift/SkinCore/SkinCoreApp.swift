@@ -49,6 +49,7 @@ struct SkinCoreApp: App {
     
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var lang = LanguageManager.shared
+    @StateObject private var subscriptionService = SubscriptionService.shared
 
     var body: some Scene {
         WindowGroup {
@@ -67,6 +68,7 @@ struct SkinCoreApp: App {
             }
             .environmentObject(authViewModel)
             .environmentObject(lang)
+            .environmentObject(subscriptionService)
             .preferredColorScheme(.light)
         }
     }

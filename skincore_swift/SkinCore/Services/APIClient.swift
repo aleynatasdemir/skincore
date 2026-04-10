@@ -134,6 +134,11 @@ class APIClient {
         return try await request(endpoint: "/auth/notifications", method: "PUT", body: UpdateNotificationsReq(enabled: enabled), authenticated: true)
     }
 
+    func updateSkinType(_ skinType: String?) async throws -> MessageResponse {
+        struct UpdateProfileReq: Encodable { let skinType: String? }
+        return try await request(endpoint: "/userprofile", method: "PUT", body: UpdateProfileReq(skinType: skinType), authenticated: true)
+    }
+
     // MARK: - Product Endpoints
 
     func searchProductsByName(query: String, maxResults: Int = 5) async throws -> [Product] {

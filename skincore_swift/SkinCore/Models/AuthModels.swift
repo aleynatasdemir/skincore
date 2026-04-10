@@ -60,6 +60,7 @@ struct UserResponse: Codable, Identifiable {
     let isEmailVerified: Bool
     let notificationsEnabled: Bool
     let isAdmin: Bool
+    let skinType: String?
     let createdAt: String
 }
 

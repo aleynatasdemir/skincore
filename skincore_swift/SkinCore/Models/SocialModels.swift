@@ -177,6 +177,49 @@ enum L10nKey {
     case ewgScore, restrictedRegion
     case placeholderFavorites, placeholderFavoritesDesc, placeholderProfile, placeholderComingSoon
 
+    // MARK: Skin Type
+    case skinTypeLabel
+    case skinTypeNormal, skinTypeOily, skinTypeDry, skinTypeCombination, skinTypeSensitive
+    case skinTypeAcneProne, skinTypeMature
+    case skinTypeCompatible, skinTypeIncompatible, skinTypeNeutral
+    case skinTypeSection
+    case skinCompatButton, skinCompatButtonLocked
+    case skinCompatTitle, skinCompatScore, skinCompatGoodSection, skinCompatBadSection
+    case skinCompatNoData, skinCompatInsufficientData
+    case skinCompatVeryGood, skinCompatGood, skinCompatNeutral, skinCompatCaution, skinCompatBad
+    case skinCompatSubCompat, skinCompatSubEwg
+
+    // MARK: Moderation
+    case moderationTitle, moderationSubtitle
+    case moderationNoteLabel, moderationNotePlaceholder
+    case moderationPhotoLabel, moderationFrontPhoto, moderationBackPhoto
+    case moderationSubmit, moderationSuccessTitle, moderationSuccessMsg
+    case moderationPhotoDialog, moderationCamera, moderationGallery
+
+    // MARK: Quiz
+    case quizNavTitle, quizStep, quizProgress, quizNext, quizFinish
+    case quizResultTitle, quizResultDesc, quizSave, quizRetake
+    case quizQ1, quizQ2, quizQ3, quizQ4, quizQ5, quizQ6, quizQ7
+    case quizQ1A1, quizQ1A2, quizQ1A3, quizQ1A4
+    case quizQ2A1, quizQ2A2, quizQ2A3, quizQ2A4
+    case quizQ3A1, quizQ3A2, quizQ3A3, quizQ3A4
+    case quizQ4A1, quizQ4A2, quizQ4A3, quizQ4A4
+    case quizQ5A1, quizQ5A2, quizQ5A3, quizQ5A4
+    case quizQ6A1, quizQ6A2, quizQ6A3, quizQ6A4
+    case quizQ7A1, quizQ7A2, quizQ7A3, quizQ7A4
+    case quizDiscoverButton
+
+    // MARK: Paywall
+    case paywallSubtitle
+    case paywallFeature1Title, paywallFeature1Subtitle
+    case paywallFeature2Title, paywallFeature2Subtitle
+    case paywallFeature3Title, paywallFeature3Subtitle
+    case paywallFeature4Title, paywallFeature4Subtitle
+    case paywallPerMonth, paywallCancelAnytime
+    case paywallProductNotLoaded, paywallGoToPremium
+    case paywallRestore, paywallLegal, paywallClose
+    case paywallScansLeft, paywallLimitReached
+
     func string(_ lang: AppLanguage) -> String {
         switch lang {
         case .tr: return tr
@@ -483,6 +526,113 @@ enum L10nKey {
         case .placeholderFavoritesDesc: return "Kaydedilmiş ürünleriniz"
         case .placeholderProfile: return "Profil"
         case .placeholderComingSoon: return "Çok Yakında"
+
+        case .skinTypeLabel: return "Cilt Tipiniz"
+        case .skinTypeNormal: return "Normal"
+        case .skinTypeOily: return "Yağlı"
+        case .skinTypeDry: return "Kuru"
+        case .skinTypeCombination: return "Karma"
+        case .skinTypeSensitive: return "Hassas"
+        case .skinTypeAcneProne: return "Akneye Meyilli"
+        case .skinTypeMature: return "Olgun"
+        case .skinTypeCompatible: return "Cildinize Uygun"
+        case .skinTypeIncompatible: return "Cildinize Dikkat"
+        case .skinTypeNeutral: return "Nötr"
+        case .skinTypeSection: return "Cilt Uyumluluğu"
+        case .skinCompatButton: return "Cilt Tipime Uygun mu?"
+        case .skinCompatButtonLocked: return "Cilt Tipime Uygun mu?"
+        case .skinCompatTitle: return "Cilt Uyumluluk Analizi"
+        case .skinCompatScore: return "Uyumluluk Skoru"
+        case .skinCompatGoodSection: return "Cildinize İyi Gelenler"
+        case .skinCompatBadSection: return "Dikkat Gerektiren İçerikler"
+        case .skinCompatNoData: return "Bu ürün için cilt uyumluluk verisi bulunamadı."
+        case .skinCompatInsufficientData: return "Yeterli veri yok"
+        case .skinCompatVeryGood: return "Cildinize Çok Uygun"
+        case .skinCompatGood: return "Genel Olarak Uygun"
+        case .skinCompatNeutral: return "Nötr"
+        case .skinCompatCaution: return "Dikkatli Kullanın"
+        case .skinCompatBad: return "Cildinize Uygun Değil"
+        case .skinCompatSubCompat: return "Cilt Uyumu"
+        case .skinCompatSubEwg: return "İçerik Güvenliği"
+
+        case .moderationTitle: return "Moderasyon Talebi"
+        case .moderationSubtitle: return "Ürün bilgisinin eksik veya hatalı olduğunu düşünüyorsanız açıklama yazıp fotoğraf ekleyebilirsiniz."
+        case .moderationNoteLabel: return "Açıklama (isteğe bağlı)"
+        case .moderationNotePlaceholder: return "Eksik ingredientler, yanlış bilgi vb."
+        case .moderationPhotoLabel: return "Fotoğraf Ekle (isteğe bağlı)"
+        case .moderationFrontPhoto: return "Ön Yüz"
+        case .moderationBackPhoto: return "Arka Yüz / İçerik"
+        case .moderationSubmit: return "Talebi Gönder"
+        case .moderationSuccessTitle: return "Talebiniz Alındı"
+        case .moderationSuccessMsg: return "Moderasyon talebiniz iletildi. En kısa sürede inceleyeceğiz."
+        case .moderationPhotoDialog: return "Fotoğraf Ekle"
+        case .moderationCamera: return "Kamera"
+        case .moderationGallery: return "Galeri"
+
+        case .quizNavTitle: return "CİLT TİPİ TESTİ"
+        case .quizStep: return "SORU %d / %d"
+        case .quizProgress: return "İLERLEME"
+        case .quizNext: return "İleri"
+        case .quizFinish: return "Bitir"
+        case .quizResultTitle: return "CİLT TİPİNİZ"
+        case .quizResultDesc: return "Analiz tamamlandı. Sonucunuzu profilinize kaydedebilirsiniz."
+        case .quizSave: return "Profilime Kaydet"
+        case .quizRetake: return "Testi Yeniden Yap"
+        case .quizDiscoverButton: return "Cilt Tipini Keşfet"
+        case .quizQ1: return "Temizledikten birkaç saat sonra cildiniz nasıl görünüyor?"
+        case .quizQ2: return "Gün içinde cildiniz nasıl bir his veriyor?"
+        case .quizQ3: return "T-bölgeniz (alın, burun, çene) nasıl görünüyor?"
+        case .quizQ4: return "Sivilce veya gözenek sorununuz var mı?"
+        case .quizQ5: return "Cildiniz dış etkenlere (hava, ürünler vb.) nasıl tepki veriyor?"
+        case .quizQ6: return "Yaşınız kaç?"
+        case .quizQ7: return "Cildinizin gözenekleri nasıl görünüyor?"
+        case .quizQ1A1: return "Parlak ve yağlı"
+        case .quizQ1A2: return "Bazı bölgeler yağlı, bazıları kuru"
+        case .quizQ1A3: return "Gergin ve kuru hissettiriyor"
+        case .quizQ1A4: return "Ne yağlı ne kuru, dengeli"
+        case .quizQ2A1: return "Sürekli gergin veya çekiyor"
+        case .quizQ2A2: return "Parlıyor veya yağlanıyor"
+        case .quizQ2A3: return "T-bölge yağlı, yanaklar kuru"
+        case .quizQ2A4: return "Genel olarak rahat ve dengeli"
+        case .quizQ3A1: return "Genellikle parlıyor ve gözenekler görünür"
+        case .quizQ3A2: return "T-bölge biraz parlıyor, yanaklar normal"
+        case .quizQ3A3: return "Kuru veya pul pul"
+        case .quizQ3A4: return "Genel olarak dengeli"
+        case .quizQ4A1: return "Evet, sık sık sivilce çıkıyor"
+        case .quizQ4A2: return "Bazen, özellikle T-bölgede"
+        case .quizQ4A3: return "Nadiren"
+        case .quizQ4A4: return "Hayır, hemen hiç yok"
+        case .quizQ5A1: return "Kolayca kızarıyor veya yanıyor"
+        case .quizQ5A2: return "Bazen hafif reaksiyon veriyor"
+        case .quizQ5A3: return "Genellikle tepki vermiyor"
+        case .quizQ5A4: return "Hiç reaksiyon vermez"
+        case .quizQ6A1: return "40 yaş üstü"
+        case .quizQ6A2: return "30-40 arası"
+        case .quizQ6A3: return "20-30 arası"
+        case .quizQ6A4: return "20 yaş altı"
+        case .quizQ7A1: return "Büyük ve belirgin"
+        case .quizQ7A2: return "Sadece T-bölgede belirgin"
+        case .quizQ7A3: return "Küçük veya neredeyse yok"
+        case .quizQ7A4: return "Normal büyüklükte, belirgin değil"
+
+        case .paywallSubtitle: return "Cilt analizinin tüm gücü"
+        case .paywallFeature1Title: return "Sınırsız Tarama"
+        case .paywallFeature1Subtitle: return "Her gün istediğin kadar ürün tara"
+        case .paywallFeature2Title: return "Detaylı İçerik Analizi"
+        case .paywallFeature2Subtitle: return "Her bileşen için kapsamlı bilgi"
+        case .paywallFeature3Title: return "Favori & Geçmiş"
+        case .paywallFeature3Subtitle: return "Tüm tarama geçmişine eriş"
+        case .paywallFeature4Title: return "Sosyal Özellikler"
+        case .paywallFeature4Subtitle: return "Rutin paylaş, toplulukla bağlan"
+        case .paywallPerMonth: return "/ ay"
+        case .paywallCancelAnytime: return "İstediğin zaman iptal edebilirsin"
+        case .paywallProductNotLoaded: return "Ürün yüklenemedi. İnternet bağlantını kontrol et."
+        case .paywallGoToPremium: return "Premium'a Geç"
+        case .paywallRestore: return "Satın almaları geri yükle"
+        case .paywallLegal: return "Abonelik her ay otomatik yenilenir. iTunes hesabından iptal edebilirsin."
+        case .paywallClose: return "Kapat"
+        case .paywallScansLeft: return "Bugün %d tarama hakkın kaldı"
+        case .paywallLimitReached: return "Günlük limit doldu · Premium'a geç"
 
         case .fullNameLabel: return "Ad Soyad"
         case .bioLabel: return "Biyografi"
@@ -797,6 +947,113 @@ enum L10nKey {
         case .placeholderFavoritesDesc: return "Your saved products"
         case .placeholderProfile: return "Profile"
         case .placeholderComingSoon: return "Coming Soon"
+
+        case .skinTypeLabel: return "Your Skin Type"
+        case .skinTypeNormal: return "Normal"
+        case .skinTypeOily: return "Oily"
+        case .skinTypeDry: return "Dry"
+        case .skinTypeCombination: return "Combination"
+        case .skinTypeSensitive: return "Sensitive"
+        case .skinTypeAcneProne: return "Acne-Prone"
+        case .skinTypeMature: return "Mature"
+        case .skinTypeCompatible: return "Good for Your Skin"
+        case .skinTypeIncompatible: return "Caution for Your Skin"
+        case .skinTypeNeutral: return "Neutral"
+        case .skinTypeSection: return "Skin Compatibility"
+        case .skinCompatButton: return "Is It Right for My Skin?"
+        case .skinCompatButtonLocked: return "Is It Right for My Skin? (Premium)"
+        case .skinCompatTitle: return "Skin Compatibility Analysis"
+        case .skinCompatScore: return "Compatibility Score"
+        case .skinCompatGoodSection: return "Good for Your Skin"
+        case .skinCompatBadSection: return "Ingredients to Watch"
+        case .skinCompatNoData: return "No skin compatibility data available for this product."
+        case .skinCompatInsufficientData: return "Not enough data"
+        case .skinCompatVeryGood: return "Excellent Match"
+        case .skinCompatGood: return "Generally Compatible"
+        case .skinCompatNeutral: return "Neutral"
+        case .skinCompatCaution: return "Use with Caution"
+        case .skinCompatBad: return "Not Recommended"
+        case .skinCompatSubCompat: return "Skin Match"
+        case .skinCompatSubEwg: return "Ingredient Safety"
+
+        case .moderationTitle: return "Moderation Request"
+        case .moderationSubtitle: return "If you think the product information is missing or incorrect, you can add a note and attach photos."
+        case .moderationNoteLabel: return "Note (optional)"
+        case .moderationNotePlaceholder: return "Missing ingredients, wrong info, etc."
+        case .moderationPhotoLabel: return "Add Photos (optional)"
+        case .moderationFrontPhoto: return "Front Side"
+        case .moderationBackPhoto: return "Back / Ingredients"
+        case .moderationSubmit: return "Submit Request"
+        case .moderationSuccessTitle: return "Request Received"
+        case .moderationSuccessMsg: return "Your moderation request has been submitted. We'll review it as soon as possible."
+        case .moderationPhotoDialog: return "Add Photo"
+        case .moderationCamera: return "Camera"
+        case .moderationGallery: return "Gallery"
+
+        case .quizNavTitle: return "SKIN TYPE QUIZ"
+        case .quizStep: return "QUESTION %d / %d"
+        case .quizProgress: return "PROGRESS"
+        case .quizNext: return "Next"
+        case .quizFinish: return "Finish"
+        case .quizResultTitle: return "YOUR SKIN TYPE"
+        case .quizResultDesc: return "Analysis complete. You can save the result to your profile."
+        case .quizSave: return "Save to My Profile"
+        case .quizRetake: return "Retake the Quiz"
+        case .quizDiscoverButton: return "Discover Your Skin Type"
+        case .quizQ1: return "How does your skin look a few hours after cleansing?"
+        case .quizQ2: return "How does your skin feel throughout the day?"
+        case .quizQ3: return "How does your T-zone (forehead, nose, chin) look?"
+        case .quizQ4: return "Do you experience acne or visible pores?"
+        case .quizQ5: return "How does your skin react to external factors (weather, products, etc.)?"
+        case .quizQ6: return "What is your age range?"
+        case .quizQ7: return "How do your pores look?"
+        case .quizQ1A1: return "Shiny and oily"
+        case .quizQ1A2: return "Oily in some areas, dry in others"
+        case .quizQ1A3: return "Tight and dry"
+        case .quizQ1A4: return "Neither oily nor dry — balanced"
+        case .quizQ2A1: return "Constantly tight or pulls"
+        case .quizQ2A2: return "Gets shiny or oily"
+        case .quizQ2A3: return "T-zone oily, cheeks dry"
+        case .quizQ2A4: return "Generally comfortable and balanced"
+        case .quizQ3A1: return "Usually shiny with visible pores"
+        case .quizQ3A2: return "T-zone slightly shiny, cheeks normal"
+        case .quizQ3A3: return "Dry or flaky"
+        case .quizQ3A4: return "Generally balanced"
+        case .quizQ4A1: return "Yes, breakouts are frequent"
+        case .quizQ4A2: return "Sometimes, especially in the T-zone"
+        case .quizQ4A3: return "Rarely"
+        case .quizQ4A4: return "No, almost never"
+        case .quizQ5A1: return "Easily gets red or burns"
+        case .quizQ5A2: return "Sometimes reacts mildly"
+        case .quizQ5A3: return "Usually no reaction"
+        case .quizQ5A4: return "Never reacts"
+        case .quizQ6A1: return "Over 40"
+        case .quizQ6A2: return "30–40"
+        case .quizQ6A3: return "20–30"
+        case .quizQ6A4: return "Under 20"
+        case .quizQ7A1: return "Large and visible"
+        case .quizQ7A2: return "Only visible in the T-zone"
+        case .quizQ7A3: return "Small or barely visible"
+        case .quizQ7A4: return "Normal size, not prominent"
+
+        case .paywallSubtitle: return "The full power of skin analysis"
+        case .paywallFeature1Title: return "Unlimited Scans"
+        case .paywallFeature1Subtitle: return "Scan as many products as you want every day"
+        case .paywallFeature2Title: return "Detailed Ingredient Analysis"
+        case .paywallFeature2Subtitle: return "Comprehensive info for every ingredient"
+        case .paywallFeature3Title: return "Favorites & History"
+        case .paywallFeature3Subtitle: return "Access your full scan history"
+        case .paywallFeature4Title: return "Social Features"
+        case .paywallFeature4Subtitle: return "Share routines, connect with the community"
+        case .paywallPerMonth: return "/ month"
+        case .paywallCancelAnytime: return "Cancel anytime"
+        case .paywallProductNotLoaded: return "Could not load product. Check your internet connection."
+        case .paywallGoToPremium: return "Go Premium"
+        case .paywallRestore: return "Restore purchases"
+        case .paywallLegal: return "Subscription renews automatically each month. Cancel anytime via your iTunes account."
+        case .paywallClose: return "Close"
+        case .paywallScansLeft: return "%d scans remaining today"
+        case .paywallLimitReached: return "Daily limit reached · Go Premium"
         }
     }
 }
