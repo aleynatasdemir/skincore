@@ -787,6 +787,8 @@ private struct CameraResultSheet: View {
 
     @State private var selectedProductId: String? = nil
     @State private var showProductRequest = false
+    @State private var productTapCount = 0
+    @EnvironmentObject var subscriptionService: SubscriptionService
 
     var body: some View {
         VStack(spacing: 0) {
@@ -855,6 +857,12 @@ private struct CameraResultSheet: View {
                     LazyVStack(spacing: 10) {
                         ForEach(Array(viewModel.searchResults.enumerated()), id: \.element.id) { index, product in
                             Button {
+                                if !subscriptionService.isPremium {
+                                    productTapCount += 1
+                                    if productTapCount % 3 == 0 {
+                                        InterstitialAdManager.shared.showAd()
+                                    }
+                                }
                                 selectedProductId = product.id
                             } label: {
                                 ScanResultCard(product: product, rank: index + 1)

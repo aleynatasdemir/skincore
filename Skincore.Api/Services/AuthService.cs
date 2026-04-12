@@ -442,6 +442,17 @@ public class AuthService
         return (true, "Bildirim tercihi güncellendi.");
     }
 
+    // ── Delete Account ──
+    public async Task<(bool Success, string Message)> DeleteAccountAsync(string userId)
+    {
+        var result = await _mongoDbService.UsersCollection.DeleteOneAsync(u => u.Id == userId);
+
+        if (result.DeletedCount == 0)
+            return (false, "Kullanıcı bulunamadı.");
+
+        return (true, "Hesabınız başarıyla silindi.");
+    }
+
     // ── Get User By ID ──
     public async Task<User?> GetUserByIdAsync(string userId)
     {

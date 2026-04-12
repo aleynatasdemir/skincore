@@ -140,16 +140,19 @@ struct LoginView: View {
                     }
                     
                     // Terms
-                    VStack(spacing: 2) {
-                        Text(lang.s(.termsPrefix)) +
-                        Text(lang.s(.termsOf)).underline() +
-                        Text("\n") +
-                        Text(lang.s(.termService)).underline() +
-                        Text(lang.s(.termsAnd)) +
-                        Text(lang.s(.termsPrivacy)).underline()
+                    VStack(spacing: 4) {
+                        Text(lang.s(.termsPrefix))
+                            .foregroundColor(Color(hex: "9CA3AF"))
+                        HStack(spacing: 4) {
+                            Link(lang.s(.termService), destination: URL(string: "https://skincore.beauty/terms.html")!)
+                                .foregroundColor(Color(hex: "D4728C"))
+                            Text(lang.s(.termsAnd))
+                                .foregroundColor(Color(hex: "9CA3AF"))
+                            Link(lang.s(.termsPrivacy), destination: URL(string: "https://skincore.beauty/privacy.html")!)
+                                .foregroundColor(Color(hex: "D4728C"))
+                        }
                     }
                     .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "9CA3AF"))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
                     .padding(.bottom, 24)

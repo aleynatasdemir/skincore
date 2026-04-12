@@ -7,12 +7,21 @@ class SubscriptionService: ObservableObject {
     static let shared = SubscriptionService()
 
     static let monthlyProductID = "com.skincore.premium.monthly"
-    static let freeDailyLimit = 3
+    static let yearlyProductID  = "com.skincore.premium.yearly"
+    static let freeDailyLimit   = 3
 
     @Published var isPremium: Bool = false
     @Published var storeProducts: [StoreKit.Product] = []
     @Published var isLoading: Bool = false
     @Published var purchaseError: String? = nil
+    @Published var showPaywallOnLaunch: Bool = false
+
+    // Seçili plan: monthly veya yearly
+    @Published var selectedProductID: String = SubscriptionService.yearlyProductID
+
+    var monthlyProduct: StoreKit.Product? { storeProducts.first { $0.id == Self.monthlyProductID } }
+    var yearlyProduct:  StoreKit.Product? { storeProducts.first { $0.id == Self.yearlyProductID  } }
+    var selectedProduct: StoreKit.Product? { storeProducts.first { $0.id == selectedProductID } }
 
     private var updateListenerTask: Task<Void, Error>? = nil
 
@@ -33,7 +42,7 @@ class SubscriptionService: ObservableObject {
     func loadProducts() async {
         isLoading = true
         do {
-            let fetched = try await StoreKit.Product.products(for: [Self.monthlyProductID])
+            let fetched = try await StoreKit.Product.products(for: [Self.monthlyProductID, Self.yearlyProductID])
             storeProducts = fetched
         } catch {
             print("Ürünler yüklenemedi: \(error)")
@@ -44,7 +53,7 @@ class SubscriptionService: ObservableObject {
     // MARK: - Satın Al
 
     func purchase() async -> Bool {
-        guard let product = storeProducts.first else {
+        guard let product = selectedProduct else {
             purchaseError = "Ürün bulunamadı."
             return false
         }
@@ -101,7 +110,7 @@ class SubscriptionService: ObservableObject {
         for await result in Transaction.currentEntitlements {
             do {
                 let transaction = try checkVerified(result)
-                if transaction.productID == Self.monthlyProductID {
+                if transaction.productID == Self.monthlyProductID || transaction.productID == Self.yearlyProductID {
                     hasPremium = transaction.revocationDate == nil
                 }
             } catch {

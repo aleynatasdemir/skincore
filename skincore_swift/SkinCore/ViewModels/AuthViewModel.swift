@@ -287,6 +287,25 @@ class AuthViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Delete Account
+
+    func deleteAccount() async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        do {
+            _ = try await APIClient.shared.deleteAccount()
+            logout()
+            isLoading = false
+            return true
+        } catch let error as APIClientError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = "Hesap silinemedi. Lütfen tekrar deneyin."
+        }
+        isLoading = false
+        return false
+    }
+
     // MARK: - Clear Error
 
     func clearError() {

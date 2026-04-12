@@ -24,7 +24,7 @@
     "_developerTeamID" : "37LBF6B778",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 797538638.94033396,
+    "_lastSynchronizedDate" : 797568816.58946598,
     "_locale" : "en_US",
     "_renewalBillingIssuesEnabled" : false,
     "_storefront" : "USA",
@@ -68,6 +68,30 @@
           "productID" : "com.skincore.premium.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Skincore Premium",
+          "subscriptionGroupID" : "22025892",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6762030850",
+          "introductoryOffer" : null,
+          "localizations" : [
+
+          ],
+          "productID" : "com.skincore.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Skincore Premium Yearly",
           "subscriptionGroupID" : "22025892",
           "type" : "RecurringSubscription",
           "winbackOffers" : [

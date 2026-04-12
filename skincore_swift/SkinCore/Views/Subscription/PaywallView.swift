@@ -10,6 +10,7 @@ struct PaywallView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 28) {
+
                     // MARK: - Başlık
                     VStack(spacing: 8) {
                         Image("app_logo_header")
@@ -31,50 +32,49 @@ struct PaywallView: View {
                         FeatureRow(icon: "infinity",
                                    title: lang.s(.paywallFeature1Title),
                                    subtitle: lang.s(.paywallFeature1Subtitle))
-                        FeatureRow(icon: "checkmark.seal.fill",
-                                   title: lang.s(.paywallFeature2Title),
-                                   subtitle: lang.s(.paywallFeature2Subtitle))
-                        FeatureRow(icon: "heart.fill",
+                        FeatureRow(icon: "staroflife.fill",
                                    title: lang.s(.paywallFeature3Title),
                                    subtitle: lang.s(.paywallFeature3Subtitle))
-                        FeatureRow(icon: "person.2.fill",
-                                   title: lang.s(.paywallFeature4Title),
-                                   subtitle: lang.s(.paywallFeature4Subtitle))
+                        FeatureRow(icon: "nosign",
+                                   title: lang.language == .tr ? "Reklamsız Deneyim" : "Ad-Free Experience",
+                                   subtitle: lang.language == .tr ? "Hiçbir reklam görmeden kullan" : "Use the app without any ads")
                     }
                     .padding(.horizontal)
 
-                    // MARK: - Fiyat Kartı
+                    // MARK: - Plan Seçimi
                     if subscriptionService.isLoading {
-                        ProgressView()
-                            .frame(height: 80)
-                    } else if let product = subscriptionService.storeProducts.first {
-                        VStack(spacing: 6) {
-                            Text(product.displayName)
-                                .font(.headline)
-                            Text(product.displayPrice + " " + lang.s(.paywallPerMonth))
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(Color(hex: "D4728C"))
-                            Text(lang.s(.paywallCancelAnytime))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(20)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(hex: "FFF0F0"))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color(hex: "D4728C"), lineWidth: 1.5)
-                                )
-                        )
-                        .padding(.horizontal)
+                        ProgressView().frame(height: 120)
                     } else {
-                        Text(lang.s(.paywallProductNotLoaded))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+                        VStack(spacing: 12) {
+                            // Yıllık Plan
+                            PlanCard(
+                                product: subscriptionService.yearlyProduct,
+                                isSelected: subscriptionService.selectedProductID == SubscriptionService.yearlyProductID,
+                                badge: lang.language == .tr ? "En Popüler" : "Most Popular",
+                                periodLabel: lang.language == .tr ? "/ yıl" : "/ year",
+                                perMonthLabel: subscriptionService.yearlyProduct.map { p in
+                                    let monthly = p.price / 12
+                                    let monthlyStr = monthly.formatted(p.priceFormatStyle)
+                                    return lang.language == .tr
+                                        ? "≈ \(monthlyStr) / ay"
+                                        : "≈ \(monthlyStr) / mo"
+                                }
+                            ) {
+                                subscriptionService.selectedProductID = SubscriptionService.yearlyProductID
+                            }
+
+                            // Aylık Plan
+                            PlanCard(
+                                product: subscriptionService.monthlyProduct,
+                                isSelected: subscriptionService.selectedProductID == SubscriptionService.monthlyProductID,
+                                badge: nil,
+                                periodLabel: lang.language == .tr ? "/ ay" : "/ month",
+                                perMonthLabel: nil
+                            ) {
+                                subscriptionService.selectedProductID = SubscriptionService.monthlyProductID
+                            }
+                        }
+                        .padding(.horizontal)
                     }
 
                     if let error = subscriptionService.purchaseError {
@@ -107,7 +107,7 @@ struct PaywallView: View {
                         .cornerRadius(14)
                         .padding(.horizontal)
                     }
-                    .disabled(subscriptionService.isLoading || subscriptionService.storeProducts.isEmpty)
+                    .disabled(subscriptionService.isLoading || subscriptionService.selectedProduct == nil)
 
                     // MARK: - Restore
                     Button {
@@ -134,6 +134,80 @@ struct PaywallView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Plan Card
+
+private struct PlanCard: View {
+    let product: StoreKit.Product?
+    let isSelected: Bool
+    let badge: String?
+    let periodLabel: String
+    let perMonthLabel: String?
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 14) {
+                // Seçim göstergesi
+                ZStack {
+                    Circle()
+                        .stroke(isSelected ? Color(hex: "D4728C") : Color(hex: "D1D5DB"), lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                    if isSelected {
+                        Circle()
+                            .fill(Color(hex: "D4728C"))
+                            .frame(width: 12, height: 12)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 8) {
+                        Text(product?.displayName ?? "–")
+                            .font(.subheadline.bold())
+                            .foregroundColor(Color(hex: "1A1A2E"))
+                        if let badge {
+                            Text(badge)
+                                .font(.caption2.bold())
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color(hex: "D4728C"))
+                                .clipShape(Capsule())
+                        }
+                    }
+                    if let perMonthLabel {
+                        Text(perMonthLabel)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if let product {
+                    Text(product.displayPrice + " " + periodLabel)
+                        .font(.subheadline.bold())
+                        .foregroundColor(Color(hex: "D4728C"))
+                } else {
+                    ProgressView().scaleEffect(0.7)
+                }
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(hex: "FFF0F0"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(
+                                isSelected ? Color(hex: "D4728C") : Color(hex: "E5E7EB"),
+                                lineWidth: isSelected ? 2 : 1
+                            )
+                    )
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 

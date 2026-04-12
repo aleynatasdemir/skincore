@@ -128,8 +128,7 @@ struct RoutineCreateView: View {
     @StateObject private var viewModel = RoutineCreateViewModel()
 
     var body: some View {
-        NavigationStack {
-            ZStack {
+        ZStack {
                 Color(hex: "FFF0F0").ignoresSafeArea()
 
                 ScrollView {
@@ -346,16 +345,6 @@ struct RoutineCreateView: View {
             }
             .navigationTitle(lang.s(.routineTitle))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(Color(hex: "1A1A2E"))
-                    }
-                }
-            }
             .safeAreaInset(edge: .bottom) {
                 Button {
                     Task {
@@ -385,7 +374,6 @@ struct RoutineCreateView: View {
             .task {
                 await viewModel.loadPopular()
             }
-        }
     }
 }
 

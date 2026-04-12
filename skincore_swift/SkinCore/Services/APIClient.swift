@@ -134,6 +134,10 @@ class APIClient {
         return try await request(endpoint: "/auth/notifications", method: "PUT", body: UpdateNotificationsReq(enabled: enabled), authenticated: true)
     }
 
+    func deleteAccount() async throws -> MessageResponse {
+        return try await request(endpoint: "/auth/account", method: "DELETE", body: nil as String?, authenticated: true)
+    }
+
     func updateSkinType(_ skinType: String?) async throws -> MessageResponse {
         struct UpdateProfileReq: Encodable { let skinType: String? }
         return try await request(endpoint: "/userprofile", method: "PUT", body: UpdateProfileReq(skinType: skinType), authenticated: true)

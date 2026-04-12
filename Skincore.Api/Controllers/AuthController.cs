@@ -245,6 +245,25 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Hesabı kalıcı olarak sil.
+    /// </summary>
+    [Authorize]
+    [HttpDelete("account")]
+    public async Task<IActionResult> DeleteAccount()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var (success, message) = await _authService.DeleteAccountAsync(userId);
+
+        if (!success)
+            return BadRequest(new MessageResponse { Message = message });
+
+        return Ok(new MessageResponse { Message = message });
+    }
+
+    /// <summary>
     /// Mevcut kullanıcı bilgilerini getir. JWT gerektirir.
     /// </summary>
     [Authorize]

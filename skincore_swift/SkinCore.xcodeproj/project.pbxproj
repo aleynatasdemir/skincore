@@ -38,6 +38,8 @@
 		9C044A692F8979D40036631B /* SubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C044A682F8979D40036631B /* SubscriptionService.swift */; };
 		9CD566882F897B92000211E2 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD566862F897B92000211E2 /* PaywallView.swift */; };
 		9CD5668A2F8993D0000211E2 /* SkinTypeQuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD566892F8993D0000211E2 /* SkinTypeQuizView.swift */; };
+		9CD5668D2F89E07E000211E2 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 9CD5668C2F89E07E000211E2 /* GoogleMobileAds */; };
+		9CD5668F2F89E12C000211E2 /* InterstitialAdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD5668E2F89E12C000211E2 /* InterstitialAdManager.swift */; };
 		9CE0620A2F87248E00474A88 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 9CE062092F87248E00474A88 /* Kingfisher */; };
 		A5702E61C7BD5D764E818C0B /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61F2D9EBF8272B849369C9B /* APIClient.swift */; };
 		A79C0889A416D6B21E0FF684 /* SearchHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC479611C32BB3D4F490E28E /* SearchHistoryView.swift */; };
@@ -81,6 +83,7 @@
 		9C044A682F8979D40036631B /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
 		9CD566862F897B92000211E2 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		9CD566892F8993D0000211E2 /* SkinTypeQuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinTypeQuizView.swift; sourceTree = "<group>"; };
+		9CD5668E2F89E12C000211E2 /* InterstitialAdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterstitialAdManager.swift; sourceTree = "<group>"; };
 		9CECC751109430888347060E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		A36151F293CA29B87C550A49 /* ResetPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordView.swift; sourceTree = "<group>"; };
 		AD09454A21F9D6C71A2C3712 /* ProductModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductModels.swift; sourceTree = "<group>"; };
@@ -105,6 +108,7 @@
 			files = (
 				9CE0620A2F87248E00474A88 /* Kingfisher in Frameworks */,
 				86F16A5CD8FB92877C0DC992 /* FirebaseAnalytics in Frameworks */,
+				9CD5668D2F89E07E000211E2 /* GoogleMobileAds in Frameworks */,
 				37F1C70450EECF4E9977845C /* FirebaseMessaging in Frameworks */,
 				9C044A642F8972DA0036631B /* StoreKit.framework in Frameworks */,
 			);
@@ -205,6 +209,7 @@
 		87E55BDB3A3748305F15BD20 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				9CD5668E2F89E12C000211E2 /* InterstitialAdManager.swift */,
 				9C044A682F8979D40036631B /* SubscriptionService.swift */,
 				B61F2D9EBF8272B849369C9B /* APIClient.swift */,
 				17E37A0C5BDD83939ADD8501 /* KeychainService.swift */,
@@ -317,6 +322,7 @@
 				CBDCA3D87F8C3C11C0562021 /* FirebaseAnalytics */,
 				986E46E4362A5D157EE3C86E /* FirebaseMessaging */,
 				9CE062092F87248E00474A88 /* Kingfisher */,
+				9CD5668C2F89E07E000211E2 /* GoogleMobileAds */,
 			);
 			productName = SkinCore;
 			productReference = 97B88233D9491DA5C655A66C /* SkinCore.app */;
@@ -344,6 +350,7 @@
 			packageReferences = (
 				4EF7E81254A559F5244C0817 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				9CE062082F87248E00474A88 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				9CD5668B2F89E07E000211E2 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8543C6688871F3ACE1D2FCBF /* Products */;
@@ -406,6 +413,7 @@
 				3DC0F8A591E868B58F5778C3 /* SocialComponents.swift in Sources */,
 				9C044A692F8979D40036631B /* SubscriptionService.swift in Sources */,
 				AB6F1995936FDE3F14D4684B /* SocialFeedView.swift in Sources */,
+				9CD5668F2F89E12C000211E2 /* InterstitialAdManager.swift in Sources */,
 				704E615236620EC9DB0633ED /* SocialModels.swift in Sources */,
 				7A69CA0FDB6DB00CF2920E3E /* VerifyEmailView.swift in Sources */,
 			);
@@ -628,6 +636,14 @@
 				minimumVersion = 10.22.0;
 			};
 		};
+		9CD5668B2F89E07E000211E2 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.2.0;
+			};
+		};
 		9CE062082F87248E00474A88 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/onevcat/Kingfisher";
@@ -643,6 +659,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4EF7E81254A559F5244C0817 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
+		};
+		9CD5668C2F89E07E000211E2 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9CD5668B2F89E07E000211E2 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 		9CE062092F87248E00474A88 /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;

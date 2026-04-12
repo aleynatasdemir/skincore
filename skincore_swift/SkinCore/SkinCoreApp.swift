@@ -2,11 +2,13 @@ import SwiftUI
 import FirebaseCore
 import FirebaseMessaging
 import UserNotifications
+import GoogleMobileAds
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        MobileAds.shared.start(completionHandler: nil)
         
         UNUserNotificationCenter.current().delegate = self
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
@@ -61,6 +63,18 @@ struct SkinCoreApp: App {
                         UsernameSetupView()
                     } else {
                         MainTabView()
+                            .onAppear {
+                                if !subscriptionService.isPremium {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                        subscriptionService.showPaywallOnLaunch = true
+                                    }
+                                }
+                            }
+                            .sheet(isPresented: $subscriptionService.showPaywallOnLaunch) {
+                                PaywallView()
+                                    .environmentObject(subscriptionService)
+                                    .environmentObject(lang)
+                            }
                     }
                 } else {
                     LoginView()

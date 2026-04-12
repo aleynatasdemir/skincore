@@ -15,6 +15,15 @@ class HomeViewModel: ObservableObject {
 
     @Published var searchHistory: [SearchHistoryResponse] = []
     @Published var isLoadingHistory: Bool = false
+    private(set) var productTapCount: Int = 0
+
+    func handleProductTap(isPremium: Bool) {
+        guard !isPremium else { return }
+        productTapCount += 1
+        if productTapCount % 3 == 0 {
+            InterstitialAdManager.shared.showAd()
+        }
+    }
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -124,6 +133,7 @@ class HomeViewModel: ObservableObject {
 struct HomeView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var lang: LanguageManager
+    @EnvironmentObject var subscriptionService: SubscriptionService
     @StateObject private var viewModel = HomeViewModel()
     @FocusState private var isSearchFocused: Bool
     @State private var selectedPopularProductId: String?
@@ -257,6 +267,7 @@ struct HomeView: View {
                                     HStack(spacing: 12) {
                                         ForEach(viewModel.popularProducts) { item in
                                             Button {
+                                                viewModel.handleProductTap(isPremium: subscriptionService.isPremium)
                                                 Task {
                                                     await viewModel.addToHistory(
                                                         query: item.productName ?? "",
@@ -308,7 +319,7 @@ struct HomeView: View {
                                     .environmentObject(lang)
                             }
 
-                            NavigationLink(destination: EmptyView()) {
+                            NavigationLink(destination: RoutineCreateView(onCreated: {})) {
                                 QuickActionCard(
                                     backgroundImage: "routine_card_background",
                                     title: lang.s(.homeRoutineCardTitle),
@@ -345,6 +356,7 @@ struct HomeView: View {
                                     ForEach(viewModel.searchHistory) { item in
                                         Button(action: {
                                             if let pid = item.productId, !pid.isEmpty {
+                                                viewModel.handleProductTap(isPremium: subscriptionService.isPremium)
                                                 selectedPopularProductId = pid
                                             }
                                         }) {
@@ -573,6 +585,7 @@ struct ProductCard: View {
 private struct SearchResultsPanel: View {
     @ObservedObject var viewModel: HomeViewModel
     @EnvironmentObject var lang: LanguageManager
+    @EnvironmentObject var subscriptionService: SubscriptionService
     @State private var selectedProductId: String?
 
     var body: some View {
@@ -611,6 +624,7 @@ private struct SearchResultsPanel: View {
                     VStack(spacing: 10) {
                         ForEach(viewModel.searchResults) { product in
                             Button {
+                                viewModel.handleProductTap(isPremium: subscriptionService.isPremium)
                                 Task {
                                     await viewModel.addToHistory(
                                         query: viewModel.searchText,

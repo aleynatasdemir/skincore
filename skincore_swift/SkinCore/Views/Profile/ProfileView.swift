@@ -678,6 +678,7 @@ private struct SettingsSheet: View {
     @Environment(\.dismiss) var dismiss
     @State private var showChangePassword = false
     @State private var notificationsEnabled: Bool = true
+    @State private var showDeleteConfirm = false
 
     var body: some View {
         NavigationStack {
@@ -712,7 +713,10 @@ private struct SettingsSheet: View {
                         .padding(.vertical, 14)
                         .background(Color.white)
                         Divider().padding(.leading, 56)
-                        SettingsRow(icon: "shield.lefthalf.fill", title: lang.s(.profilePrivacy))
+                        Link(destination: URL(string: "https://skincore.beauty/privacy.html")!) {
+                            SettingsRow(icon: "shield.lefthalf.fill", title: lang.s(.profilePrivacy))
+                        }
+                        .buttonStyle(.plain)
                         Divider().padding(.leading, 56)
                         Button {
                             authViewModel.logout()
@@ -734,6 +738,42 @@ private struct SettingsSheet: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
+
+                    // Hesabımı Sil
+                    VStack(spacing: 0) {
+                        Button {
+                            showDeleteConfirm = true
+                        } label: {
+                            HStack(spacing: 16) {
+                                Image(systemName: "trash.fill")
+                                    .foregroundColor(Color(hex: "EF4444"))
+                                    .frame(width: 24)
+                                Text(lang.language == .tr ? "Hesabımı Sil" : "Delete Account")
+                                    .foregroundColor(Color(hex: "EF4444"))
+                                    .font(.system(size: 15))
+                                Spacer()
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 16)
+                            .background(Color.white)
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .alert(
+                        lang.language == .tr ? "Hesabını Sil" : "Delete Account",
+                        isPresented: $showDeleteConfirm
+                    ) {
+                        Button(lang.language == .tr ? "Sil" : "Delete", role: .destructive) {
+                            Task { await authViewModel.deleteAccount() }
+                        }
+                        Button(lang.language == .tr ? "İptal" : "Cancel", role: .cancel) {}
+                    } message: {
+                        Text(lang.language == .tr
+                             ? "Hesabın ve tüm verilerin kalıcı olarak silinecek. Bu işlem geri alınamaz."
+                             : "Your account and all data will be permanently deleted. This cannot be undone.")
+                    }
                     Spacer()
                 }
             }
