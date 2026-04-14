@@ -1,6 +1,8 @@
 1. Hafta Video Linki: https://drive.google.com/drive/folders/1qbefQPeL55cTfJeT5uPsiIo-x3iHWXvc?usp=sharing
 2. Hafta Video Linki: https://drive.google.com/file/d/1PJogE7lDBsOnOwqH8210mnAmbQbOzlBg/view?usp=drive_link
 3. Hafta Video Linki: https://drive.google.com/file/d/1wFykEFFqN1oHtgtePtWkG-BcihBAdFKD/view?usp=drive_link
+4. Hafta Video Linki: https://drive.google.com/file/d/1QlScDJaJj1tALw1lIfBMelUkFtSx1tDb/view?usp=drive_link
+
 -----------------------------------------
  1. Üstlenilen Görevler 
 -----------------------------------------
@@ -19,6 +21,9 @@
   - Kullanıcı kayıt, giriş ve e-posta doğrulama akışlarının geliştirilmesi.
   - "Yeniden gönder" (Resend OTP) mantığının rate-limit, brute-force koruması ve otomatik kilit sıfırlama ile hayata geçirilmesi.
   - Şifre sıfırlama OTP akışının email enumeration önlemi ile geliştirilmesi.
+- 4. Hafta - Sosyal Katman, Etkileşim Endpointleri ve Ayarlamalar
+  - Kullanıcıların sosyalleşebileceği ve birbirleriyle etkileşim kurabileceği fonksiyonlar için `UserProfileController.cs` ve `UserProfileService.cs` yapılarının tasarlanması.
+  - Takip etme (Follow/Unfollow), herkese açık profiller, beğenilen ürünler (Favorites/Wishlist) ve kullanıcı arama gibi sosyal etkileşimlerin uçtan uca endpointlerinin kodlanması.
 
 -----------------------------------------
  2. Şimdiye Kadar Neler Yapıldı?
@@ -49,3 +54,7 @@
    - Brute-force Koruması: 5 yanlış OTP deneme ardından hesap kilitlenir; resend ile kilit sıfırlanır ve yeni kod güvenli biçimde verilir.
    - Email Enumeration Önlemi: Şifre sıfırlama akışında kullanıcı var/yok bilgisi dışarıya sızdırılmaz; her koşulda aynı başarı mesajı döndürülür.
    - OTP güvenliği: Kodlar `RandomNumberGenerator` (kriptografik) ile 100000–999999 aralığında üretilir; 10 dakika geçerlilik süresi ve MongoDB zerinde `VerificationCode`, `VerificationCodeExpiry`, `VerificationAttempts` alanlarıyla yönetilir.
+4. Hafta - Sosyal Katman, Etkileşim Endpointleri ve Ayarlamalar:
+   - `UserProfileController.cs` içerisinde topluluk etkileşimi için API yapısı kuruldu. Takip mekanizmaları için `[HttpPost("follow/{targetUserId}")]` ve `[HttpDelete("follow/{targetUserId}")]`; takipçi listeleri için `[HttpGet("followers/following")]` endpointleri eklendi.
+   - Herkese açık profiller oluşturuldu; bir kullanıcının başkasının favori ürünlerine ya da takipçilerine bakabilmesi için `[HttpGet("public/{username}")]` ve türevi mimari kuruldu.
+   - Ürün favorileme sistemi geliştirilerek `[HttpPost("favorites/toggle")]` ile ürünlerin koleksiyonlara kaydedilmesi sağlandı. Ek olarak `search-history` (arama geçmişi kaydetme/silme) yapısıyla kişiselleştirilmiş deneyim sunan tüm modüller, `UserProfileService.cs` içerisine başarıyla uygulandı.

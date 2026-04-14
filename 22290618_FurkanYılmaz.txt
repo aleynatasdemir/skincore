@@ -2,6 +2,7 @@
 1. Hafta Video Linki :https://youtu.be/vL49_XQTqpc
 2. Hafta Video Linki :https://youtu.be/rLe49olRcSA
 3. Hafta Video Linki :https://youtu.be/kSvyybEP668?si=g1A5GfRdRmEQrA5t
+4. Hafta Video Linki :https://youtu.be/IZCZyVhYNAQ
 -----------------------------------------
  1. Üstlenilen Görevler 
 -----------------------------------------
@@ -18,6 +19,8 @@
 - 3. Hafta — Ürün Arama Algoritması
   - Arama sisteminin amacının belirlenmesi ve altyapısının kurulması.
   - Uygulama içi arama deneyimi için farklı Arama Türleri algoritmalarının tasarlanması.
+- 4. Hafta — Image Embedding ile Eşleştirme
+  - Kullanıcıdan alınan görsellerin (multipart/form-data) anlık olarak vektörel temsillere (embedding) dönüştürülmesi ve veritabanındaki ürünlerle kosinüs benzerliği (veya exact vector distance) mantığıyla eşleştirilmesi için gerekli backend altyapısının `ProductsController.cs` ve `ImageSearchService.cs` içerisine entegre edilmesi.
 
 -----------------------------------------
  2. Şimdiye Kadar Neler Yapıldı?
@@ -42,5 +45,7 @@
      - İsme göre arama: `ProductSearchService` ile isim üzerinden "Fuzzy Matching" (Bulanık) eşleştirme.
      - Barkoda göre arama: Kesin barkod eşleşmesi döndüren sorgu yapısı (`SearchByBarcodeExact`).
      - Görsel ile (Hybrid) arama: `ImageSearchService` üzerinden, daha önceden oluşturulan görsel vektörlerini kullanarak %60 Embedding ağırlığı ve %40 OCR içeriği ağırlığı ile çalışan Gelişmiş Hybrid Arama (`SearchByImage`) algoritması geliştirildi.
+- 4. Hafta — Image Embedding ile Eşleştirme
+  - Kullanıcıdan alınan görsellerin (multipart/form-data) anlık olarak vektörel temsillere (embedding) dönüştürülmesi ve veritabanındaki ürünlerle kosinüs benzerliği (veya exact vector distance) mantığıyla eşleştirilmesi için gerekli backend altyapısının `ProductsController.cs` ve `ImageSearchService.cs` içerisine entegre edilmesi.
 
 
