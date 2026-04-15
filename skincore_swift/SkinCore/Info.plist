@@ -30,6 +30,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We use this to show you personalized ads and improve your experience.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera is used to scan product labels and analyze ingredients.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

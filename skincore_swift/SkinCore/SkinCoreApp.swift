@@ -3,6 +3,7 @@ import FirebaseCore
 import FirebaseMessaging
 import UserNotifications
 import GoogleMobileAds
+import AppTrackingTransparency
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
     func application(_ application: UIApplication,
@@ -14,7 +15,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(
             options: authOptions,
-            completionHandler: { _, _ in }
+            completionHandler: { _, _ in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    ATTrackingManager.requestTrackingAuthorization { _ in }
+                }
+            }
         )
         application.registerForRemoteNotifications()
         Messaging.messaging().delegate = self

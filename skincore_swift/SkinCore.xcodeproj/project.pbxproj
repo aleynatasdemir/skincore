@@ -81,6 +81,7 @@
 		9C044A632F8972DA0036631B /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		9C044A662F89739F0036631B /* SkinCore.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = SkinCore.storekit; sourceTree = "<group>"; };
 		9C044A682F8979D40036631B /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
+		9C39CD782F8FC1D90065F450 /* SkinCoreDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SkinCoreDebug.entitlements; sourceTree = "<group>"; };
 		9CD566862F897B92000211E2 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		9CD566892F8993D0000211E2 /* SkinTypeQuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinTypeQuizView.swift; sourceTree = "<group>"; };
 		9CD5668E2F89E12C000211E2 /* InterstitialAdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterstitialAdManager.swift; sourceTree = "<group>"; };
@@ -174,6 +175,7 @@
 		3CDE210A36C2123E3B13FE38 /* SkinCore */ = {
 			isa = PBXGroup;
 			children = (
+				9C39CD782F8FC1D90065F450 /* SkinCoreDebug.entitlements */,
 				12C14E114F6837B8F3E03051 /* Assets.xcassets */,
 				D191E878E1BF2F970F79022E /* GoogleService-Info 2.plist */,
 				7E8E6B48CBD956AC3DF1114F /* GoogleService-Info.plist */,
@@ -510,7 +512,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = SkinCore/SkinCore.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SkinCore/SkinCoreDebug.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 37LBF6B778;
@@ -520,7 +522,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.skincore.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -597,7 +599,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.skincore.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
