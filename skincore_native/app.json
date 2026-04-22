@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "skincore.",
+    "slug": "skincore-native",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "skincore",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF0F0"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.skincore.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ürün etiketini taramak için kamera erişimi gerekiyor.",
+        "NSPhotoLibraryUsageDescription": "Galeriden ürün fotoğrafı seçmek için izin gerekiyor.",
+        "NSPhotoLibraryAddUsageDescription": "Fotoğrafları kaydetmek için izin gerekiyor."
+      },
+      "appleTeamId": "5YPH74WPWP"
+    },
+    "android": {
+      "package": "com.skincore.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFF0F0"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-localization",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Ürün etiketini taramak için kamera erişimi gerekiyor."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Galeriden ürün fotoğrafı seçmek için izin gerekiyor.",
+          "cameraPermission": "Fotoğraf çekmek için kamera erişimi gerekiyor."
+        }
+      ],
+      "expo-apple-authentication"
+    ]
+  }
+}
