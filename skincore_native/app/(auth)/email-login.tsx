@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../../src/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function EmailLoginScreen() {
@@ -23,6 +24,7 @@ export default function EmailLoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // E-posta doğrulama gerekiyorsa yönlendir
   useEffect(() => {
@@ -51,7 +53,7 @@ export default function EmailLoginScreen() {
         >
           {/* Geri butonu */}
           <TouchableOpacity style={styles.back} onPress={() => router.back()} activeOpacity={0.7}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Ionicons name="chevron-back" size={32} color={Colors.dark} />
           </TouchableOpacity>
 
           {/* Header */}
@@ -62,7 +64,7 @@ export default function EmailLoginScreen() {
           <View style={styles.form}>
             {/* Email */}
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>✉</Text>
+              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('email')}
@@ -78,24 +80,32 @@ export default function EmailLoginScreen() {
 
             {/* Password */}
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('password')}
                 placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
               />
+
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="#9CA3AF"
+                />
+              </TouchableOpacity>
             </View>
           </View>
 
           {/* Error */}
           {errorMessage ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorIcon}>⚠</Text>
+              <Ionicons name="warning-outline" size={20} color={Colors.danger} />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           ) : null}

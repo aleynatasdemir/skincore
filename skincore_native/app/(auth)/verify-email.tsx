@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../../src/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 
 const OTP_LENGTH = 6;
@@ -83,7 +84,7 @@ export default function VerifyEmailScreen() {
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <TouchableOpacity style={styles.back} onPress={() => router.back()} activeOpacity={0.7}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Ionicons name="chevron-back" size={32} color={Colors.dark} />
           </TouchableOpacity>
 
           {/* Header */}
@@ -115,7 +116,7 @@ export default function VerifyEmailScreen() {
           {/* Error */}
           {errorMessage ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorIcon}>⚠</Text>
+              <Ionicons name="warning-outline" size={20} color={Colors.danger} />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           ) : null}

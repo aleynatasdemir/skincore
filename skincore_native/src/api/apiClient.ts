@@ -31,8 +31,9 @@ import type {
 
 // MARK: - Sabitler
 
-export const API_BASE_URL = 'http://91.132.49.137:5192/api';
-export const MEDIA_BASE_URL = 'http://91.132.49.137:5192';
+// Localhost üzerinden .NET backend'e bağlanıyoruz
+export const API_BASE_URL = 'http://localhost:5192/api';
+export const MEDIA_BASE_URL = 'http://localhost:5192';
 
 const ACCESS_TOKEN_KEY = 'com.skincore.accessToken';
 const REFRESH_TOKEN_KEY = 'com.skincore.refreshToken';
@@ -68,7 +69,6 @@ export function resolveMediaUrl(path: string | undefined | null): string | undef
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
   timeout: 30000,
 });
 
@@ -144,8 +144,19 @@ api.interceptors.response.use(
 // MARK: - Hata mesajı çıkarıcı
 
 export function extractErrorMessage(error: unknown, fallback = 'Bir hata oluştu.'): string {
+  console.error('[API Error]:', error);
   if (axios.isAxiosError(error)) {
-    return error.response?.data?.message ?? fallback;
+    if (error.response?.data) {
+      console.error('[API Error Data]:', error.response.data);
+      if (error.response.data.message) {
+        return error.response.data.message;
+      }
+      if (error.response.data.title) {
+        return error.response.data.title;
+      }
+    }
+    // Network Error veya timeout ise:
+    return error.message ?? fallback;
   }
   if (error instanceof Error) return error.message;
   return fallback;
@@ -204,16 +215,12 @@ export const productsApi = {
   searchByImage: async (
     imageData: FormData
   ): Promise<Product[]> => {
-    const response = await api.post<Product[]>('/products/search/image', imageData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post<Product[]>('/products/search/image', imageData);
     return response.data;
   },
 
   submitRequest: async (formData: FormData): Promise<MessageResponse> => {
-    const response = await api.post<MessageResponse>('/product-requests', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post<MessageResponse>('/product-requests', formData);
     return response.data;
   },
 };
@@ -224,8 +231,7 @@ export const moderationApi = {
   submitRequest: async (productId: string, formData: FormData): Promise<MessageResponse> => {
     const response = await api.post<MessageResponse>(
       `/moderation/products/${productId}`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      formData
     );
     return response.data;
   },
@@ -326,8 +332,7 @@ export const routinesApi = {
   uploadImage: async (formData: FormData): Promise<string> => {
     const response = await api.post<{ imageUrl: string }>(
       '/routines/upload-image',
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      formData
     );
     return response.data.imageUrl;
   },
@@ -339,8 +344,7 @@ export const profileApi = {
   uploadImage: async (formData: FormData): Promise<string> => {
     const response = await api.post<{ imageUrl: string }>(
       '/userprofile/profile-image',
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      formData
     );
     return response.data.imageUrl;
   },

@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../../src/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function RegisterScreen() {
@@ -26,6 +27,8 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [localError, setLocalError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (showVerifyEmail) {
@@ -58,7 +61,7 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Geri */}
           <TouchableOpacity style={styles.back} onPress={() => router.back()} activeOpacity={0.7}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Ionicons name="chevron-back" size={32} color={Colors.dark} />
           </TouchableOpacity>
 
           {/* Header */}
@@ -69,7 +72,7 @@ export default function RegisterScreen() {
           <View style={styles.form}>
             {/* Ad Soyad */}
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>👤</Text>
+              <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('fullName')}
@@ -79,11 +82,19 @@ export default function RegisterScreen() {
                 autoCapitalize="words"
                 returnKeyType="next"
               />
+
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="#9CA3AF"
+                />
+              </TouchableOpacity>
             </View>
 
             {/* Email */}
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>✉</Text>
+              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('email')}
@@ -95,42 +106,66 @@ export default function RegisterScreen() {
                 autoComplete="email"
                 returnKeyType="next"
               />
+
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="#9CA3AF"
+                />
+              </TouchableOpacity>
             </View>
 
             {/* Şifre */}
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('passwordMinChars')}
                 placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 returnKeyType="next"
               />
+
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="#9CA3AF"
+                />
+              </TouchableOpacity>
             </View>
 
             {/* Şifre tekrar */}
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('confirmPassword')}
                 placeholderTextColor="#9CA3AF"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                secureTextEntry
+                secureTextEntry={!showConfirmPassword}
                 returnKeyType="done"
                 onSubmitEditing={handleRegister}
               />
+
+              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <Ionicons
+                  name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="#9CA3AF"
+                />
+              </TouchableOpacity>
             </View>
           </View>
 
           {/* Error */}
           {displayError ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorIcon}>⚠</Text>
+              <Ionicons name="warning-outline" size={20} color={Colors.danger} />
               <Text style={styles.errorText}>{displayError}</Text>
             </View>
           ) : null}

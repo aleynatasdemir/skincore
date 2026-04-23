@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../../src/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function ForgotPasswordScreen() {
@@ -56,7 +57,7 @@ export default function ForgotPasswordScreen() {
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <TouchableOpacity style={styles.back} onPress={() => router.back()} activeOpacity={0.7}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Ionicons name="chevron-back" size={32} color={Colors.dark} />
           </TouchableOpacity>
 
           <Text style={styles.logo}>{t('appBrand')}</Text>
@@ -66,7 +67,7 @@ export default function ForgotPasswordScreen() {
 
           <View style={styles.form}>
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>✉</Text>
+              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('email')}
@@ -84,7 +85,7 @@ export default function ForgotPasswordScreen() {
 
           {errorMessage ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorIcon}>⚠</Text>
+              <Ionicons name="warning-outline" size={20} color={Colors.danger} />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           ) : null}

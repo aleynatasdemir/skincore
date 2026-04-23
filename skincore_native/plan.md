@@ -217,7 +217,7 @@ isAuthenticated → MainTabs
 
 ---
 
-### ADIM 8 – Navigasyon (`app/(tabs)/_layout.tsx`)
+### ✅ ADIM 8 – Navigasyon (`app/(tabs)/_layout.tsx`)
 5 sekme:
 | Index | İkon | Ekran |
 |---|---|---|
@@ -230,7 +230,7 @@ Aktif renk: `#D4728C`
 
 ---
 
-### ADIM 9 – Auth Ekranları (`app/(auth)/`)
+### ✅ ADIM 9 – Auth Ekranları (`app/(auth)/`)
 
 #### `login.tsx` – LoginView
 - E-posta ile giriş formu
@@ -260,7 +260,7 @@ Aktif renk: `#D4728C`
 
 ---
 
-### ADIM 10 – Home Ekranı (`app/(tabs)/index.tsx`)
+### ADIM 10 – Home Ekranı (`app/(tabs)/index.tsx`) (TAMAMLANDI)
 
 **HomeViewModel → Zustand + React hooks:**
 - Arama çubuğu (debounce 350ms → `/products/search/name`)
@@ -273,7 +273,7 @@ Aktif renk: `#D4728C`
 
 ---
 
-### ADIM 11 – Scan Ekranı (`app/(tabs)/scan.tsx` + bileşenler)
+### ADIM 11 – Scan Ekranı (`app/(tabs)/scan.tsx` + bileşenler) (TAMAMLANDI)
 
 Bu en büyük ekran (Swift'te 103KB). Aşamalı yapı:
 

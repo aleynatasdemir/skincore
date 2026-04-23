@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../../src/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function ResetPasswordScreen() {
@@ -70,7 +71,7 @@ export default function ResetPasswordScreen() {
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <TouchableOpacity style={styles.back} onPress={() => router.back()} activeOpacity={0.7}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Ionicons name="chevron-back" size={32} color={Colors.dark} />
           </TouchableOpacity>
 
           <Text style={styles.logo}>{t('appBrand')}</Text>
@@ -99,7 +100,7 @@ export default function ResetPasswordScreen() {
 
             {/* Yeni Şifre */}
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('newPassword')}
@@ -113,7 +114,7 @@ export default function ResetPasswordScreen() {
 
             {/* Şifre Tekrar */}
             <View style={styles.inputWrap}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('confirmNewPassword')}
@@ -129,7 +130,7 @@ export default function ResetPasswordScreen() {
 
           {displayError ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorIcon}>⚠</Text>
+              <Ionicons name="warning-outline" size={20} color={Colors.danger} />
               <Text style={styles.errorText}>{displayError}</Text>
             </View>
           ) : null}

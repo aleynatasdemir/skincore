@@ -19,7 +19,10 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Ürün etiketini taramak için kamera erişimi gerekiyor.",
         "NSPhotoLibraryUsageDescription": "Galeriden ürün fotoğrafı seçmek için izin gerekiyor.",
-        "NSPhotoLibraryAddUsageDescription": "Fotoğrafları kaydetmek için izin gerekiyor."
+        "NSPhotoLibraryAddUsageDescription": "Fotoğrafları kaydetmek için izin gerekiyor.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       },
       "appleTeamId": "5YPH74WPWP"
     },
