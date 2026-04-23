@@ -50,8 +50,7 @@ export default function HomeScreen() {
   const handleProductTap = async (productId: string, productName?: string, firstImageUrl?: string, brand?: string) => {
     // Add to history
     await addSearchHistory(searchText || productName || 'Ürün', productId, productName, brand, firstImageUrl);
-    // TODO: Navigate to product detail when built
-    console.log('Navigate to product:', productId);
+    router.push(`/product/${productId}`);
   };
 
   const renderContent = () => {

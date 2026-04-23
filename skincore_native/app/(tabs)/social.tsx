@@ -3,11 +3,17 @@ import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, SafeArea
 import { Ionicons } from '@expo/vector-icons';
 import { useSocialStore } from '../../src/store/socialStore';
 import { RoutineFeedCard, PersonRow, RoutineDetailSheet } from '../../src/components/social/SocialComponents';
+import { RoutineCreateModal } from '../../src/components/social/RoutineCreateModal';
+import { UserProfileModal } from '../../src/components/profile/UserProfileModal';
 import type { RoutineFeedItem, PublicUserProfileResponse } from '../../src/types/social';
 
 export default function SocialScreen() {
   const store = useSocialStore();
   const [selectedRoutine, setSelectedRoutine] = useState<RoutineFeedItem | null>(null);
+  
+  // Yeni eklenen modallar
+  const [isCreateModalVisible, setCreateModalVisible] = useState(false);
+  const [selectedUsernameProfile, setSelectedUsernameProfile] = useState<string | null>(null);
 
   useEffect(() => {
     store.fetchData();
@@ -16,7 +22,7 @@ export default function SocialScreen() {
   const renderHeader = () => (
     <View style={styles.header}>
       <Text style={styles.headerTitle}>Topluluk</Text>
-      <TouchableOpacity style={styles.createButton}>
+      <TouchableOpacity style={styles.createButton} onPress={() => setCreateModalVisible(true)}>
         <Ionicons name="add" size={24} color="#FFF" />
       </TouchableOpacity>
     </View>
@@ -80,6 +86,7 @@ export default function SocialScreen() {
             <RoutineFeedCard 
               item={item} 
               onPress={() => setSelectedRoutine(item)} 
+              onUsernamePress={() => setSelectedUsernameProfile(item.username)}
             />
           )}
           ListEmptyComponent={
@@ -95,7 +102,12 @@ export default function SocialScreen() {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => <PersonRow user={item} />}
+          renderItem={({ item }) => (
+            <PersonRow 
+              user={item} 
+              onPress={() => setSelectedUsernameProfile(item.username)}
+            />
+          )}
           ListEmptyComponent={
             <View style={styles.centerContainer}>
               <Ionicons name="people-outline" size={48} color="#D1D5DB" />
@@ -123,6 +135,23 @@ export default function SocialScreen() {
           )}
         </TouchableOpacity>
       </Modal>
+
+      {/* Routine Oluşturma Modal */}
+      <RoutineCreateModal
+         visible={isCreateModalVisible}
+         onClose={() => setCreateModalVisible(false)}
+         onSuccess={() => {
+           // Yeni rutin eklendiğinde listeyi yenile
+           store.fetchData();
+         }}
+      />
+
+      {/* Kullanıcı Profili Modal */}
+      <UserProfileModal
+         visible={!!selectedUsernameProfile}
+         username={selectedUsernameProfile || ''}
+         onClose={() => setSelectedUsernameProfile(null)}
+      />
 
     </SafeAreaView>
   );

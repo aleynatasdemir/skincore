@@ -11,8 +11,9 @@ const { width, height } = Dimensions.get('window');
 interface RoutineFeedCardProps {
   item: RoutineFeedItem;
   onPress: () => void;
+  onUsernamePress?: () => void;
 }
-export const RoutineFeedCard: React.FC<RoutineFeedCardProps> = ({ item, onPress }) => {
+export const RoutineFeedCard: React.FC<RoutineFeedCardProps> = ({ item, onPress, onUsernamePress }) => {
   const store = useSocialStore();
   const coverUrl = resolveMediaUrl(item.coverImageUrl) || 'https://via.placeholder.com/400x300';
   const profileUrl = resolveMediaUrl(item.profileImageUrl);
@@ -23,7 +24,7 @@ export const RoutineFeedCard: React.FC<RoutineFeedCardProps> = ({ item, onPress 
       
       <View style={styles.cardOverlay}>
         <View style={styles.cardHeader}>
-          <View style={styles.authorRow}>
+          <TouchableOpacity style={styles.authorRow} onPress={onUsernamePress}>
             {profileUrl ? (
               <Image source={{ uri: profileUrl }} style={styles.avatar} />
             ) : (
@@ -35,7 +36,7 @@ export const RoutineFeedCard: React.FC<RoutineFeedCardProps> = ({ item, onPress 
               <Text style={styles.authorName}>{item.displayName || item.username || 'A. Skincore'}</Text>
               <Text style={styles.timeAgo}>{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Yeni'}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
           
           <View style={styles.typeBadge}>
             <Text style={styles.typeBadgeText}>
@@ -74,12 +75,13 @@ export const RoutineFeedCard: React.FC<RoutineFeedCardProps> = ({ item, onPress 
 // MARK: - Person Row
 interface PersonRowProps {
   user: PublicUserProfileResponse;
+  onPress?: () => void;
 }
-export const PersonRow: React.FC<PersonRowProps> = ({ user }) => {
+export const PersonRow: React.FC<PersonRowProps> = ({ user, onPress }) => {
   const profileUrl = resolveMediaUrl(user.profileImageUrl);
 
   return (
-    <TouchableOpacity style={styles.personContainer}>
+    <TouchableOpacity style={styles.personContainer} onPress={onPress}>
       {profileUrl ? (
         <Image source={{ uri: profileUrl }} style={styles.personAvatar} />
       ) : (

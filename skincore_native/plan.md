@@ -290,13 +290,13 @@ idle → capturing → analyzing → results → productDetail
    - Ürün başlığı, marka, görseller (yatay scroll)
    - **Güvenlik skoru** (0–100 daire göstergesi)
    - **Güvenlik etiketi**: Güvenli & Temiz / Dikkatli Kullan / Yüksek Risk
-   - **Cilt uyumluluğu** (premium lock): cildinize göre % uyum skoru
+   - **Cilt uyumluluğu**: cildinize göre % uyum skoru
    - **İçerik listesi** (filtre: Tümü / Güvenli / Orta / Riskli)
    - Her içerik için IngredientRow: isim, ewg skoru, safety badge, iyi/kötü cilt listesi
    - Favorilere ekle / çıkar
    - **Moderasyon talebi** butonu → ModerationSheet
 5. **ProductRequestView**: marka + ürün adı + fotoğraf (ön yüz + içerik) form
-6. **Scan limiti**: Premium değil ve günlük 3 limit doldu → PaywallModal
+6. **Tarama Sonuçları**: Sonuçları doğrudan ProductDetail sayfasında (.tsx) göster.
 
 ---
 
@@ -349,7 +349,7 @@ idle → capturing → analyzing → results → productDetail
 
 ---
 
-### ADIM 14 – Profile Ekranı (`app/(tabs)/profile.tsx`)
+### ✅ ADIM 14 – Profile Ekranı (`app/(tabs)/profile.tsx`)
 
 **Kendi profili (ProfileView):**
 - Avatar (fotoğraf değiştir: expo-image-picker → upload)
@@ -407,33 +407,19 @@ Silme (tek tek + tümünü temizle)
 
 ---
 
-### ADIM 17 – Paywall / Abonelik (`src/store/subscriptionStore.ts`)
+### ADIM 17 – Ürün Seçilen Detay Sayfası (`app/product/[id].tsx`)
 
-**RevenueCat kullanımı:**
-```ts
-Purchases.configure({ apiKey: 'rc_...' });
-// Paketler
-const offerings = await Purchases.getOfferings();
-// Satın al
-await Purchases.purchasePackage(package);
-// Restore
-await Purchases.restorePurchases();
-// Premium kontrolü 
-const info = await Purchases.getCustomerInfo();
-isPremium = info.entitlements.active['premium'] !== undefined;
-```
-
-**PaywallView:**
-- Logo + başlık
-- 3 özellik satırı (FeatureRow): Sınırsız Tarama, Cilt Uyumluluk Analizi, Reklamsız
-- Yıllık / Aylık plan kartı (seçilebilir)
-- Premium'a Geç butonu
-- Satın almaları geri yükle
-- Yasal metin
-
-**Günlük tarama limiti:**
-- `AsyncStorage`'da `scanCount_YYYY-MM-DD` key'i ile günlük tarama say
-- 3 scan dolunca → PaywallModal göster
+**ProductDetailView:**
+- Bağımsız ürün detay sayfası (Arama, Barkod veya Social üzerinden gelinebilir)
+- Ürün görselleri carousel (yatay kaydırılabilir resimler)
+- Marka adı, ürün adı, açıklama
+- Güvenlik Skoru Dairesi (0-100)
+- Güvenlik Etiketi (Temiz, Orta, Riskli)
+- Cilt Uyumluluğu analizi (Kullanıcı cilt tipine göre analiz)
+- İçerik listesi (IngredientRow komponentleri ile)
+  - İçerik güvenli, orta, riskli olarak kategorize edilir
+- Favorilere Ekle/Çıkar butonu
+- Moderasyon talebi (Eksik/Hatalı bildirme)
 
 ---
 
@@ -457,7 +443,7 @@ isPremium = info.entitlements.active['premium'] !== undefined;
 | 7 | Social Feed | RoutineFeedCard, RoutineDetail, like/comment |
 | 8 | Routine Create | Form, ürün arama, fotoğraf yükleme, yayımlama |
 | 9 | Profile | Kendi/başkası profili, takip, edit, settings |
-| 10 | Paywall | RevenueCat entegrasyonu, PaywallView, scan limiti |
+| 10 | Product Details | Bağımsız Product Detay Sayfası, Skor, Ingredient List |
 | 11 | Polish | Animasyonlar, hata durumları, loading skeleton'lar, test |
 
 ---
