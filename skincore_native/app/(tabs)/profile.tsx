@@ -6,6 +6,7 @@ import { Colors } from '../../src/theme/colors';
 import { useProfileStore, ProfileTabState } from '../../src/store/profileStore';
 import { ProfileHeader, RoutineGridCell, FavoriteGridCell, EditProfileSheet } from '../../src/components/profile/ProfileComponents';
 import { SettingsSheet } from '../../src/components/profile/SettingsSheet';
+import { ConnectionsModal, ConnectionType } from '../../src/components/profile/ConnectionsModal';
 import type { RoutineFeedItem } from '../../src/types/social';
 import type { FavoriteResponse } from '../../src/types/product';
 
@@ -21,6 +22,8 @@ export default function ProfileScreen() {
   // Modals state
   const [showSettings, setShowSettings] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showConnections, setShowConnections] = useState(false);
+  const [connectionType, setConnectionType] = useState<ConnectionType>('followers');
 
   useEffect(() => {
     store.fetchProfile();
@@ -86,6 +89,14 @@ export default function ProfileScreen() {
                 myRoutinesCount={store.myRoutines?.length || 0}
                 onEditProfile={() => setShowEditProfile(true)}
                 onOpenSettings={() => setShowSettings(true)}
+                onFollowersPress={() => {
+                  setConnectionType('followers');
+                  setShowConnections(true);
+                }}
+                onFollowingPress={() => {
+                  setConnectionType('following');
+                  setShowConnections(true);
+                }}
               />
             )}
             {renderTabs()}
@@ -122,6 +133,14 @@ export default function ProfileScreen() {
           visible={showEditProfile} 
           onClose={() => setShowEditProfile(false)} 
           user={store.myProfile}
+        />
+      )}
+
+      {showConnections && (
+        <ConnectionsModal
+          visible={showConnections}
+          type={connectionType}
+          onClose={() => setShowConnections(false)}
         />
       )}
     </SafeAreaView>

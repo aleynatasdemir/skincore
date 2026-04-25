@@ -7,6 +7,7 @@ import { useProfileStore } from '../../store/profileStore';
 import type { RoutineFeedItem, UserProfileResponse } from '../../types/social';
 import type { FavoriteResponse } from '../../types/product';
 import { CachedImage } from '../common/CachedImage';
+import { SkinTypeQuizModal } from './SkinTypeQuizModal';
 
 // MARK: - Profile Stats & Header
 
@@ -15,9 +16,11 @@ interface ProfileHeaderProps {
   myRoutinesCount: number;
   onEditProfile: () => void;
   onOpenSettings: () => void;
+  onFollowersPress?: () => void;
+  onFollowingPress?: () => void;
 }
 
-export function ProfileHeader({ user, myRoutinesCount, onEditProfile, onOpenSettings }: ProfileHeaderProps) {
+export function ProfileHeader({ user, myRoutinesCount, onEditProfile, onOpenSettings, onFollowersPress, onFollowingPress }: ProfileHeaderProps) {
   return (
     <View style={styles.headerContainer}>
       <View style={styles.topRow}>
@@ -33,11 +36,11 @@ export function ProfileHeader({ user, myRoutinesCount, onEditProfile, onOpenSett
             <Text style={styles.statNumber}>{myRoutinesCount}</Text>
             <Text style={styles.statLabel}>Rutin</Text>
           </View>
-          <TouchableOpacity style={styles.statBox}>
+          <TouchableOpacity style={styles.statBox} onPress={onFollowersPress}>
             <Text style={styles.statNumber}>{user.followerCount || 0}</Text>
             <Text style={styles.statLabel}>Takipçi</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.statBox}>
+          <TouchableOpacity style={styles.statBox} onPress={onFollowingPress}>
             <Text style={styles.statNumber}>{user.followingCount || 0}</Text>
             <Text style={styles.statLabel}>Takip</Text>
           </TouchableOpacity>
@@ -256,6 +259,7 @@ export function EditProfileSheet({ visible, onClose, user }: EditProfileSheetPro
   const [username, setUsername] = useState(user?.username || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [loading, setLoading] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
 
   const handleSave = async () => {
     if (!username.trim()) {
@@ -340,6 +344,20 @@ export function EditProfileSheet({ visible, onClose, user }: EditProfileSheetPro
                 maxLength={150}
               />
             </View>
+            
+            <View style={stylesSheet.inputGroup}>
+              <Text style={stylesSheet.label}>Cilt Tipi</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+                <Text style={{ fontSize: 16, color: user?.skinType ? '#1a1a2e' : '#9ca3af' }}>{user?.skinType || 'Belirtilmemiş'}</Text>
+                <TouchableOpacity onPress={() => setShowQuiz(true)}>
+                    <Text style={{ fontSize: 14, color: Colors.primary, fontWeight: '600' }}>Testi Çöz</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <SkinTypeQuizModal
+               visible={showQuiz}
+               onClose={() => setShowQuiz(false)}
+            />
           </View>
         </View>
       </SafeAreaView>

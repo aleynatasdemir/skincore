@@ -4,6 +4,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import '../src/i18n';
 import { useAuthStore } from '../src/store/authStore';
 
+import { SplashView } from '../src/components/common/SplashView';
+
 // Splash screen'i hemen saklanmasını engelle
 SplashScreen.preventAutoHideAsync();
 
@@ -13,8 +15,11 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
+    // Hide native splash immediately so our custom SplashView runs its animation
+    SplashScreen.hideAsync();
+    
     checkAuth().finally(() => {
-      SplashScreen.hideAsync();
+      // isInitializing will become false, component updates
     });
   }, []);
 
@@ -37,8 +42,7 @@ export default function RootLayout() {
   }, [isAuthenticated, isInitializing, segments, needsUsername]);
 
   if (isInitializing) {
-    // Expo splash screen görünmeye devam eder
-    return null;
+    return <SplashView />;
   }
 
   return (

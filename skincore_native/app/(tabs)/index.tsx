@@ -12,10 +12,12 @@ import {
   SearchProductRow,
   HistoryRow
 } from '../../src/components/home/HomeComponents';
+import { SkinTypeQuizModal } from '../../src/components/profile/SkinTypeQuizModal';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [quizVisible, setQuizVisible] = useState(false);
   
   const {
     searchResults,
@@ -104,14 +106,14 @@ export default function HomeScreen() {
             title="Cilt Tipi Testi"
             subtitle="Cildini tanıyarak sana en uygun rutini keşfet"
             imageSource={require('../../assets/images/quiz_card_background.png')}
-            onPress={() => console.log('Quiz triggered')}
+            onPress={() => setQuizVisible(true)}
           />
           <View style={{ width: 12 }} />
           <QuickActionCard
             title="Rutin Oluştur"
             subtitle="Ürünlerini ekle, günlük cilt bakım rutinini planla"
             imageSource={require('../../assets/images/routine_card_background.png')}
-            onPress={() => console.log('Routine triggered')}
+            onPress={() => router.push('/(tabs)/social')}
           />
         </View>
 
@@ -181,6 +183,13 @@ export default function HomeScreen() {
       >
         {renderContent()}
       </ScrollView>
+      <SkinTypeQuizModal 
+         visible={quizVisible}
+         onClose={() => setQuizVisible(false)}
+         onQuizComplete={(skinType) => {
+            console.log('Quiz finished with result:', skinType);
+         }}
+      />
     </SafeAreaView>
   );
 }
