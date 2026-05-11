@@ -1,3 +1,6 @@
+Skincore Appstore Uygulama Linki:https://apps.apple.com/tr/app/skincore/id6761394676
+
+
 22290583 Habibe Aleyna Taşdemir
 1. Hafta Video Linki: https://drive.google.com/file/d/10CKxX9DFqr8OYtDmkWj9-0TcP9Kup8BM/view?usp=drive_link
 2. Hafta Video Linki: https://drive.google.com/file/d/1PJogE7lDBsOnOwqH8210mnAmbQbOzlBg/view?usp=drive_link
@@ -13,3 +16,5 @@
 4. Hafta Video Linki :https://youtu.be/IZCZyVhYNAQ
 5. Hafta Video Linki :https://drive.google.com/file/d/1KIoFittZ8GPySGQrlHTsOcuhdw-_JGmN/view?usp=sharing
 6. Hafta Video Linki :https://drive.google.com/file/d/1lrA_ep88ncjPHhQe5zljZC5RwpXXig2L/view
+
+Not: Erişim Ayarları Güncellendi
