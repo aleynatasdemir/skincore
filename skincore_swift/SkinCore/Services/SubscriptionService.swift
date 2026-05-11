@@ -11,6 +11,9 @@ class SubscriptionService: ObservableObject {
     static let freeDailyLimit   = 3
 
     @Published var isPremium: Bool = false
+    @Published var isStatusLoaded: Bool = false   // Abonelik durumu StoreKit'ten yüklendi mi?
+    @Published var subscriptionExpirationDate: Date? = nil  // Aktif abonelik bitiş tarihi
+    @Published var activeProductID: String? = nil           // Aktif plan ID'si
     @Published var storeProducts: [StoreKit.Product] = []
     @Published var isLoading: Bool = false
     @Published var purchaseError: String? = nil
@@ -106,12 +109,26 @@ class SubscriptionService: ObservableObject {
 
     func updatePurchaseStatus() async {
         var hasPremium = false
+        var foundExpDate: Date? = nil
+        var foundProductID: String? = nil
 
         for await result in Transaction.currentEntitlements {
             do {
                 let transaction = try checkVerified(result)
                 if transaction.productID == Self.monthlyProductID || transaction.productID == Self.yearlyProductID {
-                    hasPremium = transaction.revocationDate == nil
+                    // İptal edilmemiş VE süresi dolmamış olmalı
+                    let notRevoked = transaction.revocationDate == nil
+                    let notExpired: Bool
+                    if let expDate = transaction.expirationDate {
+                        notExpired = expDate > Date()
+                    } else {
+                        notExpired = true
+                    }
+                    if notRevoked && notExpired {
+                        hasPremium = true
+                        foundExpDate = transaction.expirationDate
+                        foundProductID = transaction.productID
+                    }
                 }
             } catch {
                 print("Transaction doğrulama hatası: \(error)")
@@ -119,6 +136,54 @@ class SubscriptionService: ObservableObject {
         }
 
         isPremium = hasPremium
+        subscriptionExpirationDate = hasPremium ? foundExpDate : nil
+        activeProductID = hasPremium ? foundProductID : nil
+        isStatusLoaded = true
+    }
+
+    // MARK: - Kalan Süre Metni
+
+    /// Premium kullanıcı için "X gün kaldı", "X ay kaldı" gibi metin döndürür.
+    /// Premium değilse nil döner.
+    func remainingSubscriptionText(isTurkish: Bool) -> String? {
+        guard isPremium, let expDate = subscriptionExpirationDate else { return nil }
+
+        let now = Date()
+        let calendar = Calendar.current
+        let totalDays = calendar.dateComponents([.day], from: now, to: expDate).day ?? 0
+
+        // Plan tipine göre etiket
+        let planLabel: String
+        if activeProductID == Self.yearlyProductID {
+            planLabel = isTurkish ? "Yıllık" : "Yearly"
+        } else {
+            planLabel = isTurkish ? "Aylık" : "Monthly"
+        }
+
+        // Bitiş tarihini formatla
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: isTurkish ? "tr_TR" : "en_US")
+        dateFormatter.dateFormat = isTurkish ? "d MMM yyyy" : "MMM d, yyyy"
+        let expStr = dateFormatter.string(from: expDate)
+
+        // Kalan süreyi insan dostu göster
+        let remaining: String
+        if totalDays <= 0 {
+            remaining = isTurkish ? "Bugün bitiyor" : "Expires today"
+        } else if totalDays == 1 {
+            remaining = isTurkish ? "1 gün kaldı" : "1 day left"
+        } else if totalDays < 31 {
+            remaining = isTurkish ? "\(totalDays) gün kaldı" : "\(totalDays) days left"
+        } else {
+            let months = totalDays / 30
+            remaining = isTurkish
+                ? (months == 1 ? "1 ay kaldı" : "\(months) ay kaldı")
+                : (months == 1 ? "1 month left" : "\(months) months left")
+        }
+
+        return isTurkish
+            ? "\(planLabel) · \(remaining) · \(expStr)"
+            : "\(planLabel) · \(remaining) · \(expStr)"
     }
 
     // MARK: - Transaction Listener

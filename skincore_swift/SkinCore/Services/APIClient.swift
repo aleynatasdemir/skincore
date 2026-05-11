@@ -325,6 +325,16 @@ class APIClient {
         return try await request(endpoint: "/popular?limit=\(limit)")
     }
 
+    func incrementPopular(productId: String, productName: String?, imageUrl: String?) async throws {
+        struct IncrReq: Encodable { let productId: String; let productName: String?; let imageUrl: String? }
+        let _: MessageResponse = try await request(
+            endpoint: "/popular/increment",
+            method: "POST",
+            body: IncrReq(productId: productId, productName: productName, imageUrl: imageUrl),
+            authenticated: true
+        )
+    }
+
     // MARK: - Search History Endpoints
 
     func getSearchHistory(limit: Int = 20) async throws -> [SearchHistoryResponse] {

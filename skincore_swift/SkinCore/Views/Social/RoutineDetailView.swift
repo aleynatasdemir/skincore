@@ -140,7 +140,7 @@ struct RoutineDetailView: View {
                             }
                             Spacer()
                             if let skinType = routine.skinType, !skinType.isEmpty {
-                                Text(skinType)
+                                Text(skinType.formattedSkinType)
                                     .font(.system(size: 11, weight: .medium))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)

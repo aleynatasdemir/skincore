@@ -87,7 +87,7 @@ class HomeViewModel: ObservableObject {
     }
 
     func addToHistory(query: String, productId: String?, productName: String?, category: String?, imageUrl: String?) async {
-        let req = AddSearchHistoryRequest(query: query, productId: productId, productName: productName, category: category)
+        let req = AddSearchHistoryRequest(query: query, productId: productId, productName: productName, category: category, imageUrl: imageUrl)
         do {
             _ = try await APIClient.shared.addSearchHistory(req)
             // Sadece local listeye ekle, fetchHistory() çağırma — aramayı yavaşlatır
@@ -276,6 +276,11 @@ struct HomeView: View {
                                                         category: nil,
                                                         imageUrl: item.resolvedImageUrl
                                                     )
+                                                    try? await APIClient.shared.incrementPopular(
+                                                        productId: item.productId,
+                                                        productName: item.productName,
+                                                        imageUrl: item.resolvedImageUrl
+                                                    )
                                                 }
                                                 selectedPopularProductId = item.productId
                                             } label: {
@@ -387,6 +392,9 @@ struct HomeView: View {
             .navigationBarHidden(true)
         }
         .onTapGesture { hideKeyboard() }
+        .onAppear {
+            Task { await viewModel.fetchHistory() }
+        }
     }
 }
 
@@ -631,6 +639,11 @@ private struct SearchResultsPanel: View {
                                         productId: product.id,
                                         productName: product.name,
                                         category: product.brand,
+                                        imageUrl: product.firstImageUrl
+                                    )
+                                    try? await APIClient.shared.incrementPopular(
+                                        productId: product.id,
+                                        productName: product.name,
                                         imageUrl: product.firstImageUrl
                                     )
                                 }

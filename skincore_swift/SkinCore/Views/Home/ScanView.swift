@@ -863,6 +863,22 @@ private struct CameraResultSheet: View {
                                         InterstitialAdManager.shared.showAd()
                                     }
                                 }
+                                // Son aramalara ekle + popular sayacı artır
+                                Task {
+                                    let req = AddSearchHistoryRequest(
+                                        query: product.name ?? "",
+                                        productId: product.id,
+                                        productName: product.name,
+                                        category: product.brand,
+                                        imageUrl: product.firstImageUrl
+                                    )
+                                    try? await APIClient.shared.addSearchHistory(req)
+                                    try? await APIClient.shared.incrementPopular(
+                                        productId: product.id,
+                                        productName: product.name,
+                                        imageUrl: product.firstImageUrl
+                                    )
+                                }
                                 selectedProductId = product.id
                             } label: {
                                 ScanResultCard(product: product, rank: index + 1)
@@ -1160,6 +1176,7 @@ struct ProductDetailView: View {
     @State private var showModerationSheet = false
     @State private var showSkinCompatSheet = false
     @State private var showPaywall = false
+    @State private var showSkinTypeQuiz = false
     @EnvironmentObject var lang: LanguageManager
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var subscriptionService: SubscriptionService
@@ -1373,46 +1390,59 @@ struct ProductDetailView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 20)
 
-                        // ── Cilt Tipi Uyumluluk Butonu ────────────────
-                        if let skinType = authViewModel.currentUser?.skinType {
-                            Button {
-                                if subscriptionService.isPremium {
-                                    showSkinCompatSheet = true
-                                } else {
-                                    showPaywall = true
-                                }
-                            } label: {
-                                HStack(spacing: 10) {
-                                    Image(systemName: subscriptionService.isPremium ? "staroflife.fill" : "lock.fill")
-                                        .font(.system(size: 14))
-                                    Text(subscriptionService.isPremium
-                                         ? lang.s(.skinCompatButton)
-                                         : lang.s(.skinCompatButtonLocked))
-                                        .font(.system(size: 15, weight: .semibold))
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(Color(hex: "D4728C").opacity(0.6))
-                                }
-                                .foregroundColor(Color(hex: "D4728C"))
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 16)
-                                .background(Color(hex: "FFF0F5"))
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color(hex: "D4728C").opacity(0.25), lineWidth: 1)
-                                )
+                        // ── Cilt Tipi Uyumluluk Butonu ──
+                        let skinType = authViewModel.currentUser?.skinType
+                        Button {
+                            if skinType == nil {
+                                // Cilt tipi belirlenmemiş → quiz'e yönlendir
+                                showSkinTypeQuiz = true
+                            } else if subscriptionService.isPremium {
+                                showSkinCompatSheet = true
+                            } else {
+                                showPaywall = true
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.top, 12)
-                            .sheet(isPresented: $showSkinCompatSheet) {
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: skinType == nil
+                                    ? "questionmark.circle.fill"
+                                    : (subscriptionService.isPremium ? "staroflife.fill" : "lock.fill"))
+                                    .font(.system(size: 14))
+                                Text(skinType == nil
+                                    ? (lang.language == .tr ? "Cilt Tipimi Belirle" : "Set My Skin Type")
+                                    : (subscriptionService.isPremium
+                                        ? lang.s(.skinCompatButton)
+                                        : lang.s(.skinCompatButtonLocked)))
+                                    .font(.system(size: 15, weight: .semibold))
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(Color(hex: "D4728C").opacity(0.6))
+                            }
+                            .foregroundColor(Color(hex: "D4728C"))
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 16)
+                            .background(Color(hex: "FFF0F5"))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color(hex: "D4728C").opacity(0.25), lineWidth: 1)
+                            )
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
+                        .sheet(isPresented: $showSkinCompatSheet) {
+                            if let st = skinType {
                                 SkinCompatibilitySheet(
                                     ingredients: ingredients,
-                                    skinType: skinType
+                                    skinType: st
                                 )
                                 .environmentObject(lang)
                             }
+                        }
+                        .sheet(isPresented: $showSkinTypeQuiz) {
+                            SkinTypeQuizView()
+                                .environmentObject(authViewModel)
+                                .environmentObject(lang)
                         }
 
                         // ── İçerikler Başlık + Filtre ────────────────
@@ -2184,14 +2214,14 @@ enum SkinTypeTranslation {
     ]
 
     static func toEn(_ tr: String) -> String {
-        trToEn[tr] ?? tr
+        trToEn[tr.formattedSkinType] ?? tr.formattedSkinType
     }
 
     static func localized(_ tr: String, lang: LanguageManager) -> String {
         if lang.language == .en {
             return toEn(tr)
         }
-        return tr
+        return tr.formattedSkinType
     }
 }
 

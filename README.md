@@ -1,11 +1,15 @@
 22290583 Habibe Aleyna Taşdemir
-1. Hafta Video Linki: https://drive.google.com/drive/folders/1qbefQPeL55cTfJeT5uPsiIo-x3iHWXvc?usp=sharing
+1. Hafta Video Linki: https://drive.google.com/file/d/10CKxX9DFqr8OYtDmkWj9-0TcP9Kup8BM/view?usp=drive_link
 2. Hafta Video Linki: https://drive.google.com/file/d/1PJogE7lDBsOnOwqH8210mnAmbQbOzlBg/view?usp=drive_link
 3. Hafta Video Linki: https://drive.google.com/file/d/1wFykEFFqN1oHtgtePtWkG-BcihBAdFKD/view?usp=drive_link
 4. Hafta Video Linki: https://drive.google.com/file/d/1QlScDJaJj1tALw1lIfBMelUkFtSx1tDb/view?usp=drive_link
+5. Hafta Video Linki: https://drive.google.com/file/d/1h-IwcBG_fkXg6qJahJt1YRmKizTwcgcW/view?usp=drive_link
+6. Hafta Video Linki: https://drive.google.com/file/d/1Ck3AQzZrJ6rc4ZQiCP8adM6SrkDcYD-D/view?usp=drive_link
 
 22290618 Furkan Yılmaz
 1. Hafta Video Linki :https://youtu.be/vL49_XQTqpc
 2. Hafta Video Linki :https://youtu.be/rLe49olRcSA
 3. Hafta Video Linki :https://youtu.be/kSvyybEP668?si=g1A5GfRdRmEQrA5t
 4. Hafta Video Linki :https://youtu.be/IZCZyVhYNAQ
+5. Hafta Video Linki :https://drive.google.com/file/d/1KIoFittZ8GPySGQrlHTsOcuhdw-_JGmN/view?usp=sharing
+6. Hafta Video Linki :https://drive.google.com/file/d/1lrA_ep88ncjPHhQe5zljZC5RwpXXig2L/view

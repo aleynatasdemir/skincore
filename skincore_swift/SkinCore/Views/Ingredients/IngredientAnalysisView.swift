@@ -645,7 +645,7 @@ struct IngredientDetailSheet: View {
                                 .foregroundColor(Color(hex: "9CA3AF"))
                                 .tracking(1)
                             FlowLayout(items: good) { item in
-                                ChipView(text: item, color: Color(hex: "D4728C"), bgColor: Color(hex: "FDF2F8"))
+                                ChipView(text: item.formattedSkinType, color: Color(hex: "D4728C"), bgColor: Color(hex: "FDF2F8"))
                             }
                         }
                         .padding(.horizontal, 24)
@@ -659,7 +659,7 @@ struct IngredientDetailSheet: View {
                                 .foregroundColor(Color(hex: "9CA3AF"))
                                 .tracking(1)
                             FlowLayout(items: bad) { item in
-                                ChipView(text: item, color: Color(hex: "EF4444"), bgColor: Color(hex: "FEE2E2"))
+                                ChipView(text: item.formattedSkinType, color: Color(hex: "EF4444"), bgColor: Color(hex: "FEE2E2"))
                             }
                         }
                         .padding(.horizontal, 24)

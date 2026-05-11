@@ -103,6 +103,7 @@ struct ProfileView: View {
                 SettingsSheet()
                     .environmentObject(authViewModel)
                     .environmentObject(lang)
+                    .environmentObject(SubscriptionService.shared)
             }
             .sheet(isPresented: $showEditProfile) {
                 EditProfileView(profile: profileData) {
@@ -675,106 +676,153 @@ private struct FavoriteGridCell: View {
 private struct SettingsSheet: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var lang: LanguageManager
+    @EnvironmentObject var subscriptionService: SubscriptionService
     @Environment(\.dismiss) var dismiss
     @State private var showChangePassword = false
     @State private var notificationsEnabled: Bool = true
     @State private var showDeleteConfirm = false
+    @State private var showPaywall = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(hex: "FFF0F0").ignoresSafeArea()
-                VStack(spacing: 0) {
-                    // Other settings
-                    VStack(spacing: 0) {
-                        Button { showChangePassword = true } label: {
-                            SettingsRow(icon: "lock.fill", title: lang.s(.changePasswordTitle))
-                        }
-                        .buttonStyle(.plain)
-                        Divider().padding(.leading, 56)
-                        HStack(spacing: 16) {
-                            Image(systemName: "bell.fill")
-                                .foregroundColor(Color(hex: "7B5455"))
-                                .frame(width: 24)
-                            Text(lang.s(.profileNotifications))
-                                .font(.system(size: 15))
-                                .foregroundColor(.primary)
-                            Spacer()
-                            Toggle("", isOn: $notificationsEnabled)
-                                .labelsHidden()
-                                .tint(Color(hex: "E07D7D"))
-                                .onChange(of: notificationsEnabled) { newValue in
-                                    Task {
-                                        await authViewModel.updateNotifications(enabled: newValue)
+                ScrollView {
+                    VStack(spacing: 8) {
+                        // ── Premium + Diğer Ayarlar ──
+                        VStack(spacing: 0) {
+                            // ── Premium Satırı ──
+                            Button {
+                                if !subscriptionService.isPremium {
+                                    showPaywall = true
+                                }
+                            } label: {
+                                HStack(spacing: 16) {
+                                    Image(systemName: subscriptionService.isPremium ? "staroflife.fill" : "crown.fill")
+                                        .foregroundColor(Color(hex: "D4728C"))
+                                        .frame(width: 24)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("SkinCore Premium")
+                                            .font(.system(size: 15))
+                                            .foregroundColor(.primary)
+                                        if subscriptionService.isPremium,
+                                           let remaining = subscriptionService.remainingSubscriptionText(isTurkish: lang.language == .tr) {
+                                            Text(remaining)
+                                                .font(.caption)
+                                                .foregroundColor(Color(hex: "22C55E"))
+                                        } else {
+                                            Text(lang.language == .tr ? "Premium özellikleri aç" : "Unlock premium features")
+                                                .font(.caption)
+                                                .foregroundColor(Color(hex: "9CA3AF"))
+                                        }
+                                    }
+                                    Spacer()
+                                    if !subscriptionService.isPremium {
+                                        Text(lang.language == .tr ? "Al" : "Get")
+                                            .font(.caption.bold())
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 4)
+                                            .background(Color(hex: "D4728C"))
+                                            .clipShape(Capsule())
                                     }
                                 }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 14)
-                        .background(Color.white)
-                        Divider().padding(.leading, 56)
-                        Link(destination: URL(string: "https://skincore.beauty/privacy.html")!) {
-                            SettingsRow(icon: "shield.lefthalf.fill", title: lang.s(.profilePrivacy))
-                        }
-                        .buttonStyle(.plain)
-                        Divider().padding(.leading, 56)
-                        Button {
-                            authViewModel.logout()
-                        } label: {
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 14)
+                                .background(Color.white)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(subscriptionService.isPremium)
+                            Divider().padding(.leading, 56)
+                            // ── Diğer Ayarlar ──
+                            Button { showChangePassword = true } label: {
+                                SettingsRow(icon: "lock.fill", title: lang.s(.changePasswordTitle))
+                            }
+                            .buttonStyle(.plain)
+                            Divider().padding(.leading, 56)
                             HStack(spacing: 16) {
-                                Image(systemName: "rectangle.portrait.and.arrow.right")
-                                    .foregroundColor(Color(hex: "EF4444"))
+                                Image(systemName: "bell.fill")
+                                    .foregroundColor(Color(hex: "7B5455"))
                                     .frame(width: 24)
-                                Text(lang.s(.profileLogout))
-                                    .foregroundColor(Color(hex: "EF4444"))
+                                Text(lang.s(.profileNotifications))
                                     .font(.system(size: 15))
+                                    .foregroundColor(.primary)
                                 Spacer()
+                                Toggle("", isOn: $notificationsEnabled)
+                                    .labelsHidden()
+                                    .tint(Color(hex: "E07D7D"))
+                                    .onChange(of: notificationsEnabled) { newValue in
+                                        Task {
+                                            await authViewModel.updateNotifications(enabled: newValue)
+                                        }
+                                    }
                             }
                             .padding(.horizontal, 20)
-                            .padding(.vertical, 16)
+                            .padding(.vertical, 14)
                             .background(Color.white)
+                            Divider().padding(.leading, 56)
+                            Link(destination: URL(string: "https://skincore.beauty/privacy.html")!) {
+                                SettingsRow(icon: "shield.lefthalf.fill", title: lang.s(.profilePrivacy))
+                            }
+                            .buttonStyle(.plain)
+                            Divider().padding(.leading, 56)
+                            Button {
+                                authViewModel.logout()
+                            } label: {
+                                HStack(spacing: 16) {
+                                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                                        .foregroundColor(Color(hex: "EF4444"))
+                                        .frame(width: 24)
+                                    Text(lang.s(.profileLogout))
+                                        .foregroundColor(Color(hex: "EF4444"))
+                                        .font(.system(size: 15))
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 16)
+                                .background(Color.white)
+                            }
                         }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal, 16)
-                    .padding(.top, 12)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
 
-                    // Hesabımı Sil
-                    VStack(spacing: 0) {
-                        Button {
-                            showDeleteConfirm = true
-                        } label: {
-                            HStack(spacing: 16) {
-                                Image(systemName: "trash.fill")
-                                    .foregroundColor(Color(hex: "EF4444"))
-                                    .frame(width: 24)
-                                Text(lang.language == .tr ? "Hesabımı Sil" : "Delete Account")
-                                    .foregroundColor(Color(hex: "EF4444"))
-                                    .font(.system(size: 15))
-                                Spacer()
+                        // ── Hesabımı Sil ──
+                        VStack(spacing: 0) {
+                            Button {
+                                showDeleteConfirm = true
+                            } label: {
+                                HStack(spacing: 16) {
+                                    Image(systemName: "trash.fill")
+                                        .foregroundColor(Color(hex: "EF4444"))
+                                        .frame(width: 24)
+                                    Text(lang.language == .tr ? "Hesabımı Sil" : "Delete Account")
+                                        .foregroundColor(Color(hex: "EF4444"))
+                                        .font(.system(size: 15))
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 16)
+                                .background(Color.white)
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 16)
-                            .background(Color.white)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 32)
+                        .alert(
+                            lang.language == .tr ? "Hesabını Sil" : "Delete Account",
+                            isPresented: $showDeleteConfirm
+                        ) {
+                            Button(lang.language == .tr ? "Sil" : "Delete", role: .destructive) {
+                                Task { await authViewModel.deleteAccount() }
+                            }
+                            Button(lang.language == .tr ? "İptal" : "Cancel", role: .cancel) {}
+                        } message: {
+                            Text(lang.language == .tr
+                                 ? "Hesabın ve tüm verilerin kalıcı olarak silinecek. Bu işlem geri alınamaz."
+                                 : "Your account and all data will be permanently deleted. This cannot be undone.")
                         }
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .alert(
-                        lang.language == .tr ? "Hesabını Sil" : "Delete Account",
-                        isPresented: $showDeleteConfirm
-                    ) {
-                        Button(lang.language == .tr ? "Sil" : "Delete", role: .destructive) {
-                            Task { await authViewModel.deleteAccount() }
-                        }
-                        Button(lang.language == .tr ? "İptal" : "Cancel", role: .cancel) {}
-                    } message: {
-                        Text(lang.language == .tr
-                             ? "Hesabın ve tüm verilerin kalıcı olarak silinecek. Bu işlem geri alınamaz."
-                             : "Your account and all data will be permanently deleted. This cannot be undone.")
-                    }
-                    Spacer()
                 }
             }
             .navigationTitle(lang.s(.profileSettings))
@@ -791,6 +839,11 @@ private struct SettingsSheet: View {
             .sheet(isPresented: $showChangePassword) {
                 ChangePasswordView()
                     .environmentObject(authViewModel)
+                    .environmentObject(lang)
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView()
+                    .environmentObject(subscriptionService)
                     .environmentObject(lang)
             }
         }
@@ -1072,7 +1125,7 @@ private struct ConnectionUserRow: View {
                             .foregroundColor(Color(hex: "9CA3AF"))
                             .lineLimit(1)
                     } else if let skinType = user.skinType, !skinType.isEmpty {
-                        Text(skinType)
+                        Text(skinType.formattedSkinType)
                             .font(.system(size: 12))
                             .foregroundColor(Color(hex: "9CA3AF"))
                     }

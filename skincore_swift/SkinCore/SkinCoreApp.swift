@@ -68,9 +68,12 @@ struct SkinCoreApp: App {
                         UsernameSetupView()
                     } else {
                         MainTabView()
-                            .onAppear {
-                                if !subscriptionService.isPremium {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            .onReceive(subscriptionService.$isStatusLoaded) { loaded in
+                                // StoreKit durumu yüklenince çalışır
+                                guard loaded else { return }
+                                // Zaten gösterilmemişse ve premium değilse göster
+                                if !subscriptionService.isPremium && !subscriptionService.showPaywallOnLaunch {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                                         subscriptionService.showPaywallOnLaunch = true
                                     }
                                 }

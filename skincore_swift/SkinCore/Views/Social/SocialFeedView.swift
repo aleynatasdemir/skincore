@@ -329,7 +329,7 @@ private struct RoutineCard: View {
                 .buttonStyle(.plain)
                 Spacer()
                 if let skinType = routine.skinType, !skinType.isEmpty {
-                    Text(skinType)
+                    Text(skinType.formattedSkinType)
                         .font(.system(size: 11, weight: .medium))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -422,10 +422,6 @@ private struct RoutineCard: View {
                         .foregroundColor(Color(hex: "6B7280"))
                 }
 
-                Spacer()
-
-                Image(systemName: "square.and.arrow.up")
-                    .foregroundColor(Color(hex: "9CA3AF"))
             }
         }
         .padding(14)

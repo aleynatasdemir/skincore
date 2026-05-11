@@ -1,5 +1,20 @@
 import Foundation
 
+extension String {
+    var formattedSkinType: String {
+        switch self.lowercased() {
+        case "yagli", "yağlı": return "Yağlı"
+        case "akneye_meyilli", "akneye meyilli": return "Akneye Meyilli"
+        case "kuru": return "Kuru"
+        case "karma": return "Karma"
+        case "hassas": return "Hassas"
+        case "olgun": return "Olgun"
+        case "normal": return "Normal"
+        default: return self.capitalized
+        }
+    }
+}
+
 // MARK: - AnyCodable Helper
 
 struct AnyCodable: Codable {
@@ -284,6 +299,7 @@ struct AddSearchHistoryRequest: Codable {
     let productId: String?
     let productName: String?
     let category: String?
+    let imageUrl: String?
 }
 
 // MARK: - Favorite Models
