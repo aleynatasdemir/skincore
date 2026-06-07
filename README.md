@@ -11,6 +11,7 @@ Skincore Appstore Uygulama Linki:https://apps.apple.com/tr/app/skincore/id676139
 7. Hafta Video Linki: https://drive.google.com/file/d/1xe_p9sVyZaQ5Jk9Au3hv1y070HQ1ocHL/view?usp=sharing
 8. Hafta Video Linki: https://drive.google.com/file/d/1ktRq_zfSPQWhLop1ha-_jU0XTJAo3J_2/view?usp=sharing
 9. Hafta Video Linki: https://drive.google.com/file/d/1xoJxz5vpMxx0mLZ8X43ME98ZgsSLVeVt/view?usp=sharing
+10. Hafta Video Linki: https://drive.google.com/file/d/1x-ZsO0w_C0s7sjHP_VvK4K4FafsWSkVQ/view?usp=sharing
 
 22290618 Furkan Yılmaz
 1. Hafta Video Linki: https://youtu.be/vL49_XQTqpc
