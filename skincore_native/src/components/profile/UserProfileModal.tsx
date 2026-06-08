@@ -10,27 +10,26 @@ import { CachedImage } from '../common/CachedImage';
 
 interface UserProfileModalProps {
   visible: boolean;
-  username: string; // Fetch edilecek kullanıcının username'i (benzersiz)
+  userId: string;
   onClose: () => void;
 }
 
-export function UserProfileModal({ visible, username, onClose }: UserProfileModalProps) {
+export function UserProfileModal({ visible, userId, onClose }: UserProfileModalProps) {
   const [profile, setProfile] = useState<PublicUserProfileResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Bu modal her açıldığında username baz alınarak public profile getirilmeli
   React.useEffect(() => {
-    if (visible && username) {
+    if (visible && userId) {
       fetchUserProfile();
     }
-  }, [visible, username]);
+  }, [visible, userId]);
 
   const fetchUserProfile = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await profileApi.getPublicProfile(username);
+      const data = await profileApi.getPublicProfileById(userId);
       setProfile(data);
     } catch (err: any) {
       setError(err.message || 'Kullanıcı bulunamadı');
@@ -76,7 +75,7 @@ export function UserProfileModal({ visible, username, onClose }: UserProfileModa
           <TouchableOpacity onPress={onClose} style={styles.backBtn}>
             <Ionicons name="chevron-down" size={28} color="#111827" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{username}</Text>
+          <Text style={styles.headerTitle}>{profile?.username || userId}</Text>
           <View style={{ width: 28 }} />
         </View>
 

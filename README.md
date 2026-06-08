@@ -23,5 +23,5 @@ Skincore Appstore Uygulama Linki:https://apps.apple.com/tr/app/skincore/id676139
 7. Hafta Video Linki: https://drive.google.com/file/d/17qJ5IXSiQOws_b9jvMkO-Seb5KCwfP52/view?usp=drivesdk
 8. Hafta Video Linki: https://drive.google.com/file/d/16hiYpKAmel1S2zFauXt8m-OvBvfkiYnM/view?usp=drivesdk
 9. Hafta Video Linki: https://drive.google.com/file/d/1-pFCV5bSc8IOnwXMDAceMnFQ11fyldXg/view?usp=drivesdk
-
+10. Hafta Video Linki: https://drive.google.com/file/d/1x8JRpP2SbqHh9w9GfLI4xzSAw6FB-Pdo/view?usp=sharing
 

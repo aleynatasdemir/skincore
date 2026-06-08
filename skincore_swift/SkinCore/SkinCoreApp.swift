@@ -53,7 +53,8 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 @main
 struct SkinCoreApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    
+    @Environment(\.scenePhase) private var scenePhase
+
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var lang = LanguageManager.shared
     @StateObject private var subscriptionService = SubscriptionService.shared
@@ -92,6 +93,11 @@ struct SkinCoreApp: App {
             .environmentObject(lang)
             .environmentObject(subscriptionService)
             .preferredColorScheme(.light)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                Task { await authViewModel.checkAuth() }
+            }
         }
     }
 }

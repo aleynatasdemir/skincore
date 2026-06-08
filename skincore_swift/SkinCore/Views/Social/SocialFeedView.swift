@@ -131,7 +131,7 @@ struct SocialFeedView: View {
                                         ScrollView(.horizontal, showsIndicators: false) {
                                             HStack(spacing: 12) {
                                                 ForEach(viewModel.matchedUsers) { user in
-                                                    NavigationLink(destination: UserProfileView(userName: user.username ?? user.fullName ?? "")) {
+                                                    NavigationLink(destination: UserProfileView(userName: user.username ?? "")) {
                                                         UserSearchCard(user: user)
                                                     }
                                                     .buttonStyle(.plain)
@@ -313,7 +313,7 @@ private struct RoutineCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                NavigationLink(destination: UserProfileView(userName: routine.userName)) {
+                NavigationLink(destination: UserProfileView(userName: routine.userUsername ?? routine.userName)) {
                     HStack(spacing: 10) {
                         AvatarView(name: routine.userName, imageUrl: routine.userProfileImageUrl)
                         VStack(alignment: .leading, spacing: 2) {

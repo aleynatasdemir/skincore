@@ -283,7 +283,7 @@ public class UserProfileService
         return MapToPublicProfileResponse(user, isFollowing);
     }
 
-    // ==================== FAVORİLER ====================
+// ==================== FAVORİLER ====================
 
     public async Task<List<FavoriteResponse>> GetFavorites(string userId)
     {

@@ -13,7 +13,7 @@ export default function SocialScreen() {
   
   // Yeni eklenen modallar
   const [isCreateModalVisible, setCreateModalVisible] = useState(false);
-  const [selectedUsernameProfile, setSelectedUsernameProfile] = useState<string | null>(null);
+  const [selectedUserIdProfile, setSelectedUserIdProfile] = useState<string | null>(null);
 
   useEffect(() => {
     store.fetchData();
@@ -86,7 +86,7 @@ export default function SocialScreen() {
             <RoutineFeedCard 
               item={item} 
               onPress={() => setSelectedRoutine(item)} 
-              onUsernamePress={() => setSelectedUsernameProfile(item.username)}
+              onUsernamePress={() => setSelectedUserIdProfile(item.userId)}
             />
           )}
           ListEmptyComponent={
@@ -105,7 +105,7 @@ export default function SocialScreen() {
           renderItem={({ item }) => (
             <PersonRow 
               user={item} 
-              onPress={() => setSelectedUsernameProfile(item.username)}
+              onPress={() => setSelectedUserIdProfile(item.id)}
             />
           )}
           ListEmptyComponent={
@@ -148,9 +148,9 @@ export default function SocialScreen() {
 
       {/* Kullanıcı Profili Modal */}
       <UserProfileModal
-         visible={!!selectedUsernameProfile}
-         username={selectedUsernameProfile || ''}
-         onClose={() => setSelectedUsernameProfile(null)}
+         visible={!!selectedUserIdProfile}
+         userId={selectedUserIdProfile || ''}
+         onClose={() => setSelectedUserIdProfile(null)}
       />
 
     </SafeAreaView>

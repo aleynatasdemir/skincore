@@ -24,7 +24,7 @@ export const RoutineFeedCard: React.FC<RoutineFeedCardProps> = ({ item, onPress,
       
       <View style={styles.cardOverlay}>
         <View style={styles.cardHeader}>
-          <TouchableOpacity style={styles.authorRow} onPress={onUsernamePress}>
+          <TouchableOpacity style={styles.authorRow} onPress={(e) => { e.stopPropagation(); onUsernamePress?.(); }}>
             {profileUrl ? (
               <Image source={{ uri: profileUrl }} style={styles.avatar} />
             ) : (
